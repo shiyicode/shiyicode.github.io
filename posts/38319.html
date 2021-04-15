@@ -1,0 +1,653 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=&#34;auto&#34;>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/favicon/apple-touch-icon.png">
+  <link rel="icon" href="/favicon/favicon-32x32.png">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+  
+  <meta name="theme-color" content="#2f4154">
+  
+    <meta name="description" content="Less is More">
+  
+  <meta name="author" content="ShiYi">
+  <meta name="keywords" content="shiyi, shiyicode, ShiYi&#39;s Blog, code, golang">
+  
+  <title>初学A*算法求解静态地图的最短路径 - ShiYi&#39;s Blog</title>
+
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css" />
+
+
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/github-markdown-css@4.0.0/github-markdown.min.css" />
+  <link  rel="stylesheet" href="/lib/hint/hint.min.css" />
+
+  
+    
+    
+      
+      <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@10.4.0/styles/tomorrow-night-eighties.min.css" />
+    
+  
+
+  
+    <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css" />
+  
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_ba1fz6golrf.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_kmeydafke9r.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+<!-- 自定义样式保持在最底部 -->
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    var CONFIG = {"hostname":"blog.hiyicode.com","root":"/","version":"1.8.8","typing":{"enable":true,"typeSpeed":70,"cursorChar":"","loop":false},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"right","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"copy_btn":true,"image_zoom":{"enable":true},"toc":{"enable":true,"headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":4},"lazyload":{"enable":true,"onlypost":false},"web_analytics":{"enable":true,"baidu":"75eaaab59c4fa946437e9dea4f8fc07d","google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":1273342630,"leancloud":{"app_id":null,"app_key":null,"server_url":null}}};
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+<meta name="generator" content="Hexo 5.4.0"><link rel="alternate" href="/atom.xml" title="ShiYi's Blog" type="application/atom+xml">
+</head>
+
+
+<body>
+  <header style="height: 40vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>ShiYi's Blog</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/books/">
+                <i class="iconfont icon-book"></i>
+                读书
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;</a>
+          </li>
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" href="javascript:">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="banner" id="banner" parallax=true
+         style="background: url('/image/banner.jpg') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.5)">
+          <div class="page-header text-center fade-in-up">
+            <span class="h2" id="subtitle" title="初学A*算法求解静态地图的最短路径">
+              
+            </span>
+
+            
+              <div class="mt-3">
+  
+  
+    <span class="post-meta">
+      <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+      <time datetime="2015-12-07 04:13" pubdate>
+        2015年12月7日 凌晨
+      </time>
+    </span>
+  
+</div>
+
+<div class="mt-1">
+  
+
+  
+
+  
+  
+</div>
+
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div class="py-5" id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">初学A*算法求解静态地图的最短路径</h1>
+            
+            <div class="markdown-body">
+              <p>以前所接触过的最短路径算法是dijkstra或floyd之类的，都是在已知每两点之间距离的情况下求最短路的。</p>
+<p>那么想一下这样的案例</p>
+<blockquote>
+<p>给你一个地图，类似于迷宫一样，中间有些障碍物，再给定起点终点，求该两点间最短路，显然，上述两种算法就不适用了，因为提到的迷宫，我们可能会很容易想到广搜b<br>fs，但一次bfs下来实际上求出了起点到所有点的最短路径，但我们只想知道它与终点间的最短路径，也就是说这个方案里有很多冗余的操作。</p>
+</blockquote>
+<p>说到这里，该步入正题，介绍A*算法。</p>
+<blockquote>
+<p>A<em>算法；A</em>（A-Star)算法是一种静态路网中求解最短路径最有效的直接搜索方法。估价值与实际值越接近，估价函数取得就越好。(取自百度百科)</p>
+</blockquote>
+<p>何谓直接搜索方法，即 ** _ 不进行任何预处理直接进行搜索的方法 _ ** 。<br>那么它为何可以称为最有效的直接搜索方法呢，我们看到上文说到一个估价值与估价函数。<br>所以有这么一个式子</p>
+<blockquote>
+<p>** f(n) = g(n) + h(n) **</p>
+</blockquote>
+<p>先记住这个式子，在讨论这个式子之前，先谈点题外话。<br>我们都接触过 ** _ 贪心思想 _ ** ，即 ** _ 在对问题求解时，总是做出在当前看来是最好的选择。 _ **<br>从起点开始，它可走的地方是周围的8个点(最多)，平常广搜时多个可能是平等对待，全部考虑。</p>
+<p>那么？我们可不可以运用贪心的思想从8个点中选出一个最有可能达到最短路的点来优先进行操作呢？</p>
+<p>当然可以，这样我们就是 ** 有针对性的搜索 ** ，而不是 ** 盲目搜索 ** 了。</p>
+<p>有的道友可能会说了， ** 这样贪心下来求出的只能是接近于最优解的相对最优解，并不能保证一定最优 ** ，没错，事实的确是这样。<br>那么这样就行不通了，因为我们的目的是很明确的，要的是最短路径。</p>
+<p>但是往常的贪心算法都是 ** 选取当前状态下最好的选择，至于次好选择等等全部就丢掉了 **<br>，那如果我们仍然保留这些选择，仍与后来的可能进行比较呢，这样就保证最后的解一定是最优解了。</p>
+<p>如何将所有可能性都保留下来继续参与后来的比较呢， ** _ 优先队列 _ ** 是一个不错的法子。<br>1. 从A开始，将其周围可走且未标记的点，全部加入队列，然后标记A点<br>2. 从队列中选取优先度最高的点B<br>3. 对B重复1操作，直到到达终点为止</p>
+<p>但优先度如果获得呢，现在我们回到这个式子</p>
+<blockquote>
+<p>** f(n) = g(n) + h(n) **<br>g(n)为从起点到点n所花费的代价值<br>h(n)为点n到终点所花费代价的估价值<br>两者之和 f(n)就是点n的优先值</p>
+</blockquote>
+<p>例如，对几何地图进行求解时，可以将从起点到点n走的步数作为g(n)，将点n到终点的几何距离作为h(n)估价值，那么此时，f(n)的值越小，优先度越高。</p>
+<p>下面贴代码</p>
+<div class="hljs code-wrapper"><pre><code>#include&lt;iostream&gt;
+#include&lt;stdio.h&gt;
+#include&lt;algorithm&gt;
+#include&lt;math.h&gt;
+#include&lt;queue&gt;
+#include&lt;functional&gt;
+#include&lt;set&gt;
+
+using namespace std;
+
+const int N = 10009;//地图范围
+
+int v[N][N] = &#123;&#125;;//记录地图
+int dx[] = &#123;1,1,1,0,0,-1,-1,-1&#125;;//8个方向
+int dy[] = &#123;1,0,-1,1,-1,1,-1,0&#125;;
+int f[N*N];//对当前点进行标记，同时记录上一个位置的坐标
+
+struct Node
+&#123;
+    int x,y,f,g;//坐标与权值
+&#125;;
+
+struct Nodecmp//优先队列比较函数
+&#123;
+    bool operator() (const Node &amp;a, const Node &amp;b)
+    &#123;
+        return a.f &gt; b.f;
+    &#125;
+&#125;;
+
+int leng(Node a, Node b)//求点与终点的几何长度
+&#123;
+    return sqrt((a.x - b.x)*(a.x - b.x)
+                + (a.y - b.y)*(a.y - b.y));
+&#125;
+
+void print(int nid, int n)//输出最短路径
+&#123;
+    if(nid == -1)
+        return;
+    print(f[nid],n);
+    printf(&quot;%d %d\n&quot;,(nid-1)/n, nid-(nid-1)/n*n);
+&#125;
+
+bool a_start(Node s, Node e, int n)
+&#123;
+    if(!v[e.x][e.y])//终点不可达
+        return false;
+    memset(f, 0, sizeof(f));
+    priority_queue&lt;Node, vector&lt;Node&gt;, Nodecmp&gt; q;
+    int eid = e.x * n + e.y;
+    f[s.x * n + s.y] = -1;//二维转一维进行标记，便于操作
+    while(!q.empty())
+    &#123;
+        Node now = q.top();
+        q.pop();//出队
+        int nid = now.x * n + now.y;
+        if(nid == eid)//判断是否为终点
+        &#123;
+            print(nid, n);
+            return true;
+        &#125;
+        for(int i=0;i&lt;8;i++)//遍历8个方向
+        &#123;
+            Node t;
+            t.x = dx[i] + now.x;
+            t.y = dy[i] + now.y;
+            int tid = t.x * n + t.y;
+            if(v[t.x][t.y] &amp;&amp; f[tid] == 0)
+            &#123;//符合条件便标记并入队
+                f[tid] = nid;
+                t.g = now.g + 1;
+                t.f = t.g + leng(t, e);
+                q.push(t);
+            &#125;
+        &#125;
+    &#125;
+    return false;
+&#125;
+
+int main()
+&#123;
+    int n;
+    Node s,e;
+    s.g = 0;
+    cin&gt;&gt;n&gt;&gt;s.x&gt;&gt;s.y&gt;&gt;e.x&gt;&gt;e.y;
+    for(int i=1;i&lt;=n;++i)
+        for(int j=1;j&lt;=n;++j)
+            cin&gt;&gt;v[i][j];
+    if(!a_start(s,e,n))
+        cout&lt;&lt;&quot;无法到达&quot;&lt;&lt;endl;
+&#125;</code></pre></div>
+
+            </div>
+            <hr>
+            <div>
+              <div class="post-metas mb-3">
+                
+                  <div class="post-meta mr-3">
+                    <i class="iconfont icon-category"></i>
+                    
+                      <a class="hover-with-bg" href="/categories/%E5%A4%A7%E5%AD%A6%E6%97%B6%E6%9C%9FCSDN/">大学时期CSDN</a>
+                    
+                  </div>
+                
+                
+                  <div class="post-meta">
+                    <i class="iconfont icon-tags"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/%E6%90%9C%E7%B4%A2/">搜索</a>
+                    
+                  </div>
+                
+              </div>
+              
+                <p class="note note-warning">
+                  
+                    本博客所有文章除特别声明外，均采用 <a target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/deed.zh" rel="nofollow noopener noopener">CC BY-SA 4.0 协议</a> ，转载请注明出处！
+                  
+                </p>
+              
+              
+                <div class="post-prevnext">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/posts/63520.html">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">51Nod 1376 最长递增子序列的数量(dp+树状数组)</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/posts/48436.html">
+                        <span class="hidden-mobile">51Nod 1022 石子归并 V2 (划分型dp四边形不等式优化)</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+              <!-- Comments -->
+              <article class="comments" id="comments">
+                
+                  
+                
+                
+  <div id="lv-container" data-id="city" data-uid="MTAyMC80NjEzMS8yMjY0Mg">
+    <script type="text/javascript">
+      Fluid.utils.waitElementVisible('lv-container', function() {
+        Fluid.utils.createScript('https://cdn-city.livere.com/js/embed.dist.js');
+      });
+    </script>
+    <noscript>为正常使用来必力评论功能请允许 JavaScript 运行</noscript>
+  </div>
+
+
+              </article>
+            
+          </article>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+
+    
+      <a id="scroll-top-button" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+
+    
+  </main>
+
+  <footer class="text-center mt-5 py-3">
+  <div class="footer-content">
+    <script type="text/javascript">document.write(unescape("%3Cspan id='cnzz_stat_icon_1273342630'%3E%3C/span%3E%3Cscript src='https://s13.cnzz.com/z_stat.php%3Fid%3D1273342630%26show%3Dpic1' type='text/javascript'%3E%3C/script%3E"));</script>
+  </div>
+  
+  <div class="statistics">
+    
+    
+
+    
+      
+        <!-- LeanCloud 统计PV -->
+        <span id="leancloud-site-pv-container" style="display: none">
+            总访问量 
+            <span id="leancloud-site-pv"></span>
+             次
+          </span>
+      
+      
+        <!-- LeanCloud 统计UV -->
+        <span id="leancloud-site-uv-container" style="display: none">
+            总访客数 
+            <span id="leancloud-site-uv"></span>
+             人
+          </span>
+      
+
+    
+  </div>
+
+
+  
+  <!-- 备案信息 -->
+  <div class="beian">
+    <span>
+      <a href="http://beian.miit.gov.cn/" target="_blank" rel="nofollow noopener">
+        陕ICP备16019529号-2
+      </a>
+    </span>
+    
+  </div>
+
+
+  
+    <!-- cnzz Analytics Icon -->
+    <span id="cnzz_stat_icon_1273342630" style="display: none"></span>
+  
+</footer>
+
+<!-- SCRIPTS -->
+
+  <script  src="https://cdn.jsdelivr.net/npm/nprogress@0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/nprogress@0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js" ></script>
+<script  src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.min.js" ></script>
+<script  src="/js/debouncer.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+<!-- Plugins -->
+
+
+  
+    <script  src="/js/lazyload.js" ></script>
+  
+
+
+
+  
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/tocbot@4.12.0/dist/tocbot.min.js" ></script>
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js" ></script>
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/anchor-js@4.3.0/anchor.min.js" ></script>
+
+
+
+  <script defer src="https://cdn.jsdelivr.net/npm/clipboard@2.0.6/dist/clipboard.min.js" ></script>
+
+
+
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/typed.js@2.0.11/lib/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var title = document.getElementById('subtitle').title;
+      
+      typing(title)
+      
+    })(window, document);
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    (function () {
+      var path = "/local-search.xml";
+      $('#local-search-input').on('click', function() {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      });
+      $('#modalSearch').on('shown.bs.modal', function() {
+        $('#local-search-input').focus();
+      });
+    })()
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+    <!-- Baidu Analytics -->
+    <script defer>
+      var _hmt = _hmt || [];
+      (function () {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?75eaaab59c4fa946437e9dea4f8fc07d";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+      })();
+    </script>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    <!-- cnzz Analytics -->
+    <script defer src="//s4.cnzz.com/z_stat.php?id=1273342630&show=pic"
+            type="text/javascript"></script>
+  
+
+
+
+
+
+<!-- 主题的启动项 保持在最底部 -->
+<script  src="/js/boot.js" ></script>
+
+
+
+</body>
+</html>

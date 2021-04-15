@@ -1,0 +1,1516 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=&#34;auto&#34;>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/favicon/apple-touch-icon.png">
+  <link rel="icon" href="/favicon/favicon-32x32.png">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+  
+  <meta name="theme-color" content="#2f4154">
+  
+    <meta name="description" content="Less is More">
+  
+  <meta name="author" content="ShiYi">
+  <meta name="keywords" content="shiyi, shiyicode, ShiYi&#39;s Blog, code, golang">
+  
+  <title>ShiYi&#39;s Blog</title>
+
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_ba1fz6golrf.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_kmeydafke9r.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+<!-- 自定义样式保持在最底部 -->
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    var CONFIG = {"hostname":"blog.hiyicode.com","root":"/","version":"1.8.8","typing":{"enable":true,"typeSpeed":70,"cursorChar":"","loop":false},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"right","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"copy_btn":true,"image_zoom":{"enable":true},"toc":{"enable":true,"headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":4},"lazyload":{"enable":true,"onlypost":false},"web_analytics":{"enable":true,"baidu":"75eaaab59c4fa946437e9dea4f8fc07d","google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":1273342630,"leancloud":{"app_id":null,"app_key":null,"server_url":null}}};
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+<meta name="generator" content="Hexo 5.4.0"><link rel="alternate" href="/atom.xml" title="ShiYi's Blog" type="application/atom+xml">
+</head>
+
+
+<body>
+  <header style="height: 100vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>ShiYi's Blog</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/books/">
+                <i class="iconfont icon-book"></i>
+                读书
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;</a>
+          </li>
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" href="javascript:">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="banner" id="banner" parallax=true
+         style="background: url('/image/background.jpg') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.4)">
+          <div class="page-header text-center fade-in-up">
+            <span class="h2" id="subtitle" title="不疯魔，不成活">
+              
+            </span>
+
+            
+          </div>
+
+          
+            <div class="scroll-down-bar">
+              <i class="iconfont icon-arrowdown"></i>
+            </div>
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      <div class="container nopadding-x-md">
+        <div class="py-5" id="board"
+          style=margin-top:0>
+          
+          <div class="container">
+            <div class="row">
+              <div class="col-12 col-md-10 m-auto">
+                
+
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h1 class="index-header">
+        
+        <a href="/posts/19963.html">HDU 1087 Super Jumping! Jumping! Jumping!(最大递增子串和)</a>
+      </h1>
+
+      <p class="index-excerpt">
+        <a href="/posts/19963.html">
+          
+          
+            
+          
+          题目链接：  [kuangbin带你飞]专题十二 基础DP1 E - Super Jumping! Jumping! Jumping!
+
+题意
+
+起点(-无穷)终点(+无穷)中间有n个点，各有一个值，现想从起点到达终点，只能前行不能后退，且下一步必须比前面的点的值大，求所有走的点的值总和最大是多少。
+思路
+dp[i] = max(dp[k] + a[j]); 1&lt;=k&lt;=i-1;最大递
+        </a>
+      </p>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2016-01-22 18:10" pubdate>
+              2016-01-22
+            </time>
+          </div>
+        
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-category"></i>
+            
+              <a href="/categories/%E5%A4%A7%E5%AD%A6%E6%97%B6%E6%9C%9FCSDN/">大学时期CSDN</a>
+            
+          </div>
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/%E5%8A%A8%E6%80%81%E8%A7%84%E5%88%92/">动态规划</a>
+            
+          </div>
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h1 class="index-header">
+        
+        <a href="/posts/4922.html">HDU 1074 Doing Homework(状态压缩dp)</a>
+      </h1>
+
+      <p class="index-excerpt">
+        <a href="/posts/4922.html">
+          
+          
+            
+          
+          题目链接：  [kuangbin带你飞]专题十二 基础DP1 D - Doing Homework
+
+题意
+有n门功课需要完成，每一门功课都有时间期限以及你完成所需要的时间，如果完成的时间超出时间期限多少单位，就会被减多少学分，问以怎样的功课完成顺序，会使减掉的学分最少，有多个解时，输出功课名排列最小的一个。
+
+思路
+利用二进制位的方法来解题用过不少次，但真正意义上的状态压缩dp，这是第一道，有纪
+        </a>
+      </p>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2016-01-22 17:28" pubdate>
+              2016-01-22
+            </time>
+          </div>
+        
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-category"></i>
+            
+              <a href="/categories/%E5%A4%A7%E5%AD%A6%E6%97%B6%E6%9C%9FCSDN/">大学时期CSDN</a>
+            
+          </div>
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/%E5%8A%A8%E6%80%81%E8%A7%84%E5%88%92/">动态规划</a>
+            
+          </div>
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h1 class="index-header">
+        
+        <a href="/posts/41255.html">HDU 1069 Monkey and Banana(最大递增子串)</a>
+      </h1>
+
+      <p class="index-excerpt">
+        <a href="/posts/41255.html">
+          
+          
+            
+          
+          题目链接：  [kuangbin带你飞]专题十二 基础DP1 C - Monkey and Banana
+
+** 题意 **
+给定箱子种类数量n，及对应长宽高，每个箱子数量无限，求其能叠起来的最大高度是多少(上面箱子的长宽严格小于下面箱子)
+
+** 思路 **
+每种箱子有三种放置方式且数量无限，故可将每个箱子按三个箱子看待。对所有箱子按主长副宽进行先大后小排序，那么问题就成了求最大递增子串。因为n
+        </a>
+      </p>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2016-01-21 23:19" pubdate>
+              2016-01-21
+            </time>
+          </div>
+        
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-category"></i>
+            
+              <a href="/categories/%E5%A4%A7%E5%AD%A6%E6%97%B6%E6%9C%9FCSDN/">大学时期CSDN</a>
+            
+          </div>
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/%E5%8A%A8%E6%80%81%E8%A7%84%E5%88%92/">动态规划</a>
+            
+          </div>
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h1 class="index-header">
+        
+        <a href="/posts/32502.html">HDU 1029 Ignatius and the Princess IV(水题亦有妙法)</a>
+      </h1>
+
+      <p class="index-excerpt">
+        <a href="/posts/32502.html">
+          
+          
+            
+          
+          题目链接：  [kuangbin带你飞]专题十二 基础DP1 B - Ignatius and the Princess IV
+
+** 题意 **
+给n(奇数)个数，定义特殊的数为在序列中出现次数不少于(n+1)/2次的数，找出这个特殊的数
+
+** 思路 **
+
+我ac的思路是直接排序，然后一次循环进行对出现次数最大值的判断。
+
+
+
+
+还有一种方法是排序后找第n/2大的数，因为特殊数出现次数超过一
+        </a>
+      </p>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2016-01-21 21:39" pubdate>
+              2016-01-21
+            </time>
+          </div>
+        
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-category"></i>
+            
+              <a href="/categories/%E5%A4%A7%E5%AD%A6%E6%97%B6%E6%9C%9FCSDN/">大学时期CSDN</a>
+            
+          </div>
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/%E5%8A%A8%E6%80%81%E8%A7%84%E5%88%92/">动态规划</a>
+            
+          </div>
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h1 class="index-header">
+        
+        <a href="/posts/25907.html">HDU 1024 Max Sum Plus Plus</a>
+      </h1>
+
+      <p class="index-excerpt">
+        <a href="/posts/25907.html">
+          
+          
+            
+          
+          题目链接：  [kuangbin带你飞]专题十二 基础DP1 A - Max Sum Plus Plus
+
+** 题意 **
+给n个数，将其分为m部分，各部分之间不能有交叉重叠，求最大和
+
+** 思路 **
+dp[i][j]表示前j个数分为i部分的最大和，则dp[i][j] = max(dp[i][j-1] + a[j], dp[i-1][k] + a[j]) i-1&lt;=k&lt;=j-1前
+        </a>
+      </p>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2016-01-21 19:34" pubdate>
+              2016-01-21
+            </time>
+          </div>
+        
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-category"></i>
+            
+              <a href="/categories/%E5%A4%A7%E5%AD%A6%E6%97%B6%E6%9C%9FCSDN/">大学时期CSDN</a>
+            
+          </div>
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/%E5%8A%A8%E6%80%81%E8%A7%84%E5%88%92/">动态规划</a>
+            
+          </div>
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h1 class="index-header">
+        
+        <a href="/posts/61029.html">HDU 4725 The Shortest Path in Nya Graph(好题)</a>
+      </h1>
+
+      <p class="index-excerpt">
+        <a href="/posts/61029.html">
+          
+          
+            
+          
+          题目链接：  kuangbin带你飞 专题四 最短路练习 P - The Shortest Path in Nya Graph
+
+** 题意 **
+共n个点，n层(每个点单独一层)，相邻的两层之间权值为w还有m条额外的边，权值为v，求1到n的最短路
+
+** 思路 **
+本题可谓好题。时间空间都卡的相当死，硬把我从timeout逼到memorylimit。在求最短路上，本题没有什么难度，dijkst
+        </a>
+      </p>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2016-01-20 15:06" pubdate>
+              2016-01-20
+            </time>
+          </div>
+        
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-category"></i>
+            
+              <a href="/categories/%E5%A4%A7%E5%AD%A6%E6%97%B6%E6%9C%9FCSDN/">大学时期CSDN</a>
+            
+          </div>
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/%E6%9C%80%E7%9F%AD%E8%B7%AF/">最短路</a>
+            
+          </div>
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h1 class="index-header">
+        
+        <a href="/posts/9398.html">LightOJ 1074 O</a>
+      </h1>
+
+      <p class="index-excerpt">
+        <a href="/posts/9398.html">
+          
+          
+            
+          
+          题目链接：  kuangbin带你飞 专题四 最短路练习 O - Extended Traffic
+
+** 题意 **
+给定每条街的拥挤度p(x)，街a到街b的时间就是(p(b)-p(a))**3，求第一个点到第k个点的最短路，若无法到达或结果小于3，输出’?’。
+
+** 思路 **
+显然，题目可能存在负环，则所有负环上的点全应该输出’?’ ，因为它们必定小于3，所以，spfa判断负环，并进行标记
+        </a>
+      </p>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2016-01-19 23:27" pubdate>
+              2016-01-19
+            </time>
+          </div>
+        
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-category"></i>
+            
+              <a href="/categories/%E5%A4%A7%E5%AD%A6%E6%97%B6%E6%9C%9FCSDN/">大学时期CSDN</a>
+            
+          </div>
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/%E6%9C%80%E7%9F%AD%E8%B7%AF/">最短路</a>
+            
+          </div>
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h1 class="index-header">
+        
+        <a href="/posts/4438.html">POJ 1847 N</a>
+      </h1>
+
+      <p class="index-excerpt">
+        <a href="/posts/4438.html">
+          
+          
+            
+          
+          题目链接：  kuangbin带你飞 专题四 最短路练习 N - Tram
+
+题意
+电动巴士在每个十字路口有一个默认方向，走向别的方向需要改动扳手。第一行给定十字路口的数量和起点终点剩余n行给定与第i个十字路口相通的方向，第一个为默认方向
+
+思路
+典型模版题。直接dijkstraps：读题好费时间，英语是硬伤
+
+代码#include&lt;iostream&gt;
+#include&lt;cstr
+        </a>
+      </p>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2016-01-19 16:03" pubdate>
+              2016-01-19
+            </time>
+          </div>
+        
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-category"></i>
+            
+              <a href="/categories/%E5%A4%A7%E5%AD%A6%E6%97%B6%E6%9C%9FCSDN/">大学时期CSDN</a>
+            
+          </div>
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/%E6%9C%80%E7%9F%AD%E8%B7%AF/">最短路</a>
+            
+          </div>
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h1 class="index-header">
+        
+        <a href="/posts/59309.html">POJ 2502 Subway</a>
+      </h1>
+
+      <p class="index-excerpt">
+        <a href="/posts/59309.html">
+          
+          
+            
+          
+          题目链接：  kuangbin带你飞 专题四 最短路练习 L - Subway
+
+题意
+小明步行的速度是10km/h，地铁速度是40km/h，给定家和学校的坐标，再给定多条地铁线路站点的坐标，问小明从家到学校所需的最短时间
+
+思路
+典型的最短路，直接套用dijkstra就行，此题在读入数据上麻烦一点。还有一个重要问题，导致我茫然wrong了好几次。因为我是将每条地铁线路的站点读入后，便对这条线的站
+        </a>
+      </p>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2016-01-19 14:54" pubdate>
+              2016-01-19
+            </time>
+          </div>
+        
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-category"></i>
+            
+              <a href="/categories/%E5%A4%A7%E5%AD%A6%E6%97%B6%E6%9C%9FCSDN/">大学时期CSDN</a>
+            
+          </div>
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/%E6%9C%80%E7%9F%AD%E8%B7%AF/">最短路</a>
+            
+          </div>
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h1 class="index-header">
+        
+        <a href="/posts/29859.html">POJ 3159 Candies(dijkstra+heap&amp;spfa+stack)</a>
+      </h1>
+
+      <p class="index-excerpt">
+        <a href="/posts/29859.html">
+          
+          
+            
+          
+          题目链接：  kuangbin带你飞 专题四 最短路练习 K - Candies
+
+题意
+给n个人分糖果，m组数据a，b，c；意思是a比b少的糖果个数绝对不超过c个，也就是d(b)-d(a) &lt; c，求1比n少的糖果数的最大值。
+
+思路
+也是通过这个题第一次接触到差分约束这个东西，学习了下，很奇妙。令x-y&lt;=z表示x最大比y大z。若b-a&lt;=k1, c-b&lt;=k2, c-
+        </a>
+      </p>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2016-01-18 21:49" pubdate>
+              2016-01-18
+            </time>
+          </div>
+        
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-category"></i>
+            
+              <a href="/categories/%E5%A4%A7%E5%AD%A6%E6%97%B6%E6%9C%9FCSDN/">大学时期CSDN</a>
+            
+          </div>
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/%E6%9C%80%E7%9F%AD%E8%B7%AF/">最短路</a>
+            
+          </div>
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h1 class="index-header">
+        
+        <a href="/posts/41755.html">POJ 1511 Invitation Cards(正反图两次SPFA&amp;邻接表)</a>
+      </h1>
+
+      <p class="index-excerpt">
+        <a href="/posts/41755.html">
+          
+          
+            
+          
+          题目链接：  kuangbin带你飞 专题四 最短路练习 J - Invitation Cards
+
+题意
+求源点到各点的往返最短路之和
+
+思路
+本体思路没什么难度，分别用正反图求两次单源最短路即可，邻接表不好逆置，直接在最初构建两个图即可。数据量相当大，timeout了两次，第一次是直接spfa，第二次用vector做邻接表仍然超时，第三次自己构建邻接表算是过了
+
+代码#include&lt;i
+        </a>
+      </p>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2016-01-17 00:52" pubdate>
+              2016-01-17
+            </time>
+          </div>
+        
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-category"></i>
+            
+              <a href="/categories/%E5%A4%A7%E5%AD%A6%E6%97%B6%E6%9C%9FCSDN/">大学时期CSDN</a>
+            
+          </div>
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/%E6%9C%80%E7%9F%AD%E8%B7%AF/">最短路</a>
+            
+          </div>
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h1 class="index-header">
+        
+        <a href="/posts/15193.html">POJ 2240 Arbitrage</a>
+      </h1>
+
+      <p class="index-excerpt">
+        <a href="/posts/15193.html">
+          
+          
+            
+          
+          题目链接：  kuangbin带你飞 专题四 最短路练习 I - Arbitrage
+
+题意
+给定多种货币之间的兑换关系，问是否可以套利
+
+思路
+可以判断正环是否存在，或者直接floyd后判断有没有v[i][i] &gt; 1，有则说明可以套利因为数据量很小，所以直接floyd输入数据存在 a x a，即a和a之间的汇率(好坑啊，害我wrong那么多次)
+
+代码#include&lt;iostre
+        </a>
+      </p>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2016-01-16 23:50" pubdate>
+              2016-01-16
+            </time>
+          </div>
+        
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-category"></i>
+            
+              <a href="/categories/%E5%A4%A7%E5%AD%A6%E6%97%B6%E6%9C%9FCSDN/">大学时期CSDN</a>
+            
+          </div>
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/%E6%9C%80%E7%9F%AD%E8%B7%AF/">最短路</a>
+            
+          </div>
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h1 class="index-header">
+        
+        <a href="/posts/36672.html">POJ 3660 Cow Contest(Floyd)</a>
+      </h1>
+
+      <p class="index-excerpt">
+        <a href="/posts/36672.html">
+          
+          
+            
+          
+          题目链接：  kuangbin带你飞 专题四 最短路练习 H - Cow Contest
+
+题意
+n个牛进行比赛，现已知m个关系， 牛u可以胜过牛v。问最后可以确定排名位数的有几个牛
+
+思路
+Floyd获得两两牛之间的关系，如果一个牛可以胜过a个牛，b个牛可以胜过它，那么如果a＋b＝n－1，他的排名就可以确定
+
+代码#include&lt;iostream&gt;
+#include&lt;cstr
+        </a>
+      </p>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2016-01-16 18:08" pubdate>
+              2016-01-16
+            </time>
+          </div>
+        
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-category"></i>
+            
+              <a href="/categories/%E5%A4%A7%E5%AD%A6%E6%97%B6%E6%9C%9FCSDN/">大学时期CSDN</a>
+            
+          </div>
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/%E6%9C%80%E7%9F%AD%E8%B7%AF/">最短路</a>
+            
+          </div>
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h1 class="index-header">
+        
+        <a href="/posts/28422.html">POJ 1502 MPI Maelstrom(单源最短路)</a>
+      </h1>
+
+      <p class="index-excerpt">
+        <a href="/posts/28422.html">
+          
+          
+            
+          
+          题目链接：  kuangbin带你飞 专题四 最短路练习 G - MPI Maelstrom
+
+题意
+n个处理器，第一个处理器要广播消息到其他所有的处理器，求需要时间最短是多少（从第一个点出发，求到其他点最短路的最大值）
+
+思路
+没什么可说的，单源最短路，dijkstra。
+
+代码#include&lt;iostream&gt;
+#include&lt;cstring&gt;
+#include&l
+        </a>
+      </p>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2016-01-15 21:29" pubdate>
+              2016-01-15
+            </time>
+          </div>
+        
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-category"></i>
+            
+              <a href="/categories/%E5%A4%A7%E5%AD%A6%E6%97%B6%E6%9C%9FCSDN/">大学时期CSDN</a>
+            
+          </div>
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/%E6%9C%80%E7%9F%AD%E8%B7%AF/">最短路</a>
+            
+          </div>
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h1 class="index-header">
+        
+        <a href="/posts/10575.html">POJ 3259 Wormholes(判断负环&amp;(Bellman-Ford|SPFA))</a>
+      </h1>
+
+      <p class="index-excerpt">
+        <a href="/posts/10575.html">
+          
+          
+            
+          
+          题目链接：  kuangbin带你飞 专题四 最短路练习 F - Wormholes
+
+题意
+农场主拥有很多农场，在这些农场之间有很多条路，以及单向的虫洞，每条路走完会花费一定的时间，而冲动可以回到之前的时间，问农场主是否可以通过特定的路径看到出发前的自己？(也就是回到自己出发时间前的出发点)
+
+思路
+将农场看做点，路和虫洞看做边，那么显然虫洞是负权边，这样题目就转化为求给定图中是否有负环的问题了
+        </a>
+      </p>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2016-01-15 20:29" pubdate>
+              2016-01-15
+            </time>
+          </div>
+        
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-category"></i>
+            
+              <a href="/categories/%E5%A4%A7%E5%AD%A6%E6%97%B6%E6%9C%9FCSDN/">大学时期CSDN</a>
+            
+          </div>
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/%E6%9C%80%E7%9F%AD%E8%B7%AF/">最短路</a>
+            
+          </div>
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h1 class="index-header">
+        
+        <a href="/posts/57969.html">POJ 1860 Currency Exchange(Bellman-Ford判断最长路是否含有正环)</a>
+      </h1>
+
+      <p class="index-excerpt">
+        <a href="/posts/57969.html">
+          
+          
+            
+          
+          题目链接：  kuangbin带你飞 专题四 最短路练习 E - Currency Exchange
+
+题意
+有n种货币，你含有num面额的其中一种货币。给定m种交易明细，即货币a和b之间的手续费与兑换率。双向兑换时，手续费与兑换率不一定相同。求有没有可能，在多次兑换后你手中的货币大于num。
+
+思路
+以货币为点，交易情况为边，本题可转换为求最长路是否含正环的问题。用Bellman-Ford，但要
+        </a>
+      </p>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2016-01-15 15:45" pubdate>
+              2016-01-15
+            </time>
+          </div>
+        
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-category"></i>
+            
+              <a href="/categories/%E5%A4%A7%E5%AD%A6%E6%97%B6%E6%9C%9FCSDN/">大学时期CSDN</a>
+            
+          </div>
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/%E6%9C%80%E7%9F%AD%E8%B7%AF/">最短路</a>
+            
+          </div>
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h1 class="index-header">
+        
+        <a href="/posts/20093.html">POJ 3268 D</a>
+      </h1>
+
+      <p class="index-excerpt">
+        <a href="/posts/20093.html">
+          
+          
+            
+          
+          题目链接：  kuangbin带你飞 专题四 最短路练习 D - Silver Cow Party
+
+题意
+n个农场，m条单向路，n个牛分别在n个农场，第x农场为终点，问每个牛从所在农场前往x农场的往返路程最小值是多少，求出n个牛中往返路程最小值最大是多少？
+
+思路
+一看到这种求多个点最短路的问题，第一想到floyd，但1000^3，10亿，TimeLimit的可能性相当大，写完一交，果不然。重新
+        </a>
+      </p>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2016-01-15 00:38" pubdate>
+              2016-01-15
+            </time>
+          </div>
+        
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-category"></i>
+            
+              <a href="/categories/%E5%A4%A7%E5%AD%A6%E6%97%B6%E6%9C%9FCSDN/">大学时期CSDN</a>
+            
+          </div>
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/%E6%9C%80%E7%9F%AD%E8%B7%AF/">最短路</a>
+            
+          </div>
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h1 class="index-header">
+        
+        <a href="/posts/10553.html">POJ 1797 Heavy Transportation</a>
+      </h1>
+
+      <p class="index-excerpt">
+        <a href="/posts/10553.html">
+          
+          
+            
+          
+          题目链接：  kuangbin带你飞 专题四 最短路练习 C - Heavy Transportation
+
+题意
+有n个城市，n个城市之间有m条公路或桥梁，每个公路或桥都有一个最大载重量，问从城市1到城市n所能运送到货物到最大重量是多少
+
+思路
+显然1到n的最大承重量为所有公路的承重量的最小值那么本题就是要求1到n的所有可能路径中最大承重量最大的一条路，即所经过所有公路的载重量最小值 最大的一条
+        </a>
+      </p>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2016-01-14 23:15" pubdate>
+              2016-01-14
+            </time>
+          </div>
+        
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-category"></i>
+            
+              <a href="/categories/%E5%A4%A7%E5%AD%A6%E6%97%B6%E6%9C%9FCSDN/">大学时期CSDN</a>
+            
+          </div>
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/%E6%9C%80%E7%9F%AD%E8%B7%AF/">最短路</a>
+            
+          </div>
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h1 class="index-header">
+        
+        <a href="/posts/17067.html">POJ 1062 昂贵的聘礼</a>
+      </h1>
+
+      <p class="index-excerpt">
+        <a href="/posts/17067.html">
+          
+          
+            
+          
+          题目链接：  [kuangbin带你飞]专题四 最短路练习 M - 昂贵的聘礼
+
+题意
+年轻的探险家来到了一个印第安部落里。在那里他和酋长的女儿相爱了，于是便向酋长去求亲。酋长要他用10000个金币作为聘礼才答应把女儿嫁给他。探险家拿不出这么多金币，便请求酋长降低要求。酋长说：”嗯，如果你能够替我弄到大祭司的皮袄，我可以只要8000金币。如果你能够弄来他的水晶球，那么只要5000金币就行了。”探险
+        </a>
+      </p>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2016-01-14 21:59" pubdate>
+              2016-01-14
+            </time>
+          </div>
+        
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-category"></i>
+            
+              <a href="/categories/%E5%A4%A7%E5%AD%A6%E6%97%B6%E6%9C%9FCSDN/">大学时期CSDN</a>
+            
+          </div>
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/%E6%9C%80%E7%9F%AD%E8%B7%AF/">最短路</a>
+            
+          </div>
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h1 class="index-header">
+        
+        <a href="/posts/6885.html">POJ 2253 Frogger</a>
+      </h1>
+
+      <p class="index-excerpt">
+        <a href="/posts/6885.html">
+          
+          
+            
+          
+          题目链接：  [kuangbin带你飞]专题四 最短路练习 B - Frogger
+
+题意
+给定n个点，点1为起点，点2为终点，求点一到点二的所有路径中，求在所有路径中每条路径最大段的最小值
+
+思路
+用dijkstra，d[i]表示1到i的路径中最大路段的最小值
+
+代码#include&lt;iostream&gt;
+#include&lt;cstring&gt;
+#include&lt;cmat
+        </a>
+      </p>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2016-01-14 05:35" pubdate>
+              2016-01-14
+            </time>
+          </div>
+        
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-category"></i>
+            
+              <a href="/categories/%E5%A4%A7%E5%AD%A6%E6%97%B6%E6%9C%9FCSDN/">大学时期CSDN</a>
+            
+          </div>
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/%E6%9C%80%E7%9F%AD%E8%B7%AF/">最短路</a>
+            
+          </div>
+        
+      </div>
+    </article>
+  </div>
+
+
+
+  <nav aria-label="navigation">
+    <span class="pagination" id="pagination">
+      <a class="extend prev" rel="prev" href="/page/5/#board"><i class="iconfont icon-arrowleft"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/4/#board">4</a><a class="page-number" href="/page/5/#board">5</a><span class="page-number current">6</span><a class="page-number" href="/page/7/#board">7</a><a class="page-number" href="/page/8/#board">8</a><a class="page-number" href="/page/9/#board">9</a><a class="extend next" rel="next" href="/page/7/#board"><i class="iconfont icon-arrowright"></i></a>
+    </span>
+  </nav>
+
+
+
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    
+
+    
+      <a id="scroll-top-button" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+
+    
+  </main>
+
+  <footer class="text-center mt-5 py-3">
+  <div class="footer-content">
+    <script type="text/javascript">document.write(unescape("%3Cspan id='cnzz_stat_icon_1273342630'%3E%3C/span%3E%3Cscript src='https://s13.cnzz.com/z_stat.php%3Fid%3D1273342630%26show%3Dpic1' type='text/javascript'%3E%3C/script%3E"));</script>
+  </div>
+  
+  <div class="statistics">
+    
+    
+
+    
+      
+        <!-- LeanCloud 统计PV -->
+        <span id="leancloud-site-pv-container" style="display: none">
+            总访问量 
+            <span id="leancloud-site-pv"></span>
+             次
+          </span>
+      
+      
+        <!-- LeanCloud 统计UV -->
+        <span id="leancloud-site-uv-container" style="display: none">
+            总访客数 
+            <span id="leancloud-site-uv"></span>
+             人
+          </span>
+      
+
+    
+  </div>
+
+
+  
+  <!-- 备案信息 -->
+  <div class="beian">
+    <span>
+      <a href="http://beian.miit.gov.cn/" target="_blank" rel="nofollow noopener">
+        陕ICP备16019529号-2
+      </a>
+    </span>
+    
+  </div>
+
+
+  
+    <!-- cnzz Analytics Icon -->
+    <span id="cnzz_stat_icon_1273342630" style="display: none"></span>
+  
+</footer>
+
+<!-- SCRIPTS -->
+
+  <script  src="https://cdn.jsdelivr.net/npm/nprogress@0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/nprogress@0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js" ></script>
+<script  src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.min.js" ></script>
+<script  src="/js/debouncer.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+<!-- Plugins -->
+
+
+  
+    <script  src="/js/lazyload.js" ></script>
+  
+
+
+
+  
+
+
+
+
+
+
+
+
+
+  <script defer src="https://cdn.jsdelivr.net/npm/clipboard@2.0.6/dist/clipboard.min.js" ></script>
+
+
+
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/typed.js@2.0.11/lib/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var title = document.getElementById('subtitle').title;
+      
+      typing(title)
+      
+    })(window, document);
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    (function () {
+      var path = "/local-search.xml";
+      $('#local-search-input').on('click', function() {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      });
+      $('#modalSearch').on('shown.bs.modal', function() {
+        $('#local-search-input').focus();
+      });
+    })()
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+    <!-- Baidu Analytics -->
+    <script defer>
+      var _hmt = _hmt || [];
+      (function () {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?75eaaab59c4fa946437e9dea4f8fc07d";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+      })();
+    </script>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    <!-- cnzz Analytics -->
+    <script defer src="//s4.cnzz.com/z_stat.php?id=1273342630&show=pic"
+            type="text/javascript"></script>
+  
+
+
+
+
+
+<!-- 主题的启动项 保持在最底部 -->
+<script  src="/js/boot.js" ></script>
+
+
+
+</body>
+</html>

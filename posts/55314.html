@@ -1,0 +1,835 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=&#34;auto&#34;>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/favicon/apple-touch-icon.png">
+  <link rel="icon" href="/favicon/favicon-32x32.png">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+  
+  <meta name="theme-color" content="#2f4154">
+  
+    <meta name="description" content="Less is More">
+  
+  <meta name="author" content="ShiYi">
+  <meta name="keywords" content="shiyi, shiyicode, ShiYi&#39;s Blog, code, golang">
+  
+  <title>cocos2dx源码阅读之万能的Value - ShiYi&#39;s Blog</title>
+
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css" />
+
+
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/github-markdown-css@4.0.0/github-markdown.min.css" />
+  <link  rel="stylesheet" href="/lib/hint/hint.min.css" />
+
+  
+    
+    
+      
+      <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@10.4.0/styles/tomorrow-night-eighties.min.css" />
+    
+  
+
+  
+    <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css" />
+  
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_ba1fz6golrf.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_kmeydafke9r.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+<!-- 自定义样式保持在最底部 -->
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    var CONFIG = {"hostname":"blog.hiyicode.com","root":"/","version":"1.8.8","typing":{"enable":true,"typeSpeed":70,"cursorChar":"","loop":false},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"right","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"copy_btn":true,"image_zoom":{"enable":true},"toc":{"enable":true,"headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":4},"lazyload":{"enable":true,"onlypost":false},"web_analytics":{"enable":true,"baidu":"75eaaab59c4fa946437e9dea4f8fc07d","google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":1273342630,"leancloud":{"app_id":null,"app_key":null,"server_url":null}}};
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+<meta name="generator" content="Hexo 5.4.0"><link rel="alternate" href="/atom.xml" title="ShiYi's Blog" type="application/atom+xml">
+</head>
+
+
+<body>
+  <header style="height: 40vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>ShiYi's Blog</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/books/">
+                <i class="iconfont icon-book"></i>
+                读书
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;</a>
+          </li>
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" href="javascript:">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="banner" id="banner" parallax=true
+         style="background: url('/image/banner.jpg') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.5)">
+          <div class="page-header text-center fade-in-up">
+            <span class="h2" id="subtitle" title="cocos2dx源码阅读之万能的Value">
+              
+            </span>
+
+            
+              <div class="mt-3">
+  
+  
+    <span class="post-meta">
+      <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+      <time datetime="2016-07-22 20:19" pubdate>
+        2016年7月22日 晚上
+      </time>
+    </span>
+  
+</div>
+
+<div class="mt-1">
+  
+
+  
+
+  
+  
+</div>
+
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div class="py-5" id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">cocos2dx源码阅读之万能的Value</h1>
+            
+            <div class="markdown-body">
+              <p>近日在学习cocos2dx引擎的使用时，阅读了某些常用的类的源码。在此进行总结。</p>
+<h2 id="1-概述"><a href="#1-概述" class="headerlink" title="1.概述"></a>1.概述</h2><div class="hljs code-wrapper"><pre><code>版本：cocos2d-x-3.12
+语言：C++</code></pre></div>
+<blockquote>
+<p>在cocos2dx-3.x之前，存在着一些原生类型的封装类，如 CCBool, CCFloat, CCDouble,<br>CCinteger等，来完成对原生数据类型的封装，但在3.0版本出现之后，这些都被一个名叫Value的类替代了。</p>
+</blockquote>
+<blockquote>
+</blockquote>
+<blockquote>
+<p>cocos2d::Value是一个模板容器类，完成了对很多数据类型的封装。如原生类型int, float, char, char*,<br>bool，以及string，map，vector等stl模板类。<br>Value极大的方便了cocos2dx工程里各种数据类型之间的转换。我们可以很同意的将不同数据类型转换为Value，反之亦然。</p>
+</blockquote>
+<h2 id="2-源码"><a href="#2-源码" class="headerlink" title="2.源码"></a>2.源码</h2><div class="hljs code-wrapper"><pre><code>#include &lt;CCValue.h&gt;
+文件位置cocos2d-x-XXX/cocos/base/CCValue.h</code></pre></div>
+<h3 id="2-1-成员变量"><a href="#2-1-成员变量" class="headerlink" title="2.1 成员变量"></a>2.1 成员变量</h3><div class="hljs code-wrapper"><pre><code>class CC_DLL Value
+&#123;
+public:
+    //一个预定义的空值，暂时还不知道其作用
+    static const Value Null;
+
+   //枚举类，封装所有的数据类型名
+    enum class Type
+    &#123;
+        /// no value is wrapped, an empty Value
+        NONE = 0,
+        /// wrap byte
+        BYTE,
+        /// wrap integer
+        INTEGER,
+        /// wrap unsigned
+        UNSIGNED,
+        /// wrap float
+        FLOAT,
+        /// wrap double
+        DOUBLE,
+        /// wrap bool
+        BOOLEAN,
+        /// wrap string
+        STRING,
+        /// wrap vector
+        VECTOR,
+        /// wrap ValueMap
+        MAP,
+        /// wrap ValueMapIntKey
+        INT_KEY_MAP
+    &#125;;
+
+private:
+    //用共用体封装多种数据类型 保存Value的值，极大的节省了空间
+    union
+    &#123;
+        unsigned char byteVal;
+        int intVal;
+        unsigned int unsignedVal;
+        float floatVal;
+        double doubleVal;
+        bool boolVal;
+
+        std::string* strVal;
+        ValueVector* vectorVal;
+        ValueMap* mapVal;
+        ValueMapIntKey* intKeyMapVal;
+    &#125;_field;
+
+    //记录当前Value内保存的数据类型
+    Type _type;
+&#125;</code></pre></div>
+<p>** 总结：Value用一个枚举类保存数据的类型，用一个共用体保存数据的值(极大的节省了空间)，用这两项完成对多种数据的保存。 **</p>
+<h3 id="2-2-成员函数"><a href="#2-2-成员函数" class="headerlink" title="2.2 成员函数"></a>2.2 成员函数</h3><div class="hljs code-wrapper"><pre><code>class CC_DLL Value
+&#123;
+public:
+
+    /***************************************
+    对多种类型均设置了构造函数，并用explicit设置其不可隐式转换，实现基本类型到Value类型的转换
+    ****************************************/
+
+    //构造函数
+    Value();
+    explicit Value(unsigned char v);
+    explicit Value(int v);
+    explicit Value(unsigned int v);
+    explicit Value(float v);
+    explicit Value(double v);
+    explicit Value(bool v);
+    explicit Value(const char* v);
+    explicit Value(const std::string&amp; v);
+    explicit Value(const ValueVector&amp; v);
+    explicit Value(ValueVector&amp;&amp; v);
+    explicit Value(const ValueMap&amp; v);
+    explicit Value(ValueMap&amp;&amp; v);
+    explicit Value(const ValueMapIntKey&amp; v);
+    explicit Value(ValueMapIntKey&amp;&amp; v);
+
+    //拷贝构造函数
+    Value(const Value&amp; other);
+    //移动构造函数
+    Value(Value&amp;&amp; other);
+    //析构函数
+    ~Value();
+
+    /***************************************
+    重载各种数据类型的=，!=, ==运算符,实现基本类型与Value类型的操作
+    ****************************************/
+
+    Value&amp; operator= (const Value&amp; other);
+    Value&amp; operator= (Value&amp;&amp; other);
+    Value&amp; operator= (unsigned char v);
+    Value&amp; operator= (int v);
+    Value&amp; operator= (unsigned int v);
+    Value&amp; operator= (float v);
+    Value&amp; operator= (double v);
+    Value&amp; operator= (bool v);
+    Value&amp; operator= (const char* v);
+    Value&amp; operator= (const std::string&amp; v);
+    Value&amp; operator= (const ValueVector&amp; v);
+    Value&amp; operator= (ValueVector&amp;&amp; v);
+    Value&amp; operator= (const ValueMap&amp; v);
+    Value&amp; operator= (ValueMap&amp;&amp; v);
+    Value&amp; operator= (const ValueMapIntKey&amp; v);
+    Value&amp; operator= (ValueMapIntKey&amp;&amp; v);
+    bool operator!= (const Value&amp; v);
+    bool operator!= (const Value&amp; v) const;
+    bool operator== (const Value&amp; v);
+    bool operator== (const Value&amp; v) const;
+
+    /***************************************
+        上面的构造函数，以及运算符重载都实现的是基本类型到Value类型的转换，那么下面众多asXXX函数实现了Value类型到基本类型的转换，两者结合才是真正实现了两者的互相转换
+    ****************************************/
+
+    unsigned char asByte() const;
+    int asInt() const;
+    unsigned int asUnsignedInt() const;
+    float asFloat() const;
+    double asDouble() const;
+    bool asBool() const;
+    std::string asString() const;
+    ValueVector&amp; asValueVector();
+    const ValueVector&amp; asValueVector() const;
+    ValueMap&amp; asValueMap();
+    const ValueMap&amp; asValueMap() const;
+    ValueMapIntKey&amp; asIntKeyMap();
+    const ValueMapIntKey&amp; asIntKeyMap() const;
+
+    //判断Value是否为空
+    //若类型为空则Value亦为空
+    inline bool isNull() const &#123; return _type == Type::NONE; &#125;
+
+    //获取Value类型
+    inline Type getType() const &#123; return _type; &#125;
+
+    //获取类的描述，作用于string，vector，map等类型
+    std::string getDescription() const;
+
+private:
+
+    //用于释放Value内变量的空间，会在析构函数里调用
+    void clear();
+
+    //重置Value并设置类型
+    void reset(Type type);
+&#125;;</code></pre></div>
+<h3 id="2-3-详细分析"><a href="#2-3-详细分析" class="headerlink" title="2.3 详细分析"></a>2.3 详细分析</h3><h4 id="2-3-1构造函数"><a href="#2-3-1构造函数" class="headerlink" title="2.3.1构造函数"></a>2.3.1构造函数</h4><blockquote>
+<p>以int，string为例，其他的都大同小异</p>
+</blockquote>
+<div class="hljs code-wrapper"><pre><code>//很直观，直接进行了 类型_type和值_field两个成员变量的初始化
+Value::Value(int v)
+: _type(Type::INTEGER)
+&#123;
+    _field.intVal = v;
+&#125;
+
+//相较于基本类型，多了一步开辟空间
+Value::Value(const std::string&amp; v)
+: _type(Type::STRING)
+&#123;
+    _field.strVal = new (std::nothrow) std::string();
+    *_field.strVal = v;
+&#125;</code></pre></div>
+<h4 id="2-3-2-析构函数"><a href="#2-3-2-析构函数" class="headerlink" title="2.3.2 析构函数"></a>2.3.2 析构函数</h4><div class="hljs code-wrapper"><pre><code>Value::~Value()
+&#123;
+    clear();
+&#125;
+//析构函数仅调用了clear，下面说说clear函数
+
+void Value::clear()
+&#123;
+    // Free memory the old value allocated
+    switch (_type)
+    &#123;
+        //如果是基本类型，则直接对其值进行重置即可
+        case Type::BYTE:
+            _field.byteVal = 0;
+            break;
+        case Type::INTEGER:
+            _field.intVal = 0;
+            break;
+        //........省略部分内容
+
+        /*******************
+            如果是string等需要释放空间的对象，调用CC_SAFE_DELETE宏来进行处理。
+            #define CC_SAFE_DELETE(p)           do &#123; delete (p); (p) = nullptr; &#125; while(0)
+            该宏的功能很简单，释放指针指向的空间，并将指针置为空
+            *******************/
+
+        case Type::STRING:
+            CC_SAFE_DELETE(_field.strVal);
+            break;
+        case Type::VECTOR:
+            CC_SAFE_DELETE(_field.vectorVal);
+            break;
+        //........省略部分内容
+        default:
+            break;
+    &#125;
+    //将type重置
+    _type = Type::NONE;
+&#125;</code></pre></div>
+<h4 id="2-3-3-Value转化函数asXXX"><a href="#2-3-3-Value转化函数asXXX" class="headerlink" title="2.3.3 Value转化函数asXXX"></a>2.3.3 Value转化函数asXXX</h4><div class="hljs code-wrapper"><pre><code>同样，这里仅以asInt()为例
+
+
+
+int Value::asInt() const
+&#123;
+    //断言宏，如果条件表达式不符合，则中断程序并输出调试语句
+    CCASSERT(_type != Type::VECTOR &amp;&amp; _type != Type::MAP &amp;&amp; _type != Type::INT_KEY_MAP, &quot;Only base type (bool, string, float, double, int) could be converted&quot;);
+    //本身就是Int，直接返回
+    if (_type == Type::INTEGER)
+    &#123;
+        return _field.intVal;
+    &#125;
+
+    //根据不同的类型进行转换操作
+    if (_type == Type::UNSIGNED)
+    &#123;
+        CCASSERT(_field.unsignedVal &lt; INT_MAX, &quot;Can only convert values &lt; INT_MAX&quot;);
+        return (int)_field.unsignedVal;
+    &#125;
+
+    if (_type == Type::BYTE)
+    &#123;
+        return _field.byteVal;
+    &#125;
+
+    if (_type == Type::STRING)
+    &#123;
+        return atoi(_field.strVal-&gt;c_str());
+    &#125;
+
+    if (_type == Type::FLOAT)
+    &#123;
+        return static_cast&lt;int&gt;(_field.floatVal);
+    &#125;
+
+    if (_type == Type::DOUBLE)
+    &#123;
+        return static_cast&lt;int&gt;(_field.doubleVal);
+    &#125;
+
+    if (_type == Type::BOOLEAN)
+    &#123;
+        return _field.boolVal ? 1 : 0;
+    &#125;
+
+    //若进行到这一步，则表明type不是以上类型，则认为它不能与int进行转换，直接返回0
+    return 0;
+&#125;</code></pre></div>
+<h4 id="2-3-4-reset重置函数"><a href="#2-3-4-reset重置函数" class="headerlink" title="2.3.4 reset重置函数"></a>2.3.4 reset重置函数</h4><div class="hljs code-wrapper"><pre><code>//函数功能为将value重置为其他类型
+void Value::reset(Type type)
+&#123;
+    //如果类型相同，则操作完成
+    if (_type == type)
+        return;
+
+    //否则，先清除之前空间，然后根据不同类型对_field进行初始化
+    clear();
+
+    // Allocate memory for the new value
+    switch (type)
+    &#123;
+        case Type::STRING:
+            _field.strVal = new (std::nothrow) std::string();
+            break;
+        case Type::VECTOR:
+            _field.vectorVal = new (std::nothrow) ValueVector();
+            break;
+        case Type::MAP:
+            _field.mapVal = new (std::nothrow) ValueMap();
+            break;
+        case Type::INT_KEY_MAP:
+            _field.intKeyMapVal = new (std::nothrow) ValueMapIntKey();
+            break;
+        default:
+            break;
+    &#125;
+    //更改_type,重置操作完成
+    _type = type;
+&#125;</code></pre></div>
+<h3 id="3-总结"><a href="#3-总结" class="headerlink" title="3.总结"></a>3.总结</h3><blockquote>
+<p>看了源码，没有想象中的痛苦，反而带着一种享受，感慨人家的代码怎么可以写的那么好，那么条理清楚。<br>总结一下： ** Value类通过将所有数据类型都分化为 值 和类型 两部分，然后一系列操作都围绕着两部分，来实现Value与其封装类型之间的相互转换。其代<br>码实现并不难，但此设计思想实在是秒，尤其是将值使用共用体来表示，在完成需要的同时还节省了空间。 **</p>
+</blockquote>
+
+            </div>
+            <hr>
+            <div>
+              <div class="post-metas mb-3">
+                
+                  <div class="post-meta mr-3">
+                    <i class="iconfont icon-category"></i>
+                    
+                      <a class="hover-with-bg" href="/categories/%E5%A4%A7%E5%AD%A6%E6%97%B6%E6%9C%9FCSDN/">大学时期CSDN</a>
+                    
+                  </div>
+                
+                
+                  <div class="post-meta">
+                    <i class="iconfont icon-tags"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/Cocos2d-X%E5%BC%80%E5%8F%91/">Cocos2d-X开发</a>
+                    
+                  </div>
+                
+              </div>
+              
+                <p class="note note-warning">
+                  
+                    本博客所有文章除特别声明外，均采用 <a target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/deed.zh" rel="nofollow noopener noopener">CC BY-SA 4.0 协议</a> ，转载请注明出处！
+                  
+                </p>
+              
+              
+                <div class="post-prevnext">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/posts/25241.html">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">cocos2dx实现简单卡牌翻转效果</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/posts/64183.html">
+                        <span class="hidden-mobile">xcode7.3自动补全失效解决办法</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+              <!-- Comments -->
+              <article class="comments" id="comments">
+                
+                  
+                
+                
+  <div id="lv-container" data-id="city" data-uid="MTAyMC80NjEzMS8yMjY0Mg">
+    <script type="text/javascript">
+      Fluid.utils.waitElementVisible('lv-container', function() {
+        Fluid.utils.createScript('https://cdn-city.livere.com/js/embed.dist.js');
+      });
+    </script>
+    <noscript>为正常使用来必力评论功能请允许 JavaScript 运行</noscript>
+  </div>
+
+
+              </article>
+            
+          </article>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+
+    
+      <a id="scroll-top-button" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+
+    
+  </main>
+
+  <footer class="text-center mt-5 py-3">
+  <div class="footer-content">
+    <script type="text/javascript">document.write(unescape("%3Cspan id='cnzz_stat_icon_1273342630'%3E%3C/span%3E%3Cscript src='https://s13.cnzz.com/z_stat.php%3Fid%3D1273342630%26show%3Dpic1' type='text/javascript'%3E%3C/script%3E"));</script>
+  </div>
+  
+  <div class="statistics">
+    
+    
+
+    
+      
+        <!-- LeanCloud 统计PV -->
+        <span id="leancloud-site-pv-container" style="display: none">
+            总访问量 
+            <span id="leancloud-site-pv"></span>
+             次
+          </span>
+      
+      
+        <!-- LeanCloud 统计UV -->
+        <span id="leancloud-site-uv-container" style="display: none">
+            总访客数 
+            <span id="leancloud-site-uv"></span>
+             人
+          </span>
+      
+
+    
+  </div>
+
+
+  
+  <!-- 备案信息 -->
+  <div class="beian">
+    <span>
+      <a href="http://beian.miit.gov.cn/" target="_blank" rel="nofollow noopener">
+        陕ICP备16019529号-2
+      </a>
+    </span>
+    
+  </div>
+
+
+  
+    <!-- cnzz Analytics Icon -->
+    <span id="cnzz_stat_icon_1273342630" style="display: none"></span>
+  
+</footer>
+
+<!-- SCRIPTS -->
+
+  <script  src="https://cdn.jsdelivr.net/npm/nprogress@0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/nprogress@0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js" ></script>
+<script  src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.min.js" ></script>
+<script  src="/js/debouncer.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+<!-- Plugins -->
+
+
+  
+    <script  src="/js/lazyload.js" ></script>
+  
+
+
+
+  
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/tocbot@4.12.0/dist/tocbot.min.js" ></script>
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js" ></script>
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/anchor-js@4.3.0/anchor.min.js" ></script>
+
+
+
+  <script defer src="https://cdn.jsdelivr.net/npm/clipboard@2.0.6/dist/clipboard.min.js" ></script>
+
+
+
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/typed.js@2.0.11/lib/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var title = document.getElementById('subtitle').title;
+      
+      typing(title)
+      
+    })(window, document);
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    (function () {
+      var path = "/local-search.xml";
+      $('#local-search-input').on('click', function() {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      });
+      $('#modalSearch').on('shown.bs.modal', function() {
+        $('#local-search-input').focus();
+      });
+    })()
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+    <!-- Baidu Analytics -->
+    <script defer>
+      var _hmt = _hmt || [];
+      (function () {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?75eaaab59c4fa946437e9dea4f8fc07d";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+      })();
+    </script>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    <!-- cnzz Analytics -->
+    <script defer src="//s4.cnzz.com/z_stat.php?id=1273342630&show=pic"
+            type="text/javascript"></script>
+  
+
+
+
+
+
+<!-- 主题的启动项 保持在最底部 -->
+<script  src="/js/boot.js" ></script>
+
+
+
+</body>
+</html>

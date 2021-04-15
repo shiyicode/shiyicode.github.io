@@ -1,0 +1,583 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=&#34;auto&#34;>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/favicon/apple-touch-icon.png">
+  <link rel="icon" href="/favicon/favicon-32x32.png">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+  
+  <meta name="theme-color" content="#2f4154">
+  
+    <meta name="description" content="Less is More">
+  
+  <meta name="author" content="ShiYi">
+  <meta name="keywords" content="shiyi, shiyicode, ShiYi&#39;s Blog, code, golang">
+  
+  <title>TCP协议-TCP服务特点和头部结构 - ShiYi&#39;s Blog</title>
+
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css" />
+
+
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/github-markdown-css@4.0.0/github-markdown.min.css" />
+  <link  rel="stylesheet" href="/lib/hint/hint.min.css" />
+
+  
+    
+    
+      
+      <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@10.4.0/styles/tomorrow-night-eighties.min.css" />
+    
+  
+
+  
+    <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css" />
+  
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_ba1fz6golrf.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_kmeydafke9r.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+<!-- 自定义样式保持在最底部 -->
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    var CONFIG = {"hostname":"blog.hiyicode.com","root":"/","version":"1.8.8","typing":{"enable":true,"typeSpeed":70,"cursorChar":"","loop":false},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"right","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"copy_btn":true,"image_zoom":{"enable":true},"toc":{"enable":true,"headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":4},"lazyload":{"enable":true,"onlypost":false},"web_analytics":{"enable":true,"baidu":"75eaaab59c4fa946437e9dea4f8fc07d","google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":1273342630,"leancloud":{"app_id":null,"app_key":null,"server_url":null}}};
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+<meta name="generator" content="Hexo 5.4.0"><link rel="alternate" href="/atom.xml" title="ShiYi's Blog" type="application/atom+xml">
+</head>
+
+
+<body>
+  <header style="height: 40vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>ShiYi's Blog</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/books/">
+                <i class="iconfont icon-book"></i>
+                读书
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;</a>
+          </li>
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" href="javascript:">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="banner" id="banner" parallax=true
+         style="background: url('/image/banner.jpg') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.5)">
+          <div class="page-header text-center fade-in-up">
+            <span class="h2" id="subtitle" title="TCP协议-TCP服务特点和头部结构">
+              
+            </span>
+
+            
+              <div class="mt-3">
+  
+  
+    <span class="post-meta">
+      <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+      <time datetime="2017-02-20 02:22" pubdate>
+        2017年2月20日 凌晨
+      </time>
+    </span>
+  
+</div>
+
+<div class="mt-1">
+  
+
+  
+
+  
+  
+</div>
+
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div class="py-5" id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">TCP协议-TCP服务特点和头部结构</h1>
+            
+            <div class="markdown-body">
+              <h2 id="TCP服务特点"><a href="#TCP服务特点" class="headerlink" title="TCP服务特点"></a>TCP服务特点</h2><p>** 面向连接、基于字节流和可靠传输 ** 。</p>
+<h3 id="TCP的面向连接是什么意思？"><a href="#TCP的面向连接是什么意思？" class="headerlink" title="TCP的面向连接是什么意思？"></a>TCP的面向连接是什么意思？</h3><p>通信双方都必须 ** 先建立连接 ** ，然后才能 ** 开始数据的读写 ** ，双方都必须为该连接分配必要的内核资源，以管理连接的状态和连接上数据的传输。<br>同时，TCP连接是全双工的，就是说， ** 双方数据的读写，可以通过一个连接进行，完成数据交换之后，通信双方都必须断开连接，以释放系统资源 **<br>。而且，TCP连接是一对一的，所以，基于广播和多播的应用程序不能使用TCP服务，而无连接协议UDP，倒非常适合广播和多播。</p>
+<h3 id="字节流服务和通信报区别"><a href="#字节流服务和通信报区别" class="headerlink" title="字节流服务和通信报区别"></a>字节流服务和通信报区别</h3><p>主要体现在通信双方是否执行相同次数的读写操作。</p>
+<p>![这里写图片描述](<a target="_blank" rel="noopener" href="http://img.blog.csdn.net/20170220000621489?watermark/2/text/aHR0cDo">http://img.blog.csdn.net/20170220000621489?watermark/2/text/aHR0cDo</a><br>vL2Jsb2cuY3Nkbi5uZXQvdG9fYmVfYmV0dGVy/font/5a6L5L2T/fontsize/400/fill/I0JBQkFC<br>MA==/dissolve/70/gravity/SouthEast)</p>
+<p>如图所示，当发送端应用程序同时执行多次写操作时，TCP模块必须先将这些数据放入发送缓冲区中，当TCP模块真正发送数据时，发送缓冲区中这些数据才会被封装成一个<br>或多个TCP报文段发出，简言之， ** TCP模块发出的报文段个数与发送端应用程序执行的写操作次数之间没有固定的数量关系 ** 。<br>同时，当接收端收到一个或多个TCP报文段后，TCP模块要将它们携带的应用数据根据的TCP报文段的序号依次放入接收缓冲区中，同时通知应用程序读取数据。接收端应<br>用程序可以将接收缓冲区中的数据一次读出，也可以多次读出，这取决于用户指定的应用程序读缓冲区大小，简言之， **<br>接收端应用程序执行的读操作次数与TCP模块接收到的TCP报文段个数也没有固定的数量关系。 **<br>总而言之就是， ** 发送端执行的写操作数量和接收端执行的读操作数量之间没有任何的数量关系 ** 。<br>通信双方数据传输是没有边界的，这也就是TCP的字节流的概念。<br>![这里写图片描述](<a target="_blank" rel="noopener" href="http://img.blog.csdn.net/20170220000632880?watermark/2/text/aHR0cDo">http://img.blog.csdn.net/20170220000632880?watermark/2/text/aHR0cDo</a><br>vL2Jsb2cuY3Nkbi5uZXQvdG9fYmVfYmV0dGVy/font/5a6L5L2T/fontsize/400/fill/I0JBQkFC<br>MA==/dissolve/70/gravity/SouthEast)<br>而UDP的数据报截然相反，发送端应用程序每执行一次写操作，接收端应用程序都必须执行一次对应的读操作。否则，就会发生丢包。并且，如果用户没有指定足够的应用数据<br>缓冲区来读取数据报，那么UDP数据报就会发生截断。</p>
+<h3 id="TCP的可靠传输是由何支撑的："><a href="#TCP的可靠传输是由何支撑的：" class="headerlink" title="TCP的可靠传输是由何支撑的："></a>TCP的可靠传输是由何支撑的：</h3><h4 id="发送应答机制"><a href="#发送应答机制" class="headerlink" title="** 发送应答机制 **"></a>** 发送应答机制 **</h4><p>发送端发送的每个TCP报文段都必须得到接收端的应答，才认为这个TCP报文段传输成功。</p>
+<h4 id="超时重传机制"><a href="#超时重传机制" class="headerlink" title="** 超时重传机制 **"></a>** 超时重传机制 **</h4><p>发送端在发出一个TCP报文段之后，就开始定时，如果在定时时间内没有收到应答，就会重新发送这个报文段。<br>同时，TCP报文段最终是以IP数据报发送的，而IP数据报到达接收端时可能乱序、重复，TCP协议还会对接收到的TCP报文段重排、整理，再交付给应用程序。<br>而UDP数据报服务则不可靠，需要上层协议处理数据的确认和超时重传。</p>
+<h2 id="TCP头部结构"><a href="#TCP头部结构" class="headerlink" title="TCP头部结构"></a>TCP头部结构</h2><p>通过了解TCP头部结构，我们可以认识到传输层在TCP协议栈中的作用。<br>TCP头部信息用于指定通信源端端口，目标端端口，管理连接等这些任务。如下图所示：<br>![这里写图片描述](<a target="_blank" rel="noopener" href="http://img.blog.csdn.net/20170220000451567?watermark/2/text/aHR0cDo">http://img.blog.csdn.net/20170220000451567?watermark/2/text/aHR0cDo</a><br>vL2Jsb2cuY3Nkbi5uZXQvdG9fYmVfYmV0dGVy/font/5a6L5L2T/fontsize/400/fill/I0JBQkFC<br>MA==/dissolve/70/gravity/SouthEast)</p>
+<h4 id="32位序号"><a href="#32位序号" class="headerlink" title="** 32位序号 **"></a>** 32位序号 **</h4><blockquote>
+<p>在一次TCP通信，从连接建立到释放连接的整个过程中，在某一个传输方向上的字节流的每个字节的编号就是由这个32位序号确认的。<br>在两个主机通信时，第一次发送的TCP报文段中，32位序号为系统给出的随机值，我们称它为初始序号(ISN)，在该传输方向上，后续的TCP报文段中，序号，将被系<br>统设置为ISN+该报文段所携带数据的第一个字节在整个字节流中位置的偏移。<br>另外一个传输方向上，亦然。</p>
+</blockquote>
+<h4 id="32位确认号"><a href="#32位确认号" class="headerlink" title="** 32位确认号 **"></a>** 32位确认号 **</h4><blockquote>
+<p>TCP报文段中，发送方不仅携带自己的数据序号，还携带对通信另一方所发送的数据的确认。</p>
+</blockquote>
+<h4 id="4位头部长度"><a href="#4位头部长度" class="headerlink" title="** 4位头部长度 **"></a>** 4位头部长度 **</h4><blockquote>
+<p>标识该TCP头部有多少个4字节，最大值是15，所以TCP头部最大长度是60个字节。</p>
+</blockquote>
+<h4 id="6位标志字段"><a href="#6位标志字段" class="headerlink" title="** 6位标志字段 **"></a>** 6位标志字段 **</h4><ul>
+<li>** URG ** ：紧急指针是否有效。</li>
+<li>** ACK ** ：确认号是否有效（我们称携带ACK标志的TCP报文段为确认报文段）。</li>
+<li>** PSH ** ：push字段，提示接收端程序应该立即从TCP接收缓冲区中读走数据，为接收后续数据腾出空间，因为应用程序如果不把这些数据读走，这些数据会一直停留在TCP接收缓冲区中，这样会占用很大的内核资源。</li>
+<li>** RST ** ：要求对方重新建立连接（复位报文段）</li>
+<li>** SYN ** ：表示请求建立一个连接（同步报文段）</li>
+<li>** FIN ** ：通知对方关闭连接（结束报文段）</li>
+<li>** 16位窗口大小 **</li>
+</ul>
+<blockquote>
+<p>是TCP流量控制的手段。这里的窗口指接收通报窗口（Receiver<br>window），提示本端TCP接收缓冲区还能容纳多少字节数据，这样对方就可以控制数据发送的速度。</p>
+</blockquote>
+<ul>
+<li>16位校验和</li>
+</ul>
+<blockquote>
+<p>由发送端填充，接收端对TCP报文段执行CRC算法，来检验数据是否损坏。该检验不仅包括头部，也包括数据部分。</p>
+</blockquote>
+<ul>
+<li>16位紧急指针</li>
+</ul>
+<blockquote>
+<p>表示最后一个紧急数据的下一字节序号。</p>
+</blockquote>
+<p>![这里写图片描述](<a target="_blank" rel="noopener" href="http://img.blog.csdn.net/20170220000541380?watermark/2/text/aHR0cDo">http://img.blog.csdn.net/20170220000541380?watermark/2/text/aHR0cDo</a><br>vL2Jsb2cuY3Nkbi5uZXQvdG9fYmVfYmV0dGVy/font/5a6L5L2T/fontsize/400/fill/I0JBQkFC<br>MA==/dissolve/70/gravity/SouthEast)</p>
+<h4 id="40选项"><a href="#40选项" class="headerlink" title="40选项"></a>40选项</h4><p>kind类型 length总长度 info具体信息（常见TCP选项具体信息如下）</p>
+<p>![这里写图片描述](<a target="_blank" rel="noopener" href="http://img.blog.csdn.net/20170220022113004?watermark/2/text/aHR0cDo">http://img.blog.csdn.net/20170220022113004?watermark/2/text/aHR0cDo</a><br>vL2Jsb2cuY3Nkbi5uZXQvdG9fYmVfYmV0dGVy/font/5a6L5L2T/fontsize/400/fill/I0JBQkFC<br>MA==/dissolve/70/gravity/SouthEast)</p>
+<blockquote>
+<p>0： ** 选项表结束选项 **<br>1： ** 空操作选项 ** 。无特殊含义，一般用于将TCP选项的总长度填充为4字节的整数倍。<br>2： ** 最大报文段长度选项 ** 。连接初始化时，通信双方使用该选项来协商最大报文段长度。TCP模块通常将最大报文段长度设为MTU-40，这里的40指2<br>0字节的TCP头部和20字节的TCP头部，这样一来，携带TCP报文段的IP数据报的长度就不会超过MTU。<br>** ps：MTU即 _ 最大传输单元 _ ，该参数通常与通信接口有关（网络接口卡、串口等）。 **<br>3： ** 窗口扩大因子选项 ** 。TCP连接初始化时，通信双方使用该选项协商接收通道窗口扩大因子的大小。因为在TCP协议中，接收通道窗口的大小是用16位<br>表示的，也就是65535个字节，但实际上TCP模块允许的接收通道窗口远不止这个数目，比这个大是为了提高通信的吞吐量，窗口扩大因子就是为了解决这个问题。<br>如果窗口大小位N，而窗口扩大因子为M，那么窗口实际大小就是N*(2^M)。窗口扩大因子选项只能出现在同步报文段中，当连接建立成功之后，该值将固定不变。<br>4： ** 选择性确认(SACK)选项 ** 。当TCP报文段发生丢失时，TCP模块就会重传最后被确认的TCP报文段之后的所有报文段，但这样的话，原先已经成<br>功发送的报文段也可能重复发送，就降低了TCP模块的性能。选择定确认选项就是为了解决这个问题，它让TCP模块儿只重新发送丢失的TCP报文段。<br>5： ** SACK实际工作的选项 ** 。告诉发送端，本端已经收到的不连续的数据块，从而让发送端根据此选项重新发送丢失的数据块。其中块左边沿表示不连续块的<br>第一个数据的序号，而块右边沿则表示不连续块的最后一个数据的序号的下一个序号。这样一对参数（块左边沿和块右边沿）之间的数据是没有收到的。因为一个块信息占用8字<br>节，所以TCP头部选项中实际上最多可以包含4个这样的不连续数据块（考虑选项类型和长度占用的2字节）。<br>8： ** 时间戳选项 ** 。提供比较准确的计算通信双方之间的回路时间的方法。</p>
+</blockquote>
+
+            </div>
+            <hr>
+            <div>
+              <div class="post-metas mb-3">
+                
+                  <div class="post-meta mr-3">
+                    <i class="iconfont icon-category"></i>
+                    
+                      <a class="hover-with-bg" href="/categories/%E5%A4%A7%E5%AD%A6%E6%97%B6%E6%9C%9FCSDN/">大学时期CSDN</a>
+                    
+                  </div>
+                
+                
+                  <div class="post-meta">
+                    <i class="iconfont icon-tags"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/%E7%BD%91%E7%BB%9C/">网络</a>
+                    
+                  </div>
+                
+              </div>
+              
+                <p class="note note-warning">
+                  
+                    本博客所有文章除特别声明外，均采用 <a target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/deed.zh" rel="nofollow noopener noopener">CC BY-SA 4.0 协议</a> ，转载请注明出处！
+                  
+                </p>
+              
+              
+                <div class="post-prevnext">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/posts/22612.html">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">各类游戏对应的服务端架构</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/posts/23478.html">
+                        <span class="hidden-mobile">Linux内存管理机制</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+              <!-- Comments -->
+              <article class="comments" id="comments">
+                
+                  
+                
+                
+  <div id="lv-container" data-id="city" data-uid="MTAyMC80NjEzMS8yMjY0Mg">
+    <script type="text/javascript">
+      Fluid.utils.waitElementVisible('lv-container', function() {
+        Fluid.utils.createScript('https://cdn-city.livere.com/js/embed.dist.js');
+      });
+    </script>
+    <noscript>为正常使用来必力评论功能请允许 JavaScript 运行</noscript>
+  </div>
+
+
+              </article>
+            
+          </article>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+
+    
+      <a id="scroll-top-button" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+
+    
+  </main>
+
+  <footer class="text-center mt-5 py-3">
+  <div class="footer-content">
+    <script type="text/javascript">document.write(unescape("%3Cspan id='cnzz_stat_icon_1273342630'%3E%3C/span%3E%3Cscript src='https://s13.cnzz.com/z_stat.php%3Fid%3D1273342630%26show%3Dpic1' type='text/javascript'%3E%3C/script%3E"));</script>
+  </div>
+  
+  <div class="statistics">
+    
+    
+
+    
+      
+        <!-- LeanCloud 统计PV -->
+        <span id="leancloud-site-pv-container" style="display: none">
+            总访问量 
+            <span id="leancloud-site-pv"></span>
+             次
+          </span>
+      
+      
+        <!-- LeanCloud 统计UV -->
+        <span id="leancloud-site-uv-container" style="display: none">
+            总访客数 
+            <span id="leancloud-site-uv"></span>
+             人
+          </span>
+      
+
+    
+  </div>
+
+
+  
+  <!-- 备案信息 -->
+  <div class="beian">
+    <span>
+      <a href="http://beian.miit.gov.cn/" target="_blank" rel="nofollow noopener">
+        陕ICP备16019529号-2
+      </a>
+    </span>
+    
+  </div>
+
+
+  
+    <!-- cnzz Analytics Icon -->
+    <span id="cnzz_stat_icon_1273342630" style="display: none"></span>
+  
+</footer>
+
+<!-- SCRIPTS -->
+
+  <script  src="https://cdn.jsdelivr.net/npm/nprogress@0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/nprogress@0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js" ></script>
+<script  src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.min.js" ></script>
+<script  src="/js/debouncer.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+<!-- Plugins -->
+
+
+  
+    <script  src="/js/lazyload.js" ></script>
+  
+
+
+
+  
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/tocbot@4.12.0/dist/tocbot.min.js" ></script>
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js" ></script>
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/anchor-js@4.3.0/anchor.min.js" ></script>
+
+
+
+  <script defer src="https://cdn.jsdelivr.net/npm/clipboard@2.0.6/dist/clipboard.min.js" ></script>
+
+
+
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/typed.js@2.0.11/lib/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var title = document.getElementById('subtitle').title;
+      
+      typing(title)
+      
+    })(window, document);
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    (function () {
+      var path = "/local-search.xml";
+      $('#local-search-input').on('click', function() {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      });
+      $('#modalSearch').on('shown.bs.modal', function() {
+        $('#local-search-input').focus();
+      });
+    })()
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+    <!-- Baidu Analytics -->
+    <script defer>
+      var _hmt = _hmt || [];
+      (function () {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?75eaaab59c4fa946437e9dea4f8fc07d";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+      })();
+    </script>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    <!-- cnzz Analytics -->
+    <script defer src="//s4.cnzz.com/z_stat.php?id=1273342630&show=pic"
+            type="text/javascript"></script>
+  
+
+
+
+
+
+<!-- 主题的启动项 保持在最底部 -->
+<script  src="/js/boot.js" ></script>
+
+
+
+</body>
+</html>

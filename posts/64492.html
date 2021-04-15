@@ -1,0 +1,699 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=&#34;auto&#34;>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/favicon/apple-touch-icon.png">
+  <link rel="icon" href="/favicon/favicon-32x32.png">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+  
+  <meta name="theme-color" content="#2f4154">
+  
+    <meta name="description" content="Less is More">
+  
+  <meta name="author" content="ShiYi">
+  <meta name="keywords" content="shiyi, shiyicode, ShiYi&#39;s Blog, code, golang">
+  
+  <title>FZU 1686 神龙的难题(重复覆盖问题&amp;舞蹈链) - ShiYi&#39;s Blog</title>
+
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css" />
+
+
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/github-markdown-css@4.0.0/github-markdown.min.css" />
+  <link  rel="stylesheet" href="/lib/hint/hint.min.css" />
+
+  
+    
+    
+      
+      <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@10.4.0/styles/tomorrow-night-eighties.min.css" />
+    
+  
+
+  
+    <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css" />
+  
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_ba1fz6golrf.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_kmeydafke9r.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+<!-- 自定义样式保持在最底部 -->
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    var CONFIG = {"hostname":"blog.hiyicode.com","root":"/","version":"1.8.8","typing":{"enable":true,"typeSpeed":70,"cursorChar":"","loop":false},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"right","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"copy_btn":true,"image_zoom":{"enable":true},"toc":{"enable":true,"headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":4},"lazyload":{"enable":true,"onlypost":false},"web_analytics":{"enable":true,"baidu":"75eaaab59c4fa946437e9dea4f8fc07d","google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":1273342630,"leancloud":{"app_id":null,"app_key":null,"server_url":null}}};
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+<meta name="generator" content="Hexo 5.4.0"><link rel="alternate" href="/atom.xml" title="ShiYi's Blog" type="application/atom+xml">
+</head>
+
+
+<body>
+  <header style="height: 40vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/">&nbsp;<strong>ShiYi's Blog</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/books/">
+                <i class="iconfont icon-book"></i>
+                读书
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;</a>
+          </li>
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" href="javascript:">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="banner" id="banner" parallax=true
+         style="background: url('/image/banner.jpg') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.5)">
+          <div class="page-header text-center fade-in-up">
+            <span class="h2" id="subtitle" title="FZU 1686 神龙的难题(重复覆盖问题&舞蹈链)">
+              
+            </span>
+
+            
+              <div class="mt-3">
+  
+  
+    <span class="post-meta">
+      <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+      <time datetime="2016-02-22 01:54" pubdate>
+        2016年2月22日 凌晨
+      </time>
+    </span>
+  
+</div>
+
+<div class="mt-1">
+  
+
+  
+
+  
+  
+</div>
+
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div class="py-5" id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">FZU 1686 神龙的难题(重复覆盖问题&amp;舞蹈链)</h1>
+            
+            <div class="markdown-body">
+              <p>** 题目链接 ** ： <a target="_blank" rel="noopener" href="http://acm.hust.edu.cn/vjudge/contest/view.action?cid=65998#problem/D"> [kuangbin带你飞]专题三 Dancing Links D - 神龙的难题 </a></p>
+<h2 id="题意"><a href="#题意" class="headerlink" title="题意"></a>题意</h2><h4 id="Description"><a href="#Description" class="headerlink" title="Description"></a>Description</h4><blockquote>
+<p>这是个剑与魔法的世界.英雄和魔物同在,动荡和安定并存.但总的来说,库尔特王国是个安宁的国家,人民安居乐业,魔物也比较少.但是.总有一些魔物不时会进入城市<br>附近,干扰人民的生活.就要有一些人出来守护居民们不被魔物侵害.魔法使艾米莉就是这样的一个人.她骑着她的坐骑,神龙米格拉一起消灭干扰人类生存的魔物,维护王国的<br>安定.艾米莉希望能够在损伤最小的前提下完成任务.每次战斗前,她都用时间停止魔法停住时间,然后米格拉他就可以发出火球烧死敌人.米格拉想知道,他如何以最快的速度<br>消灭敌人,减轻艾米莉的负担.</p>
+</blockquote>
+<h4 id="Input"><a href="#Input" class="headerlink" title="Input"></a>Input</h4><blockquote>
+<p>数据有多组,你要处理到EOF为止.每组数据第一行有两个数,n,m,(1&lt;=n,m&lt;=15)表示这次任务的地区范围.<br>然后接下来有n行,每行m个整数,如为1表示该点有怪物,为0表示该点无怪物.然后接下一行有两个整数,n1,m1<br>(n1&lt;=n,m1&lt;=m)分别表示米格拉一次能攻击的行,列数(行列不能互换),假设米格拉一单位时间能发出一个火球,所有怪物都可一击必杀.</p>
+</blockquote>
+<h4 id="Output"><a href="#Output" class="headerlink" title="Output"></a>Output</h4><blockquote>
+<p>输出一行,一个整数,表示米格拉消灭所有魔物的最短时间.</p>
+</blockquote>
+<h2 id="思路"><a href="#思路" class="headerlink" title="思路"></a>思路</h2><blockquote>
+<p>精确覆盖是每次选取一行后，就要对这行的所有列诛九族。而本题是重复覆盖，所以删除时，只删除相关的列即可，不诛连。<br>本题需要进行剪枝，剪枝函数f()代码中已说明。<br>ps：a的第一道重复覆盖问题，因为数据范围被T了那么多次，欲哭无泪啊，把代码扫了一遍又一遍，就是想不到竟然是数据范围的原因。细心是王道啊。。。</p>
+</blockquote>
+<h2 id="代码"><a href="#代码" class="headerlink" title="代码"></a>代码</h2><div class="hljs code-wrapper"><pre><code>#include &lt;iostream&gt;
+#include &lt;algorithm&gt;
+#include &lt;cstring&gt;
+#include &lt;cstdio&gt;
+#include &lt;cstdlib&gt;
+#include &lt;vector&gt;
+
+using namespace std;
+
+const int N = 16*16;
+const int MAX = N*N;
+
+int G[N][N];//储存地图
+int P[MAX];//储存点编号
+int U[MAX], D[MAX], L[MAX], R[MAX];//数组模拟链表指向(上下左右)
+int C[MAX], M[MAX];//节点所在列与行
+int S[N];//储存每列的元素数量
+int H[N];//行头指针
+int ans;
+
+void init(int n, int m)
+&#123;
+    for(int i=0; i&lt;=m; i++)
+    &#123;
+        L[i+1] = i;
+        R[i] = i+1;
+        U[i] = D[i] = i;
+        S[i] = 0;
+    &#125;
+    for(int i=1; i&lt;=n; i++)
+        H[i] = -1;
+    L[0] = m;
+    R[m] = 0;
+&#125;
+
+void link(int row, int col, int id)//将节点加入链表
+&#123;
+    C[id] = col; M[id] = row;//记录行列
+
+    U[id] = U[col]; D[U[col]] = id;//上下连接
+    D[id] = col; U[col] = id;
+
+    if(H[row] == -1)//左右连接(使用表头方便头插)
+        H[row] = L[id] = R[id] = id;
+    else
+    &#123;
+        L[id] = L[H[row]]; R[L[H[row]]] = id;
+        L[H[row]] = id; R[id] = H[row];
+    &#125;
+    S[col]++;
+&#125;
+
+void remove(int col)//因为是重复覆盖，所以一次循环，只删除该列，不删除相关的
+&#123;
+    for(int i=D[col]; i!=col; i=D[i])
+    &#123;
+        L[R[i]] = L[i];
+        R[L[i]] = R[i];
+    &#125;
+&#125;
+
+void resume(int col)
+&#123;
+    for(int i=U[col]; i!=col; i=U[i])
+    &#123;
+        L[R[i]] = i;
+        R[L[i]] = i;
+    &#125;
+&#125;
+
+bool v[MAX];
+
+int f()//剪枝函数
+&#123;
+    int num = 0;
+    for(int i=R[0]; i!=0; i=R[i])//0代表未消灭
+        v[i] = 0;
+    for(int i=R[0]; i!=0; i=R[i])
+    &#123;
+        if(!v[i])
+        &#123;
+            v[i] = 1;
+            num++;
+            //(假设攻击范围最大化)能够杀掉它的所有攻击的全部范围进行消灭，类似以它为圆心画圆一样
+            for(int j=U[i]; j!=i; j=U[j])
+                for(int k=R[j]; k!=j; k=R[k])
+                    v[C[k]] = 1;
+        &#125;
+    &#125;
+    return num;
+&#125;
+
+void dance(int k)
+&#123;
+    if(k+f() &gt;= ans)
+        return;
+    if(!R[0])
+    &#123;
+        ans = min(ans, k);
+        return;
+    &#125;
+    int col = R[0];
+    for(int i=R[0]; i!=0; i=R[i])
+        if(S[i] &lt; S[col])
+            col = i;
+    for(int i=D[col]; i!=col; i=D[i])
+    &#123;
+        remove(i);
+        for(int j=R[i]; j!=i; j=R[j])
+            remove(j);
+        dance(k+1);
+        for(int j=L[i]; j!=i; j=L[j])
+            resume(j);
+        resume(i);
+    &#125;
+&#125;
+
+int main()
+&#123;
+    int n, m;
+    while(~scanf(&quot;%d%d&quot;, &amp;n, &amp;m))
+    &#123;
+        int num = 0;
+        for(int i=1; i&lt;=n; i++)
+            for(int j=1; j&lt;=m; j++)
+            &#123;
+                scanf(&quot;%d&quot;, &amp;G[i][j]);
+                if(G[i][j])
+                    P[j+(i-1)*m] = ++num;
+            &#125;
+        int r, c;
+        scanf(&quot;%d%d&quot;, &amp;r, &amp;c);
+        init((n-r+1)*(m-c+1), num);
+        int id = num+1;
+        for(int i=1; i&lt;=n-r+1; i++)
+        &#123;
+            for(int j=1; j&lt;=m-c+1; j++)
+                for(int x=i; x&lt;=i+r-1; x++)
+                    for(int y=j; y&lt;=j+c-1; y++)
+                    &#123;
+                        if(G[x][y])
+                            link(j+(i-1)*(m-c+1), P[y+(x-1)*m], id++);
+                    &#125;
+        &#125;
+        ans = 0x3f3f3f3f;
+        dance(0);
+        printf(&quot;%d\n&quot;, ans);
+    &#125;
+    return 0;
+&#125;</code></pre></div>
+
+            </div>
+            <hr>
+            <div>
+              <div class="post-metas mb-3">
+                
+                  <div class="post-meta mr-3">
+                    <i class="iconfont icon-category"></i>
+                    
+                      <a class="hover-with-bg" href="/categories/%E5%A4%A7%E5%AD%A6%E6%97%B6%E6%9C%9FCSDN/">大学时期CSDN</a>
+                    
+                  </div>
+                
+                
+                  <div class="post-meta">
+                    <i class="iconfont icon-tags"></i>
+                    
+                      <a class="hover-with-bg" href="/tags/%E8%88%9E%E8%B9%88%E9%93%BE%EF%BC%8DDance-Link/">舞蹈链－Dance Link</a>
+                    
+                  </div>
+                
+              </div>
+              
+                <p class="note note-warning">
+                  
+                    本博客所有文章除特别声明外，均采用 <a target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/deed.zh" rel="nofollow noopener noopener">CC BY-SA 4.0 协议</a> ，转载请注明出处！
+                  
+                </p>
+              
+              
+                <div class="post-prevnext">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/posts/38389.html">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">HDU 1166 敌兵布阵(区间求和(线段树|树状数组))</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/posts/23306.html">
+                        <span class="hidden-mobile">ZOJ 3209 Treasure Map(精确覆盖问题&舞蹈链)</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+              <!-- Comments -->
+              <article class="comments" id="comments">
+                
+                  
+                
+                
+  <div id="lv-container" data-id="city" data-uid="MTAyMC80NjEzMS8yMjY0Mg">
+    <script type="text/javascript">
+      Fluid.utils.waitElementVisible('lv-container', function() {
+        Fluid.utils.createScript('https://cdn-city.livere.com/js/embed.dist.js');
+      });
+    </script>
+    <noscript>为正常使用来必力评论功能请允许 JavaScript 运行</noscript>
+  </div>
+
+
+              </article>
+            
+          </article>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+
+    
+      <a id="scroll-top-button" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+
+    
+  </main>
+
+  <footer class="text-center mt-5 py-3">
+  <div class="footer-content">
+    <script type="text/javascript">document.write(unescape("%3Cspan id='cnzz_stat_icon_1273342630'%3E%3C/span%3E%3Cscript src='https://s13.cnzz.com/z_stat.php%3Fid%3D1273342630%26show%3Dpic1' type='text/javascript'%3E%3C/script%3E"));</script>
+  </div>
+  
+  <div class="statistics">
+    
+    
+
+    
+      
+        <!-- LeanCloud 统计PV -->
+        <span id="leancloud-site-pv-container" style="display: none">
+            总访问量 
+            <span id="leancloud-site-pv"></span>
+             次
+          </span>
+      
+      
+        <!-- LeanCloud 统计UV -->
+        <span id="leancloud-site-uv-container" style="display: none">
+            总访客数 
+            <span id="leancloud-site-uv"></span>
+             人
+          </span>
+      
+
+    
+  </div>
+
+
+  
+  <!-- 备案信息 -->
+  <div class="beian">
+    <span>
+      <a href="http://beian.miit.gov.cn/" target="_blank" rel="nofollow noopener">
+        陕ICP备16019529号-2
+      </a>
+    </span>
+    
+  </div>
+
+
+  
+    <!-- cnzz Analytics Icon -->
+    <span id="cnzz_stat_icon_1273342630" style="display: none"></span>
+  
+</footer>
+
+<!-- SCRIPTS -->
+
+  <script  src="https://cdn.jsdelivr.net/npm/nprogress@0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/nprogress@0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js" ></script>
+<script  src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.min.js" ></script>
+<script  src="/js/debouncer.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+<!-- Plugins -->
+
+
+  
+    <script  src="/js/lazyload.js" ></script>
+  
+
+
+
+  
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/tocbot@4.12.0/dist/tocbot.min.js" ></script>
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js" ></script>
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/anchor-js@4.3.0/anchor.min.js" ></script>
+
+
+
+  <script defer src="https://cdn.jsdelivr.net/npm/clipboard@2.0.6/dist/clipboard.min.js" ></script>
+
+
+
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/typed.js@2.0.11/lib/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var title = document.getElementById('subtitle').title;
+      
+      typing(title)
+      
+    })(window, document);
+  </script>
+
+
+
+  <script  src="/js/local-search.js" ></script>
+  <script>
+    (function () {
+      var path = "/local-search.xml";
+      $('#local-search-input').on('click', function() {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      });
+      $('#modalSearch').on('shown.bs.modal', function() {
+        $('#local-search-input').focus();
+      });
+    })()
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+    <!-- Baidu Analytics -->
+    <script defer>
+      var _hmt = _hmt || [];
+      (function () {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?75eaaab59c4fa946437e9dea4f8fc07d";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+      })();
+    </script>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    <!-- cnzz Analytics -->
+    <script defer src="//s4.cnzz.com/z_stat.php?id=1273342630&show=pic"
+            type="text/javascript"></script>
+  
+
+
+
+
+
+<!-- 主题的启动项 保持在最底部 -->
+<script  src="/js/boot.js" ></script>
+
+
+
+</body>
+</html>
