@@ -1,0 +1,174 @@
+<!DOCTYPE html><html lang="zh-CN" data-default-color-scheme="auto"><head><meta charset="UTF-8"><link rel="apple-touch-icon" sizes="76x76" href="/favicon/apple-touch-icon.png"><link rel="icon" href="/favicon/favicon-32x32.png"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=5,shrink-to-fit=no"><meta http-equiv="x-ua-compatible" content="ie=edge"><meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests"><meta name="theme-color" content="#2f4154"><meta name="author" content="Yi Shi"><meta name="keywords" content="shiyi, yishi, threebody, blog, golang"><meta name="description" content="前言 凡是接触过socket编程的，对connect函数一定不陌生。因为socket是面向连接的，所以在进行读写操作前我们首先要进行连接，而所谓连接也就是我们常说的三次握手，这个过程就是在connect函数中完成的。虽然connect函数本身不具备阻塞的功能，但是我们可以通过对socket进行设置和使用select函数可以设置阻塞时间的特性实现非阻塞。  为什么要非阻塞 第一，我们可以在conne"><meta property="og:type" content="article"><meta property="og:title" content="Linux 怎样实现非阻塞connect"><meta property="og:url" content="https://shiyi.threebody.xyz/posts/64027.html"><meta property="og:site_name" content="Yi Shi&#39;s Blog"><meta property="og:description" content="前言 凡是接触过socket编程的，对connect函数一定不陌生。因为socket是面向连接的，所以在进行读写操作前我们首先要进行连接，而所谓连接也就是我们常说的三次握手，这个过程就是在connect函数中完成的。虽然connect函数本身不具备阻塞的功能，但是我们可以通过对socket进行设置和使用select函数可以设置阻塞时间的特性实现非阻塞。  为什么要非阻塞 第一，我们可以在conne"><meta property="og:locale" content="zh_CN"><meta property="article:published_time" content="2016-11-07T11:50:00.000Z"><meta property="article:modified_time" content="2022-12-08T15:35:14.149Z"><meta property="article:author" content="Yi Shi"><meta property="article:tag" content="服务器开发"><meta property="article:tag" content="Linux网络编程"><meta name="twitter:card" content="summary_large_image"><title>Linux 怎样实现非阻塞connect - Yi Shi&#39;s Blog</title><link rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css"><link rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css"><link rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css"><link rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css"><link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css"><link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css"><link rel="stylesheet" href="/css/main.css"><link id="highlight-css" rel="stylesheet" href="/css/highlight.css"><link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css"><script id="fluid-configs">var Fluid=window.Fluid||{};Fluid.ctx=Object.assign({},Fluid.ctx);var CONFIG={hostname:"shiyi.threebody.xyz",root:"/",version:"1.9.3",typing:{enable:!0,typeSpeed:50,cursorChar:"",loop:!1,scope:["home"]},anchorjs:{enable:!0,element:"h1,h2,h3,h4,h5,h6",placement:"left",visible:"hover",icon:""},progressbar:{enable:!0,height_px:3,color:"#29d",options:{showSpinner:!0,trickleSpeed:100}},code_language:{enable:!0,default:"TEXT"},copy_btn:!0,image_caption:{enable:!0},image_zoom:{enable:!0,img_url_replace:["",""]},toc:{enable:!0,placement:"right",headingSelector:"h1,h2,h3,h4,h5,h6",collapseDepth:4},lazyload:{enable:!0,loading_img:"/img/loading.gif",onlypost:!1,offset_factor:2},web_analytics:{enable:!0,follow_dnt:!0,baidu:"75eaaab59c4fa946437e9dea4f8fc07d",google:null,gtag:null,tencent:{sid:null,cid:null},woyaola:null,cnzz:1273342630,leancloud:{app_id:null,app_key:null,server_url:null,path:"window.location.pathname",ignore_local:!1}},search_path:"/local-search.xml"};if(CONFIG.web_analytics.follow_dnt){var dntVal=navigator.doNotTrack||window.doNotTrack||navigator.msDoNotTrack;Fluid.ctx.dnt=dntVal&&(dntVal.startsWith("1")||dntVal.startsWith("yes")||dntVal.startsWith("on"))}</script><script src="/js/utils.js"></script><script src="/js/color-schema.js"></script><script async>if(!Fluid.ctx.dnt){var _hmt=_hmt||[];!function(){var e=document.createElement("script");e.src="https://hm.baidu.com/hm.js?75eaaab59c4fa946437e9dea4f8fc07d";var t=document.getElementsByTagName("script")[0];t.parentNode.insertBefore(e,t)}()}</script><script async>Fluid.ctx.dnt||Fluid.utils.createScript("//s4.cnzz.com/z_stat.php?id=1273342630&show=pic")</script><meta name="generator" content="Hexo 5.4.0"><link rel="alternate" href="/atom.xml" title="Yi Shi's Blog" type="application/atom+xml">
+</head><body><header><div class="header-inner" style="height:40vh"><nav id="navbar" class="navbar fixed-top navbar-expand-lg navbar-dark scrolling-navbar"><div class="container"><a class="navbar-brand" href="/"><strong>Yi Shi&#39;s Blog</strong> </a><button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation"><div class="animated-icon"><span></span><span></span><span></span></div></button><div class="collapse navbar-collapse" id="navbarSupportedContent"><ul class="navbar-nav ml-auto text-center"><li class="nav-item"><a class="nav-link" href="/"><i class="iconfont icon-home-fill"></i> 首页</a></li><li class="nav-item"><a class="nav-link" href="/archives/"><i class="iconfont icon-archive-fill"></i> 归档</a></li><li class="nav-item"><a class="nav-link" href="/categories/"><i class="iconfont icon-category-fill"></i> 分类</a></li><li class="nav-item"><a class="nav-link" href="/tags/"><i class="iconfont icon-tags-fill"></i> 标签</a></li><li class="nav-item"><a class="nav-link" href="/books/"><i class="iconfont icon-book"></i> 读书</a></li><li class="nav-item"><a class="nav-link" href="/about/"><i class="iconfont icon-user-fill"></i> 关于</a></li><li class="nav-item" id="search-btn"><a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">&nbsp;<i class="iconfont icon-search"></i>&nbsp;</a></li><li class="nav-item" id="color-toggle-btn"><a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">&nbsp;<i class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a></li></ul></div></div></nav><div id="banner" class="banner" parallax="true" style="background:url(/image/banner.jpg) no-repeat center center;background-size:cover"><div class="full-bg-img"><div class="mask flex-center" style="background-color:rgba(0,0,0,.5)"><div class="banner-text text-center fade-in-up"><div class="h2"><span id="subtitle">Linux 怎样实现非阻塞connect</span></div><div class="mt-3"><span class="post-meta"><i class="iconfont icon-date-fill" aria-hidden="true"></i> <time datetime="2016-11-07 19:50" pubdate>2016年11月7日 晚上</time></span></div><div class="mt-1"></div></div></div></div></div></div></header><main><div class="container-fluid nopadding-x"><div class="row nomargin-x"><div class="side-col d-none d-lg-block col-lg-2"></div><div class="col-lg-8 nopadding-x-md"><div class="container nopadding-x-md" id="board-ctn"><div id="board"><article class="post-content mx-auto"><h1 style="display:none">Linux 怎样实现非阻塞connect</h1><div class="markdown-body"><h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><blockquote><p>凡是接触过socket编程的，对connect函数一定不陌生。因为socket是面向连接的，所以在进行读写操作前我们首先要进行连接，而所谓连接也就是我们<br>常说的三次握手，这个过程就是在connect函数中完成的。<br>虽然connect函数本身不具备阻塞的功能，但是我们可以通过对socket进行设置和使用select函数可以设置阻塞时间的特性实现非阻塞。</p></blockquote><h3 id="为什么要非阻塞"><a href="#为什么要非阻塞" class="headerlink" title="为什么要非阻塞"></a>为什么要非阻塞</h3><blockquote><p>第一，我们可以在connect时去做些别的事，毕竟三次握手需要在网络中往返多层次，我们没有必要一直在那里闲着。<br>第二，这一点很重要，因为connect的超时时间在75秒到几分钟之间，显然不可能去让程序阻塞那么久。</p></blockquote><h3 id="怎样实现非阻塞"><a href="#怎样实现非阻塞" class="headerlink" title="怎样实现非阻塞"></a>怎样实现非阻塞</h3><h4 id="1-设置socket"><a href="#1-设置socket" class="headerlink" title="1. 设置socket"></a>1. 设置socket</h4><pre><code class="hljs">int oldOption = fcntl(sockfd, F_GETFL);
+int newOption = oldOption | O_NONBLOCK;
+//设置sockfd非阻塞
+fcntl(sockfd, F_SETFL, newOption);</code></pre><h4 id="2-执行connect"><a href="#2-执行connect" class="headerlink" title="2. 执行connect"></a>2. 执行connect</h4><pre><code class="hljs">如果返回0，表示连接成功，这种情况一般在本机上连接时会出现(否则怎么可能那么快)
+否则，查看error是否等于EINPROGRESS(表明正在进行连接中)，如果不等于，则连接失败
+int ret = connect(sockfd, (struct sockaddr*)&amp;addr, sizeof(addr));
+if(ret == 0)
+&#123;
+    //连接成功
+    fcntl(sockfd, F_SETFL, oldOption);
+    return sockfd;
+&#125;
+else if(errno != EINPROGRESS)
+&#123;
+    //连接没有立即返回，此时errno若不是EINPROGRESS，表明错误
+    perror(&quot;connect error != EINPROGRESS&quot;);
+    return -1;
+&#125;</code></pre><h4 id="3-使用select，如果没用过select可以去看看"><a href="#3-使用select，如果没用过select可以去看看" class="headerlink" title="3. 使用select，如果没用过select可以去看看"></a>3. 使用select，如果没用过select可以去看看</h4><pre><code class="hljs">用select对socket的读写进行监听
+那么监听结果有四种可能
+1. 可写(当连接成功后，sockfd就会处于可写状态，此时表示连接成功)
+2. 可读可写(在出错后，sockfd会处于可读可写状态，但有一种特殊情况见第三条)
+3. 可读可写(我们可以想象，在我们connect执行完到select开始监听的这段时间内，
+    如果连接已经成功，并且服务端发送了数据，那么此时sockfd就是可读可写的，
+    因此我们需要对这种情况特殊判断)
+    说白了，在可读可写时，我们需要甄别此时是否已经连接成功，我们采用这种方案：
+    再次执行connect，然后查看error是否等于EISCONN(表示已经连接到该套接字)。
+4. 错误
+
+if(FD_ISSET(sockfd, &amp;writeFds))
+&#123;
+    //可读可写有两种可能，一是连接错误，二是在连接后服务端已有数据传来
+    if(FD_ISSET(sockfd, &amp;readFds))
+    &#123;
+        if(connect(sockfd, (struct sockaddr*)&amp;addr, sizeof(addr)) != 0)
+        &#123;
+            int error=0;
+            socklen_t length = sizeof(errno);
+            //调用getsockopt来获取并清除sockfd上的错误.
+            if(getsockopt(sockfd, SOL_SOCKET, SO_ERROR, &amp;error, &amp;length) &lt; 0)
+            &#123;
+                printf(&quot;get socket option failed\n&quot;);
+                close(sockfd);
+                return -1;
+            &#125;
+            if(error != EISCONN)
+            &#123;
+                perror(&quot;connect error != EISCONN&quot;);
+                close(sockfd);
+                return -1;
+            &#125;
+        &#125;
+    &#125;
+    //此时已排除所有错误可能，表明连接成功
+    fcntl(sockfd, F_SETFL, oldOption);
+    return sockfd;
+&#125;</code></pre><h4 id="4-恢复socket"><a href="#4-恢复socket" class="headerlink" title="4. 恢复socket"></a>4. 恢复socket</h4><pre><code class="hljs">因为我们只是需要将连接操作变为非阻塞，并不包括读写等，所以我们吃醋要将socket重新设置。
+fcntl(sockfd, F_SETFL, oldOption);</code></pre><h4 id="End"><a href="#End" class="headerlink" title="End"></a>End</h4><p>到此，我们的非阻塞connect函数已经成功了。</p><h3 id="代码"><a href="#代码" class="headerlink" title="代码"></a>代码</h3><pre><code class="hljs">#include &lt;stdio.h&gt;
+#include &lt;pthread.h&gt;
+#include &lt;sys/socket.h&gt;
+#include &lt;sys/types.h&gt;
+#include &lt;netinet/in.h&gt;
+#include &lt;arpa/inet.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;time.h&gt;
+#include &lt;fcntl.h&gt;
+#include &lt;sys/ioctl.h&gt;
+#include &lt;unistd.h&gt;
+#include &lt;string&gt;
+#include &lt;errno.h&gt;
+
+//blokTimeMs表明非阻塞时的毫秒数，若值为-1表明阻塞
+int connect(std::string ip, int port, int blockTimeMs = -1)
+&#123;
+    struct sockaddr_in addr;
+    bzero(&amp;addr, sizeof(addr));
+
+    addr.sin_family = AF_INET;
+    addr.sin_port = htons(port);
+    inet_pton(AF_INET, ip.c_str(), &amp;addr.sin_addr);
+
+    int sockfd = socket(PF_INET, SOCK_STREAM, 0);
+
+    //阻塞
+    if(blockTimeMs == -1)
+    &#123;
+        int ret = connect(sockfd, (struct sockaddr*)&amp;addr, sizeof(addr));
+        if(ret &lt; 0)
+        &#123;
+            perror(&quot;connectBloking&quot;);
+            close(sockfd);
+            return -1;
+        &#125;
+        close(sockfd);
+        return 1;
+    &#125;
+
+    //非阻塞
+    int oldOption = fcntl(sockfd, F_GETFL);
+    int newOption = oldOption | O_NONBLOCK;
+
+    //设置sockfd非阻塞
+    fcntl(sockfd, F_SETFL, newOption);
+
+    int ret = connect(sockfd, (struct sockaddr*)&amp;addr, sizeof(addr));
+    if(ret == 0)
+    &#123;
+        //连接成功
+        fcntl(sockfd, F_SETFL, oldOption);
+        return sockfd;
+    &#125;
+    else if(errno != EINPROGRESS)
+    &#123;
+        //连接没有立即返回，此时errno若不是EINPROGRESS，表明错误
+        perror(&quot;connect error != EINPROGRESS&quot;);
+        return -1;
+    &#125;
+
+    fd_set readFds;
+    fd_set writeFds;
+    struct timeval timeout;
+
+    FD_ZERO(&amp;readFds);
+    FD_ZERO(&amp;writeFds);
+
+    FD_SET(sockfd, &amp;writeFds);
+    FD_SET(sockfd, &amp;readFds);
+
+    timeout.tv_sec = blockTimeMs/1000;
+    timeout.tv_usec = (blockTimeMs%1000)*1000;
+
+    ret = select(sockfd+1, &amp;readFds, &amp;writeFds, NULL, &amp;timeout);
+    if(ret &lt;= 0)
+    &#123;
+        perror(&quot;select timeout or error&quot;);
+        close(sockfd);
+        return -1;
+    &#125;
+
+    if(FD_ISSET(sockfd, &amp;writeFds))
+    &#123;
+        //可读可写有两种可能，一是连接错误，二是在连接后服务端已有数据传来
+        if(FD_ISSET(sockfd, &amp;readFds))
+        &#123;
+            if(connect(sockfd, (struct sockaddr*)&amp;addr, sizeof(addr)) != 0)
+            &#123;
+                int error=0;
+                socklen_t length = sizeof(errno);
+                //调用getsockopt来获取并清除sockfd上的错误.
+                if(getsockopt(sockfd, SOL_SOCKET, SO_ERROR, &amp;error, &amp;length) &lt; 0)
+                &#123;
+                    printf(&quot;get socket option failed\n&quot;);
+                    close(sockfd);
+                    return -1;
+                &#125;
+                if(error != EISCONN)
+                &#123;
+                    perror(&quot;connect error != EISCONN&quot;);
+                    close(sockfd);
+                    return -1;
+                &#125;
+            &#125;
+        &#125;
+        //此时已排除所有错误可能，表明连接成功
+        fcntl(sockfd, F_SETFL, oldOption);
+        return sockfd;
+    &#125;
+    else
+    &#123;
+        perror(&quot;connect failed&quot;);
+        close(sockfd);
+        return -1;
+    &#125;
+&#125;</code></pre></div><hr><div><div class="post-metas my-3"><div class="post-meta mr-3 d-flex align-items-center"><i class="iconfont icon-category"></i> <span class="category-chains"><span class="category-chain"><a href="/categories/%E5%A4%A7%E5%AD%A6%E6%97%B6%E6%9C%9FCSDN/" class="category-chain-item">大学时期CSDN</a></span></span></div><div class="post-meta"><i class="iconfont icon-tags"></i> <a href="/tags/%E6%9C%8D%E5%8A%A1%E5%99%A8%E5%BC%80%E5%8F%91/">#服务器开发</a> <a href="/tags/Linux%E7%BD%91%E7%BB%9C%E7%BC%96%E7%A8%8B/">#Linux网络编程</a></div></div><div class="license-box my-3"><div class="license-title"><div>Linux 怎样实现非阻塞connect</div><div>https://shiyi.threebody.xyz/posts/64027.html</div></div><div class="license-meta"><div class="license-meta-item"><div>作者</div><div>Yi Shi</div></div><div class="license-meta-item license-meta-date"><div>发布于</div><div>2016年11月7日</div></div><div class="license-meta-item"><div>许可协议</div><div><a target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/"><span class="hint--top hint--rounded" aria-label="BY - 署名"><i class="iconfont icon-by"></i> </span></a><a target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/"><span class="hint--top hint--rounded" aria-label="SA - 相同方式共享"><i class="iconfont icon-sa"></i></span></a></div></div></div><div class="license-icon iconfont"></div></div><div class="post-prevnext my-3"><article class="post-prev col-6"><a href="/posts/31126.html" title="游戏后台开发九问(腾讯技术分享实录)"><i class="iconfont icon-arrowleft"></i> <span class="hidden-mobile">游戏后台开发九问(腾讯技术分享实录)</span> <span class="visible-mobile">上一篇</span></a></article><article class="post-next col-6"><a href="/posts/63134.html" title="自制Lex-词法分析器生成器(C++)"><span class="hidden-mobile">自制Lex-词法分析器生成器(C++)</span> <span class="visible-mobile">下一篇</span> <i class="iconfont icon-arrowright"></i></a></article></div></div><article id="comments" lazyload><div id="lv-container" data-id="city" data-uid="MTAyMC80NjEzMS8yMjY0Mg"><script type="text/javascript">Fluid.utils.loadComments("#lv-container",(function(){Fluid.utils.createScript("https://cdn-city.livere.com/js/embed.dist.js")}))</script><noscript>Please enable JavaScript to view the comments</noscript></div></article></article></div></div></div><div class="side-col d-none d-lg-block col-lg-2"><aside class="sidebar" style="margin-left:-1rem"><div id="toc"><p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p><div class="toc-body" id="toc-body"></div></div></aside></div></div></div><a id="scroll-top-button" aria-label="TOP" href="#" role="button"><i class="iconfont icon-arrowup" aria-hidden="true"></i></a><div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable modal-lg" role="document"><div class="modal-content"><div class="modal-header text-center"><h4 class="modal-title w-100 font-weight-bold">搜索</h4><button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button></div><div class="modal-body mx-3"><div class="md-form mb-5"><input type="text" id="local-search-input" class="form-control validate"> <label data-error="x" data-success="v" for="local-search-input">关键词</label></div><div class="list-group" id="local-search-result"></div></div></div></div></div></main><footer><div class="footer-inner"><div class="beian"><span><a href="http://beian.miit.gov.cn/" target="_blank" rel="nofollow noopener">陕ICP备16019529号-2</a></span></div><span id="cnzz_stat_icon_1273342630" style="display:none"></span></div></footer><script src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js"></script><link rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css"><script>NProgress.configure({showSpinner:!0,trickleSpeed:100}),NProgress.start(),window.addEventListener("load",(function(){NProgress.done()}))</script><script src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js"></script><script src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js"></script><script src="/js/events.js"></script><script src="/js/plugins.js"></script><script src="/js/img-lazyload.js"></script><script>Fluid.utils.createScript("https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js",(function(){var t=jQuery("#toc");if(0!==t.length&&window.tocbot){var i=jQuery("#board-ctn").offset().top;window.tocbot.init(Object.assign({tocSelector:"#toc-body",contentSelector:".markdown-body",linkClass:"tocbot-link",activeLinkClass:"tocbot-active-link",listClass:"tocbot-list",isCollapsedClass:"tocbot-is-collapsed",collapsibleClass:"tocbot-is-collapsible",scrollSmooth:!0,includeTitleTags:!0,headingsOffset:-i},CONFIG.toc)),t.find(".toc-list-item").length>0&&t.css("visibility","visible"),Fluid.events.registerRefreshCallback((function(){if("tocbot"in window){tocbot.refresh();var t=jQuery("#toc");if(0===t.length||!tocbot)return;t.find(".toc-list-item").length>0&&t.css("visibility","visible")}}))}}))</script><script src="https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js"></script><script>Fluid.plugins.codeWidget()</script><script>Fluid.utils.createScript("https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js",(function(){window.anchors.options={placement:CONFIG.anchorjs.placement,visible:CONFIG.anchorjs.visible},CONFIG.anchorjs.icon&&(window.anchors.options.icon=CONFIG.anchorjs.icon);var n=(CONFIG.anchorjs.element||"h1,h2,h3,h4,h5,h6").split(","),o=[];for(var s of n)o.push(".markdown-body > "+s.trim());"left"===CONFIG.anchorjs.placement&&(window.anchors.options.class="anchorjs-link-left"),window.anchors.add(o.join(", ")),Fluid.events.registerRefreshCallback((function(){if("anchors"in window){anchors.removeAll();var n=(CONFIG.anchorjs.element||"h1,h2,h3,h4,h5,h6").split(","),o=[];for(var s of n)o.push(".markdown-body > "+s.trim());"left"===CONFIG.anchorjs.placement&&(anchors.options.class="anchorjs-link-left"),anchors.add(o.join(", "))}}))}))</script><script>Fluid.utils.createScript("https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js",(function(){Fluid.plugins.fancyBox()}))</script><script>Fluid.plugins.imageCaption()</script><script src="/js/local-search.js"></script><script src="/js/boot.js"></script><noscript><div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div></noscript></body></html>

@@ -1,0 +1,149 @@
+<!DOCTYPE html><html lang="zh-CN" data-default-color-scheme="auto"><head><meta charset="UTF-8"><link rel="apple-touch-icon" sizes="76x76" href="/favicon/apple-touch-icon.png"><link rel="icon" href="/favicon/favicon-32x32.png"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=5,shrink-to-fit=no"><meta http-equiv="x-ua-compatible" content="ie=edge"><meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests"><meta name="theme-color" content="#2f4154"><meta name="author" content="Yi Shi"><meta name="keywords" content="shiyi, yishi, threebody, blog, golang"><meta name="description" content="前言 最近突然萌生把stl常用的库都通通自己过一遍的想法，算是对泛型编程的一次学习，也深入理解stl，还是对c++11知识的练习，就从智能指针开始吧。另外，c++11让c++程序变得简洁优雅了许多，对这门语言有点爱不释手了。  智能指针原理 通过使用引用计数的方式来自动的对动态申请的内存进行释放，保证指针的生存期和安全性。对智能指针初始化的时候，会将引用计数初始为1，之后每次拷贝或移动赋值时，都对"><meta property="og:type" content="article"><meta property="og:title" content="shared_ptr智能指针模板类的简单实现(c++11)"><meta property="og:url" content="https://shiyi.threebody.xyz/posts/32049.html"><meta property="og:site_name" content="Yi Shi&#39;s Blog"><meta property="og:description" content="前言 最近突然萌生把stl常用的库都通通自己过一遍的想法，算是对泛型编程的一次学习，也深入理解stl，还是对c++11知识的练习，就从智能指针开始吧。另外，c++11让c++程序变得简洁优雅了许多，对这门语言有点爱不释手了。  智能指针原理 通过使用引用计数的方式来自动的对动态申请的内存进行释放，保证指针的生存期和安全性。对智能指针初始化的时候，会将引用计数初始为1，之后每次拷贝或移动赋值时，都对"><meta property="og:locale" content="zh_CN"><meta property="article:published_time" content="2016-12-10T20:51:00.000Z"><meta property="article:modified_time" content="2022-12-08T15:35:14.153Z"><meta property="article:author" content="Yi Shi"><meta property="article:tag" content="C++"><meta name="twitter:card" content="summary_large_image"><title>shared_ptr智能指针模板类的简单实现(c++11) - Yi Shi&#39;s Blog</title><link rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css"><link rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css"><link rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css"><link rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css"><link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css"><link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css"><link rel="stylesheet" href="/css/main.css"><link id="highlight-css" rel="stylesheet" href="/css/highlight.css"><link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css"><script id="fluid-configs">var Fluid=window.Fluid||{};Fluid.ctx=Object.assign({},Fluid.ctx);var CONFIG={hostname:"shiyi.threebody.xyz",root:"/",version:"1.9.3",typing:{enable:!0,typeSpeed:50,cursorChar:"",loop:!1,scope:["home"]},anchorjs:{enable:!0,element:"h1,h2,h3,h4,h5,h6",placement:"left",visible:"hover",icon:""},progressbar:{enable:!0,height_px:3,color:"#29d",options:{showSpinner:!0,trickleSpeed:100}},code_language:{enable:!0,default:"TEXT"},copy_btn:!0,image_caption:{enable:!0},image_zoom:{enable:!0,img_url_replace:["",""]},toc:{enable:!0,placement:"right",headingSelector:"h1,h2,h3,h4,h5,h6",collapseDepth:4},lazyload:{enable:!0,loading_img:"/img/loading.gif",onlypost:!1,offset_factor:2},web_analytics:{enable:!0,follow_dnt:!0,baidu:"75eaaab59c4fa946437e9dea4f8fc07d",google:null,gtag:null,tencent:{sid:null,cid:null},woyaola:null,cnzz:1273342630,leancloud:{app_id:null,app_key:null,server_url:null,path:"window.location.pathname",ignore_local:!1}},search_path:"/local-search.xml"};if(CONFIG.web_analytics.follow_dnt){var dntVal=navigator.doNotTrack||window.doNotTrack||navigator.msDoNotTrack;Fluid.ctx.dnt=dntVal&&(dntVal.startsWith("1")||dntVal.startsWith("yes")||dntVal.startsWith("on"))}</script><script src="/js/utils.js"></script><script src="/js/color-schema.js"></script><script async>if(!Fluid.ctx.dnt){var _hmt=_hmt||[];!function(){var e=document.createElement("script");e.src="https://hm.baidu.com/hm.js?75eaaab59c4fa946437e9dea4f8fc07d";var t=document.getElementsByTagName("script")[0];t.parentNode.insertBefore(e,t)}()}</script><script async>Fluid.ctx.dnt||Fluid.utils.createScript("//s4.cnzz.com/z_stat.php?id=1273342630&show=pic")</script><meta name="generator" content="Hexo 5.4.0"><link rel="alternate" href="/atom.xml" title="Yi Shi's Blog" type="application/atom+xml">
+</head><body><header><div class="header-inner" style="height:40vh"><nav id="navbar" class="navbar fixed-top navbar-expand-lg navbar-dark scrolling-navbar"><div class="container"><a class="navbar-brand" href="/"><strong>Yi Shi&#39;s Blog</strong> </a><button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation"><div class="animated-icon"><span></span><span></span><span></span></div></button><div class="collapse navbar-collapse" id="navbarSupportedContent"><ul class="navbar-nav ml-auto text-center"><li class="nav-item"><a class="nav-link" href="/"><i class="iconfont icon-home-fill"></i> 首页</a></li><li class="nav-item"><a class="nav-link" href="/archives/"><i class="iconfont icon-archive-fill"></i> 归档</a></li><li class="nav-item"><a class="nav-link" href="/categories/"><i class="iconfont icon-category-fill"></i> 分类</a></li><li class="nav-item"><a class="nav-link" href="/tags/"><i class="iconfont icon-tags-fill"></i> 标签</a></li><li class="nav-item"><a class="nav-link" href="/books/"><i class="iconfont icon-book"></i> 读书</a></li><li class="nav-item"><a class="nav-link" href="/about/"><i class="iconfont icon-user-fill"></i> 关于</a></li><li class="nav-item" id="search-btn"><a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">&nbsp;<i class="iconfont icon-search"></i>&nbsp;</a></li><li class="nav-item" id="color-toggle-btn"><a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">&nbsp;<i class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a></li></ul></div></div></nav><div id="banner" class="banner" parallax="true" style="background:url(/image/banner.jpg) no-repeat center center;background-size:cover"><div class="full-bg-img"><div class="mask flex-center" style="background-color:rgba(0,0,0,.5)"><div class="banner-text text-center fade-in-up"><div class="h2"><span id="subtitle">shared_ptr智能指针模板类的简单实现(c++11)</span></div><div class="mt-3"><span class="post-meta"><i class="iconfont icon-date-fill" aria-hidden="true"></i> <time datetime="2016-12-11 04:51" pubdate>2016年12月11日 凌晨</time></span></div><div class="mt-1"></div></div></div></div></div></div></header><main><div class="container-fluid nopadding-x"><div class="row nomargin-x"><div class="side-col d-none d-lg-block col-lg-2"></div><div class="col-lg-8 nopadding-x-md"><div class="container nopadding-x-md" id="board-ctn"><div id="board"><article class="post-content mx-auto"><h1 style="display:none">shared_ptr智能指针模板类的简单实现(c++11)</h1><div class="markdown-body"><h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><blockquote><p>最近突然萌生把stl常用的库都通通自己过一遍的想法，算是对泛型编程的一次学习，也深入理解stl，还是对c++11知识的练习，就从智能指针开始吧。<br>另外，c++11让c++程序变得简洁优雅了许多，对这门语言有点爱不释手了。</p></blockquote><h2 id="智能指针原理"><a href="#智能指针原理" class="headerlink" title="智能指针原理"></a>智能指针原理</h2><blockquote><p>通过使用引用计数的方式来自动的对动态申请的内存进行释放，保证指针的生存期和安全性。<br>对智能指针初始化的时候，会将引用计数初始为1，之后每次拷贝或移动赋值时，都对其引用计数加1.<br>而在其生存期结束，要进行析构时，对其进行引用计数减一，如果引用计数为0，则释放原指针保存的空间。<br>以前总疑惑 ** 指向同一空间的智能指针也是不同的对象，怎么在一个智能指针析构时对指向同一位置的所有智能指针进行操作呢 ** 。<br>其实这个问题很简单， ** 如果引用计数的变量的空间是动态申请的呢，每个智能指针只保存其指针，那么一个智能指针析构时操作就很容易做到影响所有其他智能指针了。<br>**</p></blockquote><h2 id="智能指针需要哪些组成部分"><a href="#智能指针需要哪些组成部分" class="headerlink" title="智能指针需要哪些组成部分"></a>智能指针需要哪些组成部分</h2><h3 id="模拟指针行为"><a href="#模拟指针行为" class="headerlink" title="模拟指针行为"></a>模拟指针行为</h3><p>智能指针，当然是模拟指针行为的类，所以我们要对解引用运算符和箭头运算符进行重载</p><pre><code class="hljs"> T&amp; operator*();//解引用重载
+ T* operator-&gt;();</code></pre><h4 id="箭头运算符重载的特殊性"><a href="#箭头运算符重载的特殊性" class="headerlink" title="箭头运算符重载的特殊性"></a>箭头运算符重载的特殊性</h4><p>c++primer第五版上关于箭头运算符的原话是</p><blockquote><p>和大多数其他运算符一样(尽管这么做不太好)，我们能令operator*完成任何我们指定的操作。箭头运算符则不是这样，它永远 **<br>不能丢掉成员访问这个最基本的含义 ** 。当我们重载箭头时，可以改变的是从哪个对象当中获取成员，而 ** 箭头获取成员 ** 这一事实则永远不变</p></blockquote><p>也就是说，比如我们定义智能指针p；<br>那么在进行*p操作时，等同于对T&amp;操作<br>而p-&gt;abcde操作时，等于(*p)-&gt;abcde;</p><h3 id="析构函数"><a href="#析构函数" class="headerlink" title="析构函数"></a>析构函数</h3><h3 id="拷贝构造函数和拷贝赋值运算符重载"><a href="#拷贝构造函数和拷贝赋值运算符重载" class="headerlink" title="拷贝构造函数和拷贝赋值运算符重载"></a>拷贝构造函数和拷贝赋值运算符重载</h3><p>我们的引用计数更改就是在上述函数内完成的，当然需要自定义。<br>我在此三者基础上，还增加实现了移动赋值的两个函数，搞得有点像标准的三五法则了。<br>其实不然，因为我们这个程序所有传参中均不涉及深拷贝，所以我们并不需要用移动赋值，此处我只是以学习为目的，想使用右值引用和完美转发而已，读者切勿多想。</p><h2 id="代码"><a href="#代码" class="headerlink" title="代码"></a>代码</h2><pre><code class="hljs">//
+//  Shared_ptr.hpp
+//  demo
+//
+//  Created by shiyi on 2016/12/10.
+//  Copyright © 2016年 shiyi. All rights reserved.
+//
+
+#ifndef Shared_ptr_Hpp
+#define Shared_ptr_Hpp
+
+#include &lt;stdio.h&gt;
+#include &lt;iostream&gt;
+
+using namespace std;
+
+template &lt;typename T&gt;
+class Shared_ptr
+&#123;
+private:
+    size_t* m_count;
+    T* m_ptr;
+
+public:
+    //构造函数
+    Shared_ptr() : m_ptr(nullptr), m_count(new size_t)
+    &#123;&#125;
+
+    Shared_ptr( T* ptr ) : m_ptr(ptr), m_count(new size_t)
+    &#123;
+        cout&lt;&lt;&quot;空间申请：&quot;&lt;&lt;ptr&lt;&lt;endl;
+        *m_count = 1;
+    &#125;
+
+    //析构函数
+    ~Shared_ptr()
+    &#123;
+        --(*m_count);
+        if(*m_count == 0)
+        &#123;
+            cout&lt;&lt;&quot;空间释放：&quot;&lt;&lt;m_ptr&lt;&lt;endl;
+            delete m_ptr;
+            delete m_count;
+            m_ptr = nullptr;
+            m_count = nullptr;
+        &#125;
+    &#125;
+
+    //拷贝构造函数
+    Shared_ptr( const Shared_ptr&amp; ptr )
+    &#123;
+        m_count = ptr.m_count;
+        m_ptr = ptr.m_ptr;
+        ++(*m_count);
+    &#125;
+
+    //拷贝赋值运算符
+    void operator=( const Shared_ptr&amp; ptr )
+    &#123;
+        Shared_ptr(std::move(ptr));
+    &#125;
+
+    //移动构造函数
+    Shared_ptr( Shared_ptr&amp;&amp; ptr ) : m_ptr(ptr.m_ptr), m_count(ptr.m_count)
+    &#123;
+        ++(*m_count);
+    &#125;
+
+    //移动赋值运算符
+    void operator=( Shared_ptr&amp;&amp; ptr )
+    &#123;
+        Shared_ptr(std::move(ptr));
+    &#125;
+
+    //解引用运算符
+    T&amp; operator*()
+    &#123;
+        return *m_ptr;
+    &#125;
+
+    //箭头运算符
+    T* operator-&gt;()
+    &#123;
+        return m_ptr;
+    &#125;
+
+    //重载布尔值操作
+    operator bool()
+    &#123;
+        return m_ptr == nullptr;
+    &#125;
+
+    T* get()
+    &#123;
+        return m_ptr;
+    &#125;
+
+    size_t use_count()
+    &#123;
+        return *m_count;
+    &#125;
+
+    bool unique()
+    &#123;
+        return *m_count == 1;
+    &#125;
+
+    void swap( Shared_ptr&amp; ptr )
+    &#123;
+        std::swap(*this, ptr);
+    &#125;
+
+&#125;;
+
+
+
+#endif /* Shared_ptr_Hpp */</code></pre><h3 id="测试代码"><a href="#测试代码" class="headerlink" title="测试代码"></a>测试代码</h3><pre><code class="hljs">#include &quot;Shared_ptr.hpp&quot;
+
+using namespace std;
+
+
+int main()
+&#123;
+    Shared_ptr&lt;int&gt; p1(new int);
+    *p1 = 222;
+    cout&lt;&lt;&quot;值：&quot;&lt;&lt;*p1&lt;&lt;&quot; 引用计数：&quot;&lt;&lt;p1.use_count()&lt;&lt;endl;
+    &#123;
+        Shared_ptr&lt;int&gt; p2(p1);
+        *p2 = 333;
+        cout&lt;&lt;&quot;值：&quot;&lt;&lt;*p2&lt;&lt;&quot; 引用计数：&quot;&lt;&lt;p1.use_count()&lt;&lt;endl;
+
+        Shared_ptr&lt;int&gt; p3(p2);
+        *p3 = 444;
+        cout&lt;&lt;&quot;值：&quot;&lt;&lt;*p3&lt;&lt;&quot; 引用计数：&quot;&lt;&lt;p1.use_count()&lt;&lt;endl;
+    &#125;
+
+    cout&lt;&lt;&quot;引用计数：&quot;&lt;&lt;p1.use_count()&lt;&lt;endl;
+
+    Shared_ptr&lt;string&gt; q1(new string(&quot;我是string1&quot;));
+    cout&lt;&lt;(*(q1)).c_str()&lt;&lt;endl;
+
+    Shared_ptr&lt;string&gt; q2(new string(&quot;我是string2&quot;));
+    q2.swap(q1);
+    cout&lt;&lt;(*(q1)).c_str()&lt;&lt;endl;
+
+    return 0;
+&#125;</code></pre><h3 id="测试结果"><a href="#测试结果" class="headerlink" title="测试结果"></a>测试结果</h3><p>![这里写图片描述](<a target="_blank" rel="noopener" href="http://img.blog.csdn.net/20161211044721300?watermark/2/text/aHR0cDo">http://img.blog.csdn.net/20161211044721300?watermark/2/text/aHR0cDo</a><br>vL2Jsb2cuY3Nkbi5uZXQvdG9fYmVfYmV0dGVy/font/5a6L5L2T/fontsize/400/fill/I0JBQkFC<br>MA==/dissolve/70/gravity/SouthEast)</p></div><hr><div><div class="post-metas my-3"><div class="post-meta mr-3 d-flex align-items-center"><i class="iconfont icon-category"></i> <span class="category-chains"><span class="category-chain"><a href="/categories/%E5%A4%A7%E5%AD%A6%E6%97%B6%E6%9C%9FCSDN/" class="category-chain-item">大学时期CSDN</a></span></span></div><div class="post-meta"><i class="iconfont icon-tags"></i> <a href="/tags/C/">#C++</a></div></div><div class="license-box my-3"><div class="license-title"><div>shared_ptr智能指针模板类的简单实现(c++11)</div><div>https://shiyi.threebody.xyz/posts/32049.html</div></div><div class="license-meta"><div class="license-meta-item"><div>作者</div><div>Yi Shi</div></div><div class="license-meta-item license-meta-date"><div>发布于</div><div>2016年12月11日</div></div><div class="license-meta-item"><div>许可协议</div><div><a target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/"><span class="hint--top hint--rounded" aria-label="BY - 署名"><i class="iconfont icon-by"></i> </span></a><a target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/"><span class="hint--top hint--rounded" aria-label="SA - 相同方式共享"><i class="iconfont icon-sa"></i></span></a></div></div></div><div class="license-icon iconfont"></div></div><div class="post-prevnext my-3"><article class="post-prev col-6"><a href="/posts/10773.html" title="boost:asio信号量signal_set源码分析及使用"><i class="iconfont icon-arrowleft"></i> <span class="hidden-mobile">boost:asio信号量signal_set源码分析及使用</span> <span class="visible-mobile">上一篇</span></a></article><article class="post-next col-6"><a href="/posts/21818.html" title="boost:asio网络库初学之echo服务器客户端实现"><span class="hidden-mobile">boost:asio网络库初学之echo服务器客户端实现</span> <span class="visible-mobile">下一篇</span> <i class="iconfont icon-arrowright"></i></a></article></div></div><article id="comments" lazyload><div id="lv-container" data-id="city" data-uid="MTAyMC80NjEzMS8yMjY0Mg"><script type="text/javascript">Fluid.utils.loadComments("#lv-container",(function(){Fluid.utils.createScript("https://cdn-city.livere.com/js/embed.dist.js")}))</script><noscript>Please enable JavaScript to view the comments</noscript></div></article></article></div></div></div><div class="side-col d-none d-lg-block col-lg-2"><aside class="sidebar" style="margin-left:-1rem"><div id="toc"><p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p><div class="toc-body" id="toc-body"></div></div></aside></div></div></div><a id="scroll-top-button" aria-label="TOP" href="#" role="button"><i class="iconfont icon-arrowup" aria-hidden="true"></i></a><div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable modal-lg" role="document"><div class="modal-content"><div class="modal-header text-center"><h4 class="modal-title w-100 font-weight-bold">搜索</h4><button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button></div><div class="modal-body mx-3"><div class="md-form mb-5"><input type="text" id="local-search-input" class="form-control validate"> <label data-error="x" data-success="v" for="local-search-input">关键词</label></div><div class="list-group" id="local-search-result"></div></div></div></div></div></main><footer><div class="footer-inner"><div class="beian"><span><a href="http://beian.miit.gov.cn/" target="_blank" rel="nofollow noopener">陕ICP备16019529号-2</a></span></div><span id="cnzz_stat_icon_1273342630" style="display:none"></span></div></footer><script src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js"></script><link rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css"><script>NProgress.configure({showSpinner:!0,trickleSpeed:100}),NProgress.start(),window.addEventListener("load",(function(){NProgress.done()}))</script><script src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js"></script><script src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js"></script><script src="/js/events.js"></script><script src="/js/plugins.js"></script><script src="/js/img-lazyload.js"></script><script>Fluid.utils.createScript("https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js",(function(){var t=jQuery("#toc");if(0!==t.length&&window.tocbot){var i=jQuery("#board-ctn").offset().top;window.tocbot.init(Object.assign({tocSelector:"#toc-body",contentSelector:".markdown-body",linkClass:"tocbot-link",activeLinkClass:"tocbot-active-link",listClass:"tocbot-list",isCollapsedClass:"tocbot-is-collapsed",collapsibleClass:"tocbot-is-collapsible",scrollSmooth:!0,includeTitleTags:!0,headingsOffset:-i},CONFIG.toc)),t.find(".toc-list-item").length>0&&t.css("visibility","visible"),Fluid.events.registerRefreshCallback((function(){if("tocbot"in window){tocbot.refresh();var t=jQuery("#toc");if(0===t.length||!tocbot)return;t.find(".toc-list-item").length>0&&t.css("visibility","visible")}}))}}))</script><script src="https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js"></script><script>Fluid.plugins.codeWidget()</script><script>Fluid.utils.createScript("https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js",(function(){window.anchors.options={placement:CONFIG.anchorjs.placement,visible:CONFIG.anchorjs.visible},CONFIG.anchorjs.icon&&(window.anchors.options.icon=CONFIG.anchorjs.icon);var n=(CONFIG.anchorjs.element||"h1,h2,h3,h4,h5,h6").split(","),o=[];for(var s of n)o.push(".markdown-body > "+s.trim());"left"===CONFIG.anchorjs.placement&&(window.anchors.options.class="anchorjs-link-left"),window.anchors.add(o.join(", ")),Fluid.events.registerRefreshCallback((function(){if("anchors"in window){anchors.removeAll();var n=(CONFIG.anchorjs.element||"h1,h2,h3,h4,h5,h6").split(","),o=[];for(var s of n)o.push(".markdown-body > "+s.trim());"left"===CONFIG.anchorjs.placement&&(anchors.options.class="anchorjs-link-left"),anchors.add(o.join(", "))}}))}))</script><script>Fluid.utils.createScript("https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js",(function(){Fluid.plugins.fancyBox()}))</script><script>Fluid.plugins.imageCaption()</script><script src="/js/local-search.js"></script><script src="/js/boot.js"></script><noscript><div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div></noscript></body></html>

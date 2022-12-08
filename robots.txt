@@ -1,0 +1,23 @@
+User-agent: *
+Allow: /
+Allow: /about/
+Allow: /books/
+Allow: /archives/
+Allow: /categories/
+Allow: /posts/
+Allow: /tags/
+
+Disallow: /photo/
+Disallow: /assert/
+Disallow: /images/
+Disallow: /404/
+Disallow: /vendors/
+Disallow: /js/
+Disallow: /css/
+Disallow: /fonts/
+Disallow: /vendors/
+Disallow: /fancybox/
+
+
+Sitemap: https://shiyi.threebody.xyz/sitemap.xml
+Sitemap: https://shiyi.threebody.xyz/baidusitemap.xml

@@ -1,0 +1,380 @@
+<!DOCTYPE html><html lang="zh-CN" data-default-color-scheme="auto"><head><meta charset="UTF-8"><link rel="apple-touch-icon" sizes="76x76" href="/favicon/apple-touch-icon.png"><link rel="icon" href="/favicon/favicon-32x32.png"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=5,shrink-to-fit=no"><meta http-equiv="x-ua-compatible" content="ie=edge"><meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests"><meta name="theme-color" content="#2f4154"><meta name="author" content="Yi Shi"><meta name="keywords" content="shiyi, yishi, threebody, blog, golang"><meta name="description" content="前言 改了又改，查了又查，想了又想，我真的不知道怎样让它再聪明了，大多时候走的都是正确的，但偶尔会蹦出那么一步臭棋，全盘皆输。 **希望有相关经验的道友看到后可以指出原因和不足。 **  效果图 按钮什么的还未完成，只是能实现正常的下棋了。  完成过程UI部分 本来准备找张棋盘图片做背景，想了下我们还有人机界面课呢，权当复习一下javaGUI了，事实上过程比我想象中简单许多。现在界面部分输出游戏结"><meta property="og:type" content="article"><meta property="og:title" content="五子棋AI图形界面人机对战(JAVA实现)"><meta property="og:url" content="https://shiyi.threebody.xyz/posts/32040.html"><meta property="og:site_name" content="Yi Shi&#39;s Blog"><meta property="og:description" content="前言 改了又改，查了又查，想了又想，我真的不知道怎样让它再聪明了，大多时候走的都是正确的，但偶尔会蹦出那么一步臭棋，全盘皆输。 **希望有相关经验的道友看到后可以指出原因和不足。 **  效果图 按钮什么的还未完成，只是能实现正常的下棋了。  完成过程UI部分 本来准备找张棋盘图片做背景，想了下我们还有人机界面课呢，权当复习一下javaGUI了，事实上过程比我想象中简单许多。现在界面部分输出游戏结"><meta property="og:locale" content="zh_CN"><meta property="og:image" content="http://img.blog.csdn.net/20160317135042608"><meta property="article:published_time" content="2016-03-17T05:52:00.000Z"><meta property="article:modified_time" content="2022-12-08T15:35:14.153Z"><meta property="article:author" content="Yi Shi"><meta property="article:tag" content="游戏开发"><meta property="article:tag" content="人机对弈"><meta property="article:tag" content="Java"><meta property="article:tag" content="智能算法"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:image" content="http://img.blog.csdn.net/20160317135042608"><title>五子棋AI图形界面人机对战(JAVA实现) - Yi Shi&#39;s Blog</title><link rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css"><link rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css"><link rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css"><link rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css"><link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css"><link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css"><link rel="stylesheet" href="/css/main.css"><link id="highlight-css" rel="stylesheet" href="/css/highlight.css"><link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css"><script id="fluid-configs">var Fluid=window.Fluid||{};Fluid.ctx=Object.assign({},Fluid.ctx);var CONFIG={hostname:"shiyi.threebody.xyz",root:"/",version:"1.9.3",typing:{enable:!0,typeSpeed:50,cursorChar:"",loop:!1,scope:["home"]},anchorjs:{enable:!0,element:"h1,h2,h3,h4,h5,h6",placement:"left",visible:"hover",icon:""},progressbar:{enable:!0,height_px:3,color:"#29d",options:{showSpinner:!0,trickleSpeed:100}},code_language:{enable:!0,default:"TEXT"},copy_btn:!0,image_caption:{enable:!0},image_zoom:{enable:!0,img_url_replace:["",""]},toc:{enable:!0,placement:"right",headingSelector:"h1,h2,h3,h4,h5,h6",collapseDepth:4},lazyload:{enable:!0,loading_img:"/img/loading.gif",onlypost:!1,offset_factor:2},web_analytics:{enable:!0,follow_dnt:!0,baidu:"75eaaab59c4fa946437e9dea4f8fc07d",google:null,gtag:null,tencent:{sid:null,cid:null},woyaola:null,cnzz:1273342630,leancloud:{app_id:null,app_key:null,server_url:null,path:"window.location.pathname",ignore_local:!1}},search_path:"/local-search.xml"};if(CONFIG.web_analytics.follow_dnt){var dntVal=navigator.doNotTrack||window.doNotTrack||navigator.msDoNotTrack;Fluid.ctx.dnt=dntVal&&(dntVal.startsWith("1")||dntVal.startsWith("yes")||dntVal.startsWith("on"))}</script><script src="/js/utils.js"></script><script src="/js/color-schema.js"></script><script async>if(!Fluid.ctx.dnt){var _hmt=_hmt||[];!function(){var e=document.createElement("script");e.src="https://hm.baidu.com/hm.js?75eaaab59c4fa946437e9dea4f8fc07d";var t=document.getElementsByTagName("script")[0];t.parentNode.insertBefore(e,t)}()}</script><script async>Fluid.ctx.dnt||Fluid.utils.createScript("//s4.cnzz.com/z_stat.php?id=1273342630&show=pic")</script><meta name="generator" content="Hexo 5.4.0"><link rel="alternate" href="/atom.xml" title="Yi Shi's Blog" type="application/atom+xml">
+</head><body><header><div class="header-inner" style="height:40vh"><nav id="navbar" class="navbar fixed-top navbar-expand-lg navbar-dark scrolling-navbar"><div class="container"><a class="navbar-brand" href="/"><strong>Yi Shi&#39;s Blog</strong> </a><button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation"><div class="animated-icon"><span></span><span></span><span></span></div></button><div class="collapse navbar-collapse" id="navbarSupportedContent"><ul class="navbar-nav ml-auto text-center"><li class="nav-item"><a class="nav-link" href="/"><i class="iconfont icon-home-fill"></i> 首页</a></li><li class="nav-item"><a class="nav-link" href="/archives/"><i class="iconfont icon-archive-fill"></i> 归档</a></li><li class="nav-item"><a class="nav-link" href="/categories/"><i class="iconfont icon-category-fill"></i> 分类</a></li><li class="nav-item"><a class="nav-link" href="/tags/"><i class="iconfont icon-tags-fill"></i> 标签</a></li><li class="nav-item"><a class="nav-link" href="/books/"><i class="iconfont icon-book"></i> 读书</a></li><li class="nav-item"><a class="nav-link" href="/about/"><i class="iconfont icon-user-fill"></i> 关于</a></li><li class="nav-item" id="search-btn"><a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">&nbsp;<i class="iconfont icon-search"></i>&nbsp;</a></li><li class="nav-item" id="color-toggle-btn"><a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">&nbsp;<i class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a></li></ul></div></div></nav><div id="banner" class="banner" parallax="true" style="background:url(/image/banner.jpg) no-repeat center center;background-size:cover"><div class="full-bg-img"><div class="mask flex-center" style="background-color:rgba(0,0,0,.5)"><div class="banner-text text-center fade-in-up"><div class="h2"><span id="subtitle">五子棋AI图形界面人机对战(JAVA实现)</span></div><div class="mt-3"><span class="post-meta"><i class="iconfont icon-date-fill" aria-hidden="true"></i> <time datetime="2016-03-17 13:52" pubdate>2016年3月17日 下午</time></span></div><div class="mt-1"></div></div></div></div></div></div></header><main><div class="container-fluid nopadding-x"><div class="row nomargin-x"><div class="side-col d-none d-lg-block col-lg-2"></div><div class="col-lg-8 nopadding-x-md"><div class="container nopadding-x-md" id="board-ctn"><div id="board"><article class="post-content mx-auto"><h1 style="display:none">五子棋AI图形界面人机对战(JAVA实现)</h1><div class="markdown-body"><h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><blockquote><p>改了又改，查了又查，想了又想，我真的不知道怎样让它再聪明了，大多时候走的都是正确的，但偶尔会蹦出那么一步臭棋，全盘皆输。 **<br>希望有相关经验的道友看到后可以指出原因和不足。 **</p></blockquote><h2 id="效果图"><a href="#效果图" class="headerlink" title="效果图"></a>效果图</h2><blockquote><p>按钮什么的还未完成，只是能实现正常的下棋了。<br><img src="http://img.blog.csdn.net/20160317135042608" srcset="/img/loading.gif" lazyload></p></blockquote><h2 id="完成过程"><a href="#完成过程" class="headerlink" title="完成过程"></a>完成过程</h2><h3 id="UI部分"><a href="#UI部分" class="headerlink" title="UI部分"></a>UI部分</h3><blockquote><p>本来准备找张棋盘图片做背景，想了下我们还有人机界面课呢，权当复习一下java<br>GUI了，事实上过程比我想象中简单许多。现在界面部分输出游戏结果和按钮什么的还没来得及弄，只是凑合可以玩了，闲了再加上，先贴出来，找点动力再说。</p></blockquote><blockquote></blockquote><blockquote><p>棋盘部分 －－ 实现落子，撤子，判断是否成五子(游戏结束)。对局面的评估函数(这个很重要，下面专门会解释)<br>AI部分(这个更重要了) ， 主要功能就是得出AI的下一步走法。</p></blockquote><h3 id="alpha-beta剪枝搜索"><a href="#alpha-beta剪枝搜索" class="headerlink" title="alpha_beta剪枝搜索"></a>alpha_beta剪枝搜索</h3><blockquote><p>未了解过此算法的可先去看<br><a target="_blank" rel="noopener" href="http://blog.csdn.net/to_be_better/article/details/50464280">最大最小搜索</a><br><a target="_blank" rel="noopener" href="http://blog.csdn.net/to_be_better/article/details/50464320">Alpha-Beta剪枝</a><br>上面两文解释的很清楚了，在此就不再赘述。</p></blockquote><h3 id="估值函数"><a href="#估值函数" class="headerlink" title="估值函数"></a>估值函数</h3><blockquote><p>判断是否能成5, 如果是机器方的话给予100000分，如果是人方的话给予－100000 分；<br>判断是否能成活4或者是双死4或者是死4活3，如果是机器方的话给予10000分，如果是人方的话给予－10000分；<br>判断是否已成双活3，如果是机器方的话给予5000分，如果是人方的话给予－5000 分；<br>判断是否成死3活3，如果是机器方的话给予1000分，如果是人方的话给予－1000 分；<br>判断是否能成死4，如果是机器方的话给予500分，如果是人方的话给予－500分；<br>判断是否能成单活3，如果是机器方的话给予200分，如果是人方的话给予－200分；<br>判断是否已成双活2，如果是机器方的话给予100分，如果是人方的话给予－100分；<br>判断是否能成死3，如果是机器方的话给予50分，如果是人方的话给予－50分；<br>判断是否能成双活2，如果是机器方的话给予10分，如果是人方的话给予－10分；<br>判断是否能成活2，如果是机器方的话给予5分，如果是人方的话给予－5分；<br>判断是否能成死2，如果是机器方的话给予3分，如果是人方的话给予－3分。</p></blockquote><h2 id="存在的问题以及未完成的地方"><a href="#存在的问题以及未完成的地方" class="headerlink" title="存在的问题以及未完成的地方"></a>存在的问题以及未完成的地方</h2><blockquote><p>最主要的问题就是偶尔会走臭棋。反复调试找原因，甚至把搜索方法又重新写了一遍，还是无果。觉得问题出现在估值函数上，但又想不出如何解决。<br>未完成的地方当然是提高搜索的效率了，每次估值都是要全盘进行估值，这样造成的时间影响是很大的，还可以用位棋盘来保存局面的情况，每走一步进行更新，每次回溯时再恢<br>复，这样估值时之用考虑最近的一步，而不是全局了。这个等日后有时间再好好改进一下吧。<br>对于输赢的判断已经有了，但是还少了UI部分的显示，只是仅仅输出提示在命令行上。</p></blockquote><h2 id="代码"><a href="#代码" class="headerlink" title="代码"></a>代码</h2><h3 id="AI走法搜索部分-－－"><a href="#AI走法搜索部分-－－" class="headerlink" title="AI走法搜索部分 －－"></a>AI走法搜索部分 －－</h3><pre><code class="hljs">import java.util.Random;
+
+/**
+ * Created by shiyi on 16/3/14.
+ */
+public class Robot &#123;
+
+    private static ChessBoard chess = ChessBoard.getInstance();
+    private Robot() &#123;&#125;
+    private static int depth = 1;
+    private static int robotColor = chess.BLACK;
+    private static Robot robot = new Robot();
+
+    public static Robot getRobot() &#123;
+        return robot;
+    &#125;
+
+    /* alpha_beta剪枝搜索 */
+    public int alpha_betaFind(int depth, int alpha, int beta, int color, int prex, int prey) &#123;
+
+        if(depth &gt;= Robot.depth || 0 != chess.isEnd(prex, prey, color%2+1)) &#123;
+
+            int ans = chess.reckon(robotColor) - chess.reckon(robotColor%2 + 1);
+
+            if(depth % 2 == 0)
+                ans = -ans;
+
+            return ans;
+        &#125;
+
+        for(int x=1; x&lt;=chess.N; x++) &#123;
+            for(int y=1; y&lt;=chess.N; y++) &#123;
+
+                if(!chess.isEmpty(x, y))
+                    continue;
+
+                chess.makeMove(x, y, color);
+                int val = -alpha_betaFind(depth+1, -beta, -alpha, color%2+1, x, y);
+
+                chess.unMove(x, y);
+
+                if(val &gt;= beta)
+                    return beta;
+
+                if(val &gt; alpha)
+                    alpha = val;
+            &#125;
+        &#125;
+        return alpha;
+    &#125;
+
+    /* 返回AI走法 */
+    public int[] getNext(int color) &#123;
+        int rel[] = new int[2];
+        int ans = -100000000;
+
+        Random random = new Random();
+
+        for(int x=1; x&lt;=chess.N; x++) &#123;
+            for(int y=1; y&lt;=chess.N; y++) &#123;
+
+                if(!chess.isEmpty(x, y))
+                    continue;
+
+                chess.makeMove(x, y, color);
+
+                int val = -alpha_betaFind(0, -100000000, 100000000, color%2 + 1, x, y);
+
+                int ra = random.nextInt(100);
+                if(val &gt; ans || val == ans &amp;&amp; ra &gt;= 50) &#123;
+                    ans = val;
+                    rel[0] = x;
+                    rel[1] = y;
+                &#125;
+                chess.unMove(x, y);
+            &#125;
+        &#125;
+        return rel;
+    &#125;
+&#125;</code></pre><h3 id="落子撤子以及估值-－－ChessBoard"><a href="#落子撤子以及估值-－－ChessBoard" class="headerlink" title="落子撤子以及估值 －－ChessBoard"></a>落子撤子以及估值 －－ChessBoard</h3><pre><code class="hljs">/**
+ * Created by shiyi on 16/3/14.
+ */
+public class ChessBoard &#123;
+    public final int N = 15;
+    public final int EMPTY = 0;
+    public final int BLACK = 1;
+    public final int WHITE = 2;
+
+    public int[][] board = new int[N+1][N+1];
+
+    private ChessBoard() &#123;&#125;
+    private static final ChessBoard chess = new ChessBoard();
+
+    /* 返回类单例 */
+    public static ChessBoard getInstance() &#123;
+        return chess;
+    &#125;
+
+    /*  判断该位置是否无子 */
+    public boolean isEmpty(int x, int y) &#123;
+        return board[x][y] == EMPTY;
+    &#125;
+
+    /* 落子 */
+    public void makeMove(int x, int y, int color) &#123;
+        board[x][y] = color;
+    &#125;
+
+    /* 撤子 */
+    public void unMove(int x, int y) &#123;
+        board[x][y] = EMPTY;
+    &#125;
+
+    public int reckon(int color) &#123;
+
+        int dx[] = &#123;1, 0, 1, 1&#125;;
+        int dy[] = &#123;0, 1, 1, -1&#125;;
+        int ans = 0;
+
+        for(int x=1; x&lt;=N; x++) &#123;
+            for (int y = 1; y &lt;= N; y++) &#123;
+                if (board[x][y] != color)
+                    continue;
+
+                int num[][] = new int[2][100];
+
+                for (int i = 0; i &lt; 4; i++) &#123;
+                    int sum = 1;
+                    int flag1 = 0, flag2 = 0;
+
+                    int tx = x + dx[i];
+                    int ty = y + dy[i];
+                    while (tx &gt; 0 &amp;&amp; tx &lt;= N
+                            &amp;&amp; ty &gt; 0 &amp;&amp; ty &lt;= N
+                            &amp;&amp; board[tx][ty] == color) &#123;
+                        tx += dx[i];
+                        ty += dy[i];
+                        ++sum;
+                    &#125;
+
+                    if(tx &gt; 0 &amp;&amp; tx &lt;= N
+                            &amp;&amp; ty &gt; 0 &amp;&amp; ty &lt;= N
+                            &amp;&amp; board[tx][ty] == EMPTY)
+                        flag1 = 1;
+
+                    tx = x - dx[i];
+                    ty = y - dy[i];
+                    while (tx &gt; 0 &amp;&amp; tx &lt;= N
+                            &amp;&amp; ty &gt; 0 &amp;&amp; ty &lt;= N
+                            &amp;&amp; board[tx][ty] == color) &#123;
+                        tx -= dx[i];
+                        ty -= dy[i];
+                        ++sum;
+                    &#125;
+
+                    if(tx &gt; 0 &amp;&amp; tx &lt;= N
+                            &amp;&amp; ty &gt; 0 &amp;&amp; ty &lt;= N
+                            &amp;&amp; board[tx][ty] == EMPTY)
+                        flag2 = 1;
+
+                    if(flag1 + flag2 &gt; 0)
+                        ++num[flag1 + flag2 - 1][sum];
+                &#125;
+
+                //成5
+                if(num[0][5] + num[1][5] &gt; 0)
+                    ans = Math.max(ans, 100000);
+                    //活4 | 双死四 | 死4活3
+                else if(num[1][4] &gt; 0
+                        || num[0][4] &gt; 1
+                        || (num[0][4] &gt; 0 &amp;&amp; num[1][3] &gt; 0))
+                    ans = Math.max(ans, 10000);
+                    //双活3
+                else if(num[1][3] &gt; 1)
+                    ans = Math.max(ans, 5000);
+                    //死3活3
+                else if(num[1][3] &gt; 0 &amp;&amp; num[0][3] &gt; 0)
+                    ans = Math.max(ans, 1000);
+                    //死4
+                else if(num[0][4] &gt; 0)
+                    ans = Math.max(ans, 500);
+                    //单活3
+                else if(num[1][3] &gt; 0)
+                    ans = Math.max(ans, 200);
+                    //双活2
+                else if(num[1][2] &gt; 1)
+                    ans = Math.max(ans, 100);
+                    //死3
+                else if(num[0][3] &gt; 0)
+                    ans = Math.max(ans, 50);
+                    //双活2
+                else if(num[1][2] &gt; 1)
+                    ans = Math.max(ans, 10);
+                    //单活2
+                else if(num[1][2] &gt; 0)
+                    ans = Math.max(ans, 5);
+                    //死2
+                else if(num[0][2] &gt; 0)
+                    ans = Math.max(ans, 1);
+
+            &#125;
+        &#125;
+
+        return ans;
+    &#125;
+
+    /* 判断局面是否结束 0未结束 1WHITE赢 2BLACK赢 */
+    public int isEnd(int x, int y, int color) &#123;
+        int dx[] = &#123;1, 0, 1, 1&#125;;
+        int dy[] = &#123;0, 1, 1, -1&#125;;
+
+        for (int i = 0; i &lt; 4; i++) &#123;
+            int sum = 1;
+
+            int tx = x + dx[i];
+            int ty = y + dy[i];
+            while (tx &gt; 0 &amp;&amp; tx &lt;= N
+                    &amp;&amp; ty &gt; 0 &amp;&amp; ty &lt;= N
+                    &amp;&amp; board[tx][ty] == color) &#123;
+                tx += dx[i];
+                ty += dy[i];
+                ++sum;
+            &#125;
+
+            tx = x - dx[i];
+            ty = y - dy[i];
+            while (tx &gt; 0 &amp;&amp; tx &lt;= N
+                    &amp;&amp; ty &gt; 0 &amp;&amp; ty &lt;= N
+                    &amp;&amp; board[tx][ty] == color) &#123;
+
+                tx -= dx[i];
+                ty -= dy[i];
+                ++sum;
+            &#125;
+
+
+            if(sum &gt;= 5)
+                return color;
+        &#125;
+        return 0;
+    &#125;
+&#125;</code></pre><h2 id="UI部分-1"><a href="#UI部分-1" class="headerlink" title="UI部分"></a>UI部分</h2><pre><code class="hljs">import java.awt.*;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.util.Random;
+
+/**
+ * Created by shiyi on 16/3/15.
+ */
+public class UI &#123;
+    private ChessBoard chess = ChessBoard.getInstance();
+    private int userColor = chess.WHITE;
+    private int robotColor = chess.BLACK;
+    private Frame frame = new Frame(&quot;绘制棋盘&quot;);
+    private MyChess drawArea = new MyChess();
+    private Robot robot = Robot.getRobot();
+
+    public void init()&#123;
+
+        Panel p = new Panel();
+        //机器执先
+        chess.makeMove(chess.N/2+1, chess.N/2+1, chess.BLACK);
+
+        drawArea.setPreferredSize(new Dimension(720, 720));
+
+        drawArea.addMouseListener(new MouseListener() &#123;
+            @Override
+            public void mouseClicked(MouseEvent e) &#123;
+                int x = e.getX();
+                int y = e.getY();
+                int i = (x-60)/40+1;
+                int j = (y-60)/40+1;
+                System.out.println(i+&quot;---&quot;+j);
+                if(chess.isEmpty(i, j)) &#123;
+
+                    chess.makeMove(i, j, userColor);
+                    int rel = chess.isEnd(i, j, userColor);
+                    if(rel != 0) &#123;
+                        System.out.println(&quot;玩家胜利&quot;);
+                        return;
+                    &#125;
+                    drawArea.repaint();
+                    int rob[] = robot.getNext(robotColor);
+                    chess.makeMove(rob[0], rob[1], robotColor);
+                    rel = chess.isEnd(rob[0], rob[1], robotColor);
+                    if(rel != 0) &#123;
+                        System.out.println(&quot;机器胜利&quot;);
+                        return;
+                    &#125;
+                    drawArea.repaint();
+                &#125;
+
+            &#125;
+
+            @Override
+            public void mousePressed(MouseEvent e) &#123;
+
+            &#125;
+
+            @Override
+            public void mouseReleased(MouseEvent e) &#123;
+
+            &#125;
+
+            @Override
+            public void mouseEntered(MouseEvent e) &#123;
+
+            &#125;
+
+            @Override
+            public void mouseExited(MouseEvent e) &#123;
+
+            &#125;
+        &#125;);
+
+        frame.add(drawArea);
+        frame.setSize(900, 720);
+        frame.setVisible(true);
+    &#125;
+&#125;
+
+
+class MyChess extends Canvas &#123;
+
+    private ChessBoard chess = ChessBoard.getInstance();
+    private final int N = chess.N + 2;
+    private final int square = 40;
+    private final int stx = square;
+    private final int sty = square;
+    private final int length = (N-1)*square;
+
+    public void drawPiece(int color, int x, int y, Graphics g) &#123;
+        if (color == chess.BLACK) &#123;
+            g.setColor(new Color(0, 0, 0));
+            g.fillArc(stx + x * square - 19, sty + y * square - 19, 38, 38, 0, 360);
+        &#125; else if (color == chess.WHITE) &#123;
+            g.setColor(new Color(255, 255, 255));
+            g.fillArc(stx + x * square - 19, sty + y * square - 19, 38, 38, 0, 360);
+        &#125;
+    &#125;
+
+    public void paint(Graphics g) &#123;
+
+        g.setColor(new Color(0, 0, 0));
+        g.fillRect(stx-8, sty-8, stx+(N-2)*square+15, sty+(N-2)*square+15);
+        g.setColor(new Color(139, 255, 71));
+        g.fillRect(stx-4, sty-4, stx+(N-2)*square+7, sty+(N-2)*square+7);
+
+        g.setColor(new Color(0, 0, 0));
+
+        g.fillArc(stx+8*square-6, sty+8*square-6, 12, 12, 0, 360);
+        g.fillArc(stx+4*square-6, sty+4*square-6, 12, 12, 0, 360);
+        g.fillArc(stx+4*square-6, sty+12*square-6, 12, 12, 0, 360);
+        g.fillArc(stx+12*square-6, sty+4*square-6, 12, 12, 0, 360);
+        g.fillArc(stx+12*square-6, sty+12*square-6, 12, 12, 0, 360);
+
+        for(int i = 0; i &lt; N; i++) &#123;
+
+            g.drawLine(stx+i*square, sty, stx+i*square, sty+length);
+            g.drawLine(stx, sty+i*square, stx+length, sty+i*square);
+        &#125;
+
+        for(int i=1; i&lt;=chess.N; i++) &#123;
+            for(int j=1; j&lt;=chess.N; j++) &#123;
+                drawPiece(chess.board[i][j], i, j, g);
+            &#125;
+        &#125;
+    &#125;
+&#125;</code></pre><h3 id="Main"><a href="#Main" class="headerlink" title="Main"></a>Main</h3><pre><code class="hljs">/**
+ * Created by shiyi on 16/3/14.
+ */
+public class Main &#123;
+    public static void main(String[] args) &#123;
+        System.out.println(&quot;游戏开始&quot;);
+
+        UI ui = new UI();
+        ui.init();
+    &#125;
+&#125;</code></pre></div><hr><div><div class="post-metas my-3"><div class="post-meta mr-3 d-flex align-items-center"><i class="iconfont icon-category"></i> <span class="category-chains"><span class="category-chain"><a href="/categories/%E5%A4%A7%E5%AD%A6%E6%97%B6%E6%9C%9FCSDN/" class="category-chain-item">大学时期CSDN</a></span></span></div><div class="post-meta"><i class="iconfont icon-tags"></i> <a href="/tags/%E6%B8%B8%E6%88%8F%E5%BC%80%E5%8F%91/">#游戏开发</a> <a href="/tags/%E4%BA%BA%E6%9C%BA%E5%AF%B9%E5%BC%88/">#人机对弈</a> <a href="/tags/Java/">#Java</a> <a href="/tags/%E6%99%BA%E8%83%BD%E7%AE%97%E6%B3%95/">#智能算法</a></div></div><div class="license-box my-3"><div class="license-title"><div>五子棋AI图形界面人机对战(JAVA实现)</div><div>https://shiyi.threebody.xyz/posts/32040.html</div></div><div class="license-meta"><div class="license-meta-item"><div>作者</div><div>Yi Shi</div></div><div class="license-meta-item license-meta-date"><div>发布于</div><div>2016年3月17日</div></div><div class="license-meta-item"><div>许可协议</div><div><a target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/"><span class="hint--top hint--rounded" aria-label="BY - 署名"><i class="iconfont icon-by"></i> </span></a><a target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/"><span class="hint--top hint--rounded" aria-label="SA - 相同方式共享"><i class="iconfont icon-sa"></i></span></a></div></div></div><div class="license-icon iconfont"></div></div><div class="post-prevnext my-3"><article class="post-prev col-6"><a href="/posts/48643.html" title="JSOI2008最大数maxnumber(栈&amp;二分查找)"><i class="iconfont icon-arrowleft"></i> <span class="hidden-mobile">JSOI2008最大数maxnumber(栈&amp;二分查找)</span> <span class="visible-mobile">上一篇</span></a></article><article class="post-next col-6"><a href="/posts/25671.html" title="快慢指针判断单向链表是否有环及找环入口"><span class="hidden-mobile">快慢指针判断单向链表是否有环及找环入口</span> <span class="visible-mobile">下一篇</span> <i class="iconfont icon-arrowright"></i></a></article></div></div><article id="comments" lazyload><div id="lv-container" data-id="city" data-uid="MTAyMC80NjEzMS8yMjY0Mg"><script type="text/javascript">Fluid.utils.loadComments("#lv-container",(function(){Fluid.utils.createScript("https://cdn-city.livere.com/js/embed.dist.js")}))</script><noscript>Please enable JavaScript to view the comments</noscript></div></article></article></div></div></div><div class="side-col d-none d-lg-block col-lg-2"><aside class="sidebar" style="margin-left:-1rem"><div id="toc"><p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p><div class="toc-body" id="toc-body"></div></div></aside></div></div></div><a id="scroll-top-button" aria-label="TOP" href="#" role="button"><i class="iconfont icon-arrowup" aria-hidden="true"></i></a><div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable modal-lg" role="document"><div class="modal-content"><div class="modal-header text-center"><h4 class="modal-title w-100 font-weight-bold">搜索</h4><button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button></div><div class="modal-body mx-3"><div class="md-form mb-5"><input type="text" id="local-search-input" class="form-control validate"> <label data-error="x" data-success="v" for="local-search-input">关键词</label></div><div class="list-group" id="local-search-result"></div></div></div></div></div></main><footer><div class="footer-inner"><div class="beian"><span><a href="http://beian.miit.gov.cn/" target="_blank" rel="nofollow noopener">陕ICP备16019529号-2</a></span></div><span id="cnzz_stat_icon_1273342630" style="display:none"></span></div></footer><script src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js"></script><link rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css"><script>NProgress.configure({showSpinner:!0,trickleSpeed:100}),NProgress.start(),window.addEventListener("load",(function(){NProgress.done()}))</script><script src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js"></script><script src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js"></script><script src="/js/events.js"></script><script src="/js/plugins.js"></script><script src="/js/img-lazyload.js"></script><script>Fluid.utils.createScript("https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js",(function(){var t=jQuery("#toc");if(0!==t.length&&window.tocbot){var i=jQuery("#board-ctn").offset().top;window.tocbot.init(Object.assign({tocSelector:"#toc-body",contentSelector:".markdown-body",linkClass:"tocbot-link",activeLinkClass:"tocbot-active-link",listClass:"tocbot-list",isCollapsedClass:"tocbot-is-collapsed",collapsibleClass:"tocbot-is-collapsible",scrollSmooth:!0,includeTitleTags:!0,headingsOffset:-i},CONFIG.toc)),t.find(".toc-list-item").length>0&&t.css("visibility","visible"),Fluid.events.registerRefreshCallback((function(){if("tocbot"in window){tocbot.refresh();var t=jQuery("#toc");if(0===t.length||!tocbot)return;t.find(".toc-list-item").length>0&&t.css("visibility","visible")}}))}}))</script><script src="https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js"></script><script>Fluid.plugins.codeWidget()</script><script>Fluid.utils.createScript("https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js",(function(){window.anchors.options={placement:CONFIG.anchorjs.placement,visible:CONFIG.anchorjs.visible},CONFIG.anchorjs.icon&&(window.anchors.options.icon=CONFIG.anchorjs.icon);var n=(CONFIG.anchorjs.element||"h1,h2,h3,h4,h5,h6").split(","),o=[];for(var s of n)o.push(".markdown-body > "+s.trim());"left"===CONFIG.anchorjs.placement&&(window.anchors.options.class="anchorjs-link-left"),window.anchors.add(o.join(", ")),Fluid.events.registerRefreshCallback((function(){if("anchors"in window){anchors.removeAll();var n=(CONFIG.anchorjs.element||"h1,h2,h3,h4,h5,h6").split(","),o=[];for(var s of n)o.push(".markdown-body > "+s.trim());"left"===CONFIG.anchorjs.placement&&(anchors.options.class="anchorjs-link-left"),anchors.add(o.join(", "))}}))}))</script><script>Fluid.utils.createScript("https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js",(function(){Fluid.plugins.fancyBox()}))</script><script>Fluid.plugins.imageCaption()</script><script src="/js/local-search.js"></script><script src="/js/boot.js"></script><noscript><div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div></noscript></body></html>

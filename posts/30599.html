@@ -1,0 +1,228 @@
+<!DOCTYPE html><html lang="zh-CN" data-default-color-scheme="auto"><head><meta charset="UTF-8"><link rel="apple-touch-icon" sizes="76x76" href="/favicon/apple-touch-icon.png"><link rel="icon" href="/favicon/favicon-32x32.png"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=5,shrink-to-fit=no"><meta http-equiv="x-ua-compatible" content="ie=edge"><meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests"><meta name="theme-color" content="#2f4154"><meta name="author" content="Yi Shi"><meta name="keywords" content="shiyi, yishi, threebody, blog, golang"><meta name="description" content="前言 断断续续学遗传到现在快一个礼拜了，之前一直在看思想，死想活想，始终不敢去自己代码实现。今天硬着头皮开始写，写不下去就找博文看，总算是初步的实现了，迈出了智能算法学习的第一小步，心情不可谓不激动。好吧，说正经的。  tsp&amp;旅行商问题 旅行商问题，即TSP问题（Traveling Salesman Problem）是数学领域中著名问题之一。** 假设有一个旅行商人要拜访N个城市，他必须"><meta property="og:type" content="article"><meta property="og:title" content="初学遗传算法解决tsp问题(C++)"><meta property="og:url" content="https://shiyi.threebody.xyz/posts/30599.html"><meta property="og:site_name" content="Yi Shi&#39;s Blog"><meta property="og:description" content="前言 断断续续学遗传到现在快一个礼拜了，之前一直在看思想，死想活想，始终不敢去自己代码实现。今天硬着头皮开始写，写不下去就找博文看，总算是初步的实现了，迈出了智能算法学习的第一小步，心情不可谓不激动。好吧，说正经的。  tsp&amp;旅行商问题 旅行商问题，即TSP问题（Traveling Salesman Problem）是数学领域中著名问题之一。** 假设有一个旅行商人要拜访N个城市，他必须"><meta property="og:locale" content="zh_CN"><meta property="og:image" content="http://img.blog.csdn.net/20160419151241489"><meta property="og:image" content="http://img.blog.csdn.net/20160419145501214"><meta property="article:published_time" content="2016-04-19T07:03:00.000Z"><meta property="article:modified_time" content="2022-12-08T15:35:14.153Z"><meta property="article:author" content="Yi Shi"><meta property="article:tag" content="智能算法"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:image" content="http://img.blog.csdn.net/20160419151241489"><title>初学遗传算法解决tsp问题(C++) - Yi Shi&#39;s Blog</title><link rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css"><link rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css"><link rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css"><link rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css"><link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css"><link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css"><link rel="stylesheet" href="/css/main.css"><link id="highlight-css" rel="stylesheet" href="/css/highlight.css"><link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css"><script id="fluid-configs">var Fluid=window.Fluid||{};Fluid.ctx=Object.assign({},Fluid.ctx);var CONFIG={hostname:"shiyi.threebody.xyz",root:"/",version:"1.9.3",typing:{enable:!0,typeSpeed:50,cursorChar:"",loop:!1,scope:["home"]},anchorjs:{enable:!0,element:"h1,h2,h3,h4,h5,h6",placement:"left",visible:"hover",icon:""},progressbar:{enable:!0,height_px:3,color:"#29d",options:{showSpinner:!0,trickleSpeed:100}},code_language:{enable:!0,default:"TEXT"},copy_btn:!0,image_caption:{enable:!0},image_zoom:{enable:!0,img_url_replace:["",""]},toc:{enable:!0,placement:"right",headingSelector:"h1,h2,h3,h4,h5,h6",collapseDepth:4},lazyload:{enable:!0,loading_img:"/img/loading.gif",onlypost:!1,offset_factor:2},web_analytics:{enable:!0,follow_dnt:!0,baidu:"75eaaab59c4fa946437e9dea4f8fc07d",google:null,gtag:null,tencent:{sid:null,cid:null},woyaola:null,cnzz:1273342630,leancloud:{app_id:null,app_key:null,server_url:null,path:"window.location.pathname",ignore_local:!1}},search_path:"/local-search.xml"};if(CONFIG.web_analytics.follow_dnt){var dntVal=navigator.doNotTrack||window.doNotTrack||navigator.msDoNotTrack;Fluid.ctx.dnt=dntVal&&(dntVal.startsWith("1")||dntVal.startsWith("yes")||dntVal.startsWith("on"))}</script><script src="/js/utils.js"></script><script src="/js/color-schema.js"></script><script async>if(!Fluid.ctx.dnt){var _hmt=_hmt||[];!function(){var e=document.createElement("script");e.src="https://hm.baidu.com/hm.js?75eaaab59c4fa946437e9dea4f8fc07d";var t=document.getElementsByTagName("script")[0];t.parentNode.insertBefore(e,t)}()}</script><script async>Fluid.ctx.dnt||Fluid.utils.createScript("//s4.cnzz.com/z_stat.php?id=1273342630&show=pic")</script><meta name="generator" content="Hexo 5.4.0"><link rel="alternate" href="/atom.xml" title="Yi Shi's Blog" type="application/atom+xml">
+</head><body><header><div class="header-inner" style="height:40vh"><nav id="navbar" class="navbar fixed-top navbar-expand-lg navbar-dark scrolling-navbar"><div class="container"><a class="navbar-brand" href="/"><strong>Yi Shi&#39;s Blog</strong> </a><button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation"><div class="animated-icon"><span></span><span></span><span></span></div></button><div class="collapse navbar-collapse" id="navbarSupportedContent"><ul class="navbar-nav ml-auto text-center"><li class="nav-item"><a class="nav-link" href="/"><i class="iconfont icon-home-fill"></i> 首页</a></li><li class="nav-item"><a class="nav-link" href="/archives/"><i class="iconfont icon-archive-fill"></i> 归档</a></li><li class="nav-item"><a class="nav-link" href="/categories/"><i class="iconfont icon-category-fill"></i> 分类</a></li><li class="nav-item"><a class="nav-link" href="/tags/"><i class="iconfont icon-tags-fill"></i> 标签</a></li><li class="nav-item"><a class="nav-link" href="/books/"><i class="iconfont icon-book"></i> 读书</a></li><li class="nav-item"><a class="nav-link" href="/about/"><i class="iconfont icon-user-fill"></i> 关于</a></li><li class="nav-item" id="search-btn"><a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">&nbsp;<i class="iconfont icon-search"></i>&nbsp;</a></li><li class="nav-item" id="color-toggle-btn"><a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">&nbsp;<i class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a></li></ul></div></div></nav><div id="banner" class="banner" parallax="true" style="background:url(/image/banner.jpg) no-repeat center center;background-size:cover"><div class="full-bg-img"><div class="mask flex-center" style="background-color:rgba(0,0,0,.5)"><div class="banner-text text-center fade-in-up"><div class="h2"><span id="subtitle">初学遗传算法解决tsp问题(C++)</span></div><div class="mt-3"><span class="post-meta"><i class="iconfont icon-date-fill" aria-hidden="true"></i> <time datetime="2016-04-19 15:03" pubdate>2016年4月19日 下午</time></span></div><div class="mt-1"></div></div></div></div></div></div></header><main><div class="container-fluid nopadding-x"><div class="row nomargin-x"><div class="side-col d-none d-lg-block col-lg-2"></div><div class="col-lg-8 nopadding-x-md"><div class="container nopadding-x-md" id="board-ctn"><div id="board"><article class="post-content mx-auto"><h1 style="display:none">初学遗传算法解决tsp问题(C++)</h1><div class="markdown-body"><h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><blockquote><p>断断续续学遗传到现在快一个礼拜了，之前一直在看思想，死想活想，始终不敢去自己代码实现。<br>今天硬着头皮开始写，写不下去就找博文看，总算是初步的实现了，迈出了智能算法学习的第一小步，心情不可谓不激动。<br>好吧，说正经的。</p></blockquote><h2 id="tsp-amp-旅行商问题"><a href="#tsp-amp-旅行商问题" class="headerlink" title="tsp&amp;旅行商问题"></a>tsp&amp;旅行商问题</h2><blockquote><p>旅行商问题，即TSP问题（Traveling Salesman Problem）是数学领域中著名问题之一。<br>** 假设有一个旅行商人要拜访N个城市，他必须选择所要走的路径，路径的限制是 _ 每个城市只能拜访一次 _ ，而且最后要回到原来出发的城市。 **<br>** 路径的选择目标是要求得的路径路程为所有路径之中的最小值。 **</p></blockquote><h2 id="遗传算法"><a href="#遗传算法" class="headerlink" title="遗传算法"></a>遗传算法</h2><h3 id="算法思想"><a href="#算法思想" class="headerlink" title="算法思想"></a>算法思想</h3><blockquote><p>从遗传两个字，不难想到，这个算法是由生物进化的机理所抽象出来的一种思想。<br>对于一个问题，有许多可能的解。<br>就拿上述的tsp问题来说吧，每一种遍历顺序都是一个解。所有城市顺序的全排列合在一起就是这个问题的解集。<br>** 我们将每个解都看做一个个体。那么多个个体放在一起就可以构成一个种群。 **<br>大自然每个种群都要经过漫长的自然选择，也就是优胜劣汰，以及繁殖和变异。<br>而解所构成的种群也不例外。<br>显然，我们可以很明确的 ** 对每个个体的优劣性进行评价 ** 。本体的条件是总路程最短，根据解得到总路程的大小是很容易的。<br>评价过后，对于每个个体的优劣我们都已掌握。<br>那么残酷的地方来了，我们要 ** 杀死(淘汰) ** 一部分个体。<br>当然也不能光杀，温馨的部分也是有的，那就是两两个体 ** 交叉繁殖 ** ，产生后代。<br>除此之外，还要有一点幸运度，那就是 ** 变异 ** 了，随机的对某些个体进行一些改变。<br>上述操作进行完之后，我们已经相当于更新了整个群体。<br>然后重复的进行此过程，直到得到满意的(个体)结果。</p></blockquote><p>** 上述内容总结一下，就是下图。 **<br><img src="http://img.blog.csdn.net/20160419151241489" srcset="/img/loading.gif" lazyload alt="这里写图片描述"></p><h3 id="交叉方式与变异方式"><a href="#交叉方式与变异方式" class="headerlink" title="交叉方式与变异方式"></a>交叉方式与变异方式</h3><blockquote><p>交叉方式有很多种，对于不同的问题，交叉方式的不同对于求解会有一定的影响。<br>变异同理。<br>这里只介绍我所用的方式。其实也是最普通最常用的方式。</p></blockquote><h4 id="交叉方式"><a href="#交叉方式" class="headerlink" title="交叉方式"></a>交叉方式</h4><pre><code class="hljs">父个体：1 2 3 4 9 8 7 6 5 0
+母个体：7 8 9 0 1 6 5 4 3 2
+那么随机取两个值，比如：4和6
+将父个体划分：1 2 3 [4 9] 8 7 6 5 0
+则，将划分区间内的基因赋给子个体
+子个体：x x x 4 9 x x x x x
+再按照母个体的基因顺序赋值给子个体
+子个体：7 8 0 4 9 1 6 5 3 2</code></pre><h4 id="变异方式"><a href="#变异方式" class="headerlink" title="变异方式"></a>变异方式</h4><pre><code class="hljs">个体：  1 2 3 4 9 8 7 6 5 0
+还是随机选取两个值，比如：4和6
+那么，交换位置4和位置6的基因。
+新个体：1 2 3 8 9 4 7 6 5 0</code></pre><h2 id="程序效果"><a href="#程序效果" class="headerlink" title="程序效果"></a>程序效果</h2><p><img src="http://img.blog.csdn.net/20160419145501214" srcset="/img/loading.gif" lazyload alt="这里写图片描述"></p><blockquote><p>** 可以看到，20次求解有14次得到了最优解，在牺牲了一定最优性的情况下，换取了程序快速得解的能力。 **</p></blockquote><h2 id="不足"><a href="#不足" class="headerlink" title="不足"></a>不足</h2><blockquote><p>因为是第一次写，交叉和变异都用了最常用也是最简单的方式。<br>** 对于同一个问题，使用不同的交叉方式和变异方式，效果会有很大不同。还有种群个体数量以及进化迭代次数，变异概率等等参数的不同取值，都会有影响。 **<br>而这些只有不停的实践，才可以真正掌握一定经验。长路漫漫，吾往矣！</p></blockquote><h2 id="代码"><a href="#代码" class="headerlink" title="代码"></a>代码</h2><pre><code class="hljs">#include &lt;iostream&gt;
+#include &lt;string.h&gt;
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;time.h&gt;
+
+using namespace std;
+
+const int city_num = 10;//城市数量
+const int unit_num = 100;//群体规模
+int ps = 10;//变异概率
+const int genmax = 500;//最大迭代数
+
+//城市间距离映射 最优解权值=10
+int length_table[10][10] = &#123;
+
+    &#123;0,1,1272,2567,1653,2097,1425,1177,3947,1&#125;,
+
+    &#123;1,0,1,2511,1633,2077,1369,1157,3961,1518&#125;,
+
+    &#123;1272,1,0,1,380,1490,821,856,3660,385&#125;,
+
+    &#123;2567,2511,1,0,1,2335,1562,2165,3995,933&#125;,
+
+    &#123;1653,1633,380,1,0,1,1041,1135,3870,456&#125;,
+
+    &#123;2097,2077,1490,2335,1,0,1,920,2170,1920&#125;,
+
+    &#123;1425,1369,821,1562,1041,1,0,1,4290,626&#125;,
+
+    &#123;1177,1157,856,2165,1135,920,1,0,1,1290&#125;,
+
+    &#123;3947,3961,3660,3995,3870,2170,4290,1,0,1&#125;,
+
+    &#123;1,1518,385,993,456,1920,626,1290,1,0&#125;
+&#125;;
+
+class Unit
+&#123;
+public:
+    int path[city_num];//个体的路径信息
+    int length;//个体价值
+&#125;;
+
+class Group
+&#123;
+public:
+    Unit group[unit_num];
+    Unit best;
+    int best_gen;
+
+    Group()
+    &#123;
+        best.length = 0x3f3f3f3f;
+        best_gen = 0;
+        for(int i = 0; i &lt; unit_num; i++)
+        &#123;
+            bool flag[city_num] = &#123;&#125;;
+
+            for(int j = 0; j &lt; city_num; j++)
+            &#123;
+                int t_city = rand()%city_num;
+                while(flag[t_city])
+                    t_city = rand()%city_num;
+                flag[t_city] = true;
+                group[i].path[j] = t_city;
+            &#125;
+        &#125;
+    &#125;
+
+    //对每个个体进行评估
+    void assess()
+    &#123;
+        for(int k = 0; k &lt; unit_num; k++)
+        &#123;
+            int rel = 0;
+            for(int i = 1; i &lt; city_num; i++)
+                rel += length_table[group[k].path[i-1]][group[k].path[i]];
+            rel += length_table[group[k].path[city_num-1]][group[k].path[0]];
+            group[k].length = rel;
+        &#125;
+    &#125;
+
+    //根据评估结果对个体进行排序
+    void unit_sort()
+    &#123;
+        for(int i = 0; i &lt; unit_num; i++)
+        &#123;
+            for(int j = i+1; j &lt; unit_num; j++)
+            &#123;
+                if(group[i].length &gt; group[j].length)
+                &#123;
+                    Unit temp;
+                    memcpy(&amp;temp, &amp;group[i], sizeof(Unit));
+                    memcpy(&amp;group[i], &amp;group[j], sizeof(Unit));
+                    memcpy(&amp;group[j], &amp;temp, sizeof(Unit));
+                &#125;
+            &#125;
+        &#125;
+    &#125;
+
+    //交叉
+    Unit cross(Unit &amp;father, Unit &amp;mother)
+    &#123;
+        int l = rand()%city_num;
+        int r = rand()%city_num;
+        if(l &gt; r)
+            swap(l, r);
+
+        bool flag[city_num] = &#123;&#125;;
+        for(int i = l; i &lt;= r; i++)
+            flag[father.path[i]] = true;
+
+        Unit son;
+        int pos = 0;
+
+        for(int i = 0; i &lt; l; i++)
+        &#123;
+            while(flag[mother.path[pos]])
+                pos++;
+            son.path[i] = mother.path[pos++];
+        &#125;
+        for(int i = l; i &lt;= r; i++)
+            son.path[i] = father.path[i];
+        for(int i = r+1; i &lt; city_num; i++)
+        &#123;
+            while(flag[mother.path[pos]])
+                pos++;
+            son.path[i] = mother.path[pos++];
+        &#125;
+
+        return son;
+    &#125;
+
+    //突变
+    void mutation(Unit &amp;t)
+    &#123;
+        int proport = rand() % 100;
+
+        if(proport &gt; ps)
+            return;
+        int one = rand()%city_num;
+        int two = rand()%city_num;
+        while(two != one)
+            two = rand()%city_num;
+        swap(t.path[one], t.path[two]);
+    &#125;
+
+    //输出信息
+    void print()
+    &#123;
+        for(int i = 0; i &lt; unit_num; i++)
+        &#123;
+            printf(&quot;第%d个个体，路径信息：&quot;, i);
+            for(int j = 0; j &lt; city_num; j++)
+                printf(&quot;%d &quot;, group[i].path[j]);
+
+            printf(&quot;;总权值：%d;\n&quot;, group[i].length);
+        &#125;
+        printf(&quot;最优个体，路径信息：&quot;);
+        for(int j = 0; j &lt; city_num; j++)
+            printf(&quot;%d &quot;, group[0].path[j]);
+
+        printf(&quot;;总权值：%d;\n&quot;, group[0].length);
+    &#125;
+
+    //种群进化
+    void work()
+    &#123;
+        for(int i = 0; i &lt; genmax; i++)
+        &#123;
+            //如果进化层数大于20，加大变异的概率
+            if(i &gt; 20)
+                ps *= 3;
+
+            assess();//评估
+
+            unit_sort();//根据评估结果排序
+
+            if(best.length &gt; group[0].length)
+            &#123;
+                memcpy(&amp;best, &amp;group[0], sizeof(group[0]));
+                best_gen = i;
+            &#125;
+
+            for(int j = 0; j+2 &lt; unit_num; j+=3)
+                group[j+2] = cross(group[j], group[j+1]);
+
+            for(int j = 0; j &lt; city_num; j++)//变异(从1开始，保留最优)
+                mutation(group[j]);
+        &#125;
+    &#125;
+
+&#125;;
+
+Unit group[unit_num];//种群变量
+Unit bestone;//记录最短路径
+int generation_num;//记录当前达到了第几代
+
+
+
+int main()
+&#123;
+    srand((int)time(0));
+
+    for(int i = 0; i &lt; 20; i++)
+    &#123;
+        Group g;
+        g.work();
+        printf(&quot;第%d次求解。路径：&quot;, i+1);
+        for(int j = 0; j &lt; city_num; j++)
+            printf(&quot;%d &quot;, g.best.path[j]);
+
+        printf(&quot;;总权值：%d; 第%d代;\n&quot;, g.best.length, g.best_gen);
+    &#125;
+    return 0;
+&#125;</code></pre></div><hr><div><div class="post-metas my-3"><div class="post-meta mr-3 d-flex align-items-center"><i class="iconfont icon-category"></i> <span class="category-chains"><span class="category-chain"><a href="/categories/%E5%A4%A7%E5%AD%A6%E6%97%B6%E6%9C%9FCSDN/" class="category-chain-item">大学时期CSDN</a></span></span></div><div class="post-meta"><i class="iconfont icon-tags"></i> <a href="/tags/%E6%99%BA%E8%83%BD%E7%AE%97%E6%B3%95/">#智能算法</a></div></div><div class="license-box my-3"><div class="license-title"><div>初学遗传算法解决tsp问题(C++)</div><div>https://shiyi.threebody.xyz/posts/30599.html</div></div><div class="license-meta"><div class="license-meta-item"><div>作者</div><div>Yi Shi</div></div><div class="license-meta-item license-meta-date"><div>发布于</div><div>2016年4月19日</div></div><div class="license-meta-item"><div>许可协议</div><div><a target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/"><span class="hint--top hint--rounded" aria-label="BY - 署名"><i class="iconfont icon-by"></i> </span></a><a target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/"><span class="hint--top hint--rounded" aria-label="SA - 相同方式共享"><i class="iconfont icon-sa"></i></span></a></div></div></div><div class="license-icon iconfont"></div></div><div class="post-prevnext my-3"><article class="post-prev col-6"><a href="/posts/10072.html" title="BestCoder Round"><i class="iconfont icon-arrowleft"></i> <span class="hidden-mobile">BestCoder Round</span> <span class="visible-mobile">上一篇</span></a></article><article class="post-next col-6"><a href="/posts/60175.html" title="njust sequence(二分查找)"><span class="hidden-mobile">njust sequence(二分查找)</span> <span class="visible-mobile">下一篇</span> <i class="iconfont icon-arrowright"></i></a></article></div></div><article id="comments" lazyload><div id="lv-container" data-id="city" data-uid="MTAyMC80NjEzMS8yMjY0Mg"><script type="text/javascript">Fluid.utils.loadComments("#lv-container",(function(){Fluid.utils.createScript("https://cdn-city.livere.com/js/embed.dist.js")}))</script><noscript>Please enable JavaScript to view the comments</noscript></div></article></article></div></div></div><div class="side-col d-none d-lg-block col-lg-2"><aside class="sidebar" style="margin-left:-1rem"><div id="toc"><p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p><div class="toc-body" id="toc-body"></div></div></aside></div></div></div><a id="scroll-top-button" aria-label="TOP" href="#" role="button"><i class="iconfont icon-arrowup" aria-hidden="true"></i></a><div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable modal-lg" role="document"><div class="modal-content"><div class="modal-header text-center"><h4 class="modal-title w-100 font-weight-bold">搜索</h4><button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button></div><div class="modal-body mx-3"><div class="md-form mb-5"><input type="text" id="local-search-input" class="form-control validate"> <label data-error="x" data-success="v" for="local-search-input">关键词</label></div><div class="list-group" id="local-search-result"></div></div></div></div></div></main><footer><div class="footer-inner"><div class="beian"><span><a href="http://beian.miit.gov.cn/" target="_blank" rel="nofollow noopener">陕ICP备16019529号-2</a></span></div><span id="cnzz_stat_icon_1273342630" style="display:none"></span></div></footer><script src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js"></script><link rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css"><script>NProgress.configure({showSpinner:!0,trickleSpeed:100}),NProgress.start(),window.addEventListener("load",(function(){NProgress.done()}))</script><script src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js"></script><script src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js"></script><script src="/js/events.js"></script><script src="/js/plugins.js"></script><script src="/js/img-lazyload.js"></script><script>Fluid.utils.createScript("https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js",(function(){var t=jQuery("#toc");if(0!==t.length&&window.tocbot){var i=jQuery("#board-ctn").offset().top;window.tocbot.init(Object.assign({tocSelector:"#toc-body",contentSelector:".markdown-body",linkClass:"tocbot-link",activeLinkClass:"tocbot-active-link",listClass:"tocbot-list",isCollapsedClass:"tocbot-is-collapsed",collapsibleClass:"tocbot-is-collapsible",scrollSmooth:!0,includeTitleTags:!0,headingsOffset:-i},CONFIG.toc)),t.find(".toc-list-item").length>0&&t.css("visibility","visible"),Fluid.events.registerRefreshCallback((function(){if("tocbot"in window){tocbot.refresh();var t=jQuery("#toc");if(0===t.length||!tocbot)return;t.find(".toc-list-item").length>0&&t.css("visibility","visible")}}))}}))</script><script src="https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js"></script><script>Fluid.plugins.codeWidget()</script><script>Fluid.utils.createScript("https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js",(function(){window.anchors.options={placement:CONFIG.anchorjs.placement,visible:CONFIG.anchorjs.visible},CONFIG.anchorjs.icon&&(window.anchors.options.icon=CONFIG.anchorjs.icon);var n=(CONFIG.anchorjs.element||"h1,h2,h3,h4,h5,h6").split(","),o=[];for(var s of n)o.push(".markdown-body > "+s.trim());"left"===CONFIG.anchorjs.placement&&(window.anchors.options.class="anchorjs-link-left"),window.anchors.add(o.join(", ")),Fluid.events.registerRefreshCallback((function(){if("anchors"in window){anchors.removeAll();var n=(CONFIG.anchorjs.element||"h1,h2,h3,h4,h5,h6").split(","),o=[];for(var s of n)o.push(".markdown-body > "+s.trim());"left"===CONFIG.anchorjs.placement&&(anchors.options.class="anchorjs-link-left"),anchors.add(o.join(", "))}}))}))</script><script>Fluid.utils.createScript("https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js",(function(){Fluid.plugins.fancyBox()}))</script><script>Fluid.plugins.imageCaption()</script><script src="/js/local-search.js"></script><script src="/js/boot.js"></script><noscript><div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div></noscript></body></html>

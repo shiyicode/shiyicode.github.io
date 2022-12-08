@@ -1,0 +1,176 @@
+<!DOCTYPE html><html lang="zh-CN" data-default-color-scheme="auto"><head><meta charset="UTF-8"><link rel="apple-touch-icon" sizes="76x76" href="/favicon/apple-touch-icon.png"><link rel="icon" href="/favicon/favicon-32x32.png"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=5,shrink-to-fit=no"><meta http-equiv="x-ua-compatible" content="ie=edge"><meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests"><meta name="theme-color" content="#2f4154"><meta name="author" content="Yi Shi"><meta name="keywords" content="shiyi, yishi, threebody, blog, golang"><meta name="description" content="分析 表达式里包含五种符号：左括号，右括号，连接符，选择符，闭包符。连接符因为优先级最高，可以将其过滤掉，不予考虑。  闭包符* 首先来说闭包，无非两种情况：X* 或者 (…..)*两者都可以看做是从一个起始状态，经过诸多输入到达一个终止状态。如 1– X –&gt;2 和 1– (……) –&gt; 2。那么闭包符可以看做是以下操作：1 – ε –&gt; 22 – ε –&gt; 1即将首尾以"><meta property="og:type" content="article"><meta property="og:title" content="正规表达式转NFA(C++)"><meta property="og:url" content="https://shiyi.threebody.xyz/posts/7094.html"><meta property="og:site_name" content="Yi Shi&#39;s Blog"><meta property="og:description" content="分析 表达式里包含五种符号：左括号，右括号，连接符，选择符，闭包符。连接符因为优先级最高，可以将其过滤掉，不予考虑。  闭包符* 首先来说闭包，无非两种情况：X* 或者 (…..)*两者都可以看做是从一个起始状态，经过诸多输入到达一个终止状态。如 1– X –&gt;2 和 1– (……) –&gt; 2。那么闭包符可以看做是以下操作：1 – ε –&gt; 22 – ε –&gt; 1即将首尾以"><meta property="og:locale" content="zh_CN"><meta property="article:published_time" content="2016-10-01T18:56:00.000Z"><meta property="article:modified_time" content="2022-12-08T15:35:14.153Z"><meta property="article:author" content="Yi Shi"><meta property="article:tag" content="编译原理"><meta name="twitter:card" content="summary_large_image"><title>正规表达式转NFA(C++) - Yi Shi&#39;s Blog</title><link rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css"><link rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css"><link rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css"><link rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css"><link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css"><link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css"><link rel="stylesheet" href="/css/main.css"><link id="highlight-css" rel="stylesheet" href="/css/highlight.css"><link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css"><script id="fluid-configs">var Fluid=window.Fluid||{};Fluid.ctx=Object.assign({},Fluid.ctx);var CONFIG={hostname:"shiyi.threebody.xyz",root:"/",version:"1.9.3",typing:{enable:!0,typeSpeed:50,cursorChar:"",loop:!1,scope:["home"]},anchorjs:{enable:!0,element:"h1,h2,h3,h4,h5,h6",placement:"left",visible:"hover",icon:""},progressbar:{enable:!0,height_px:3,color:"#29d",options:{showSpinner:!0,trickleSpeed:100}},code_language:{enable:!0,default:"TEXT"},copy_btn:!0,image_caption:{enable:!0},image_zoom:{enable:!0,img_url_replace:["",""]},toc:{enable:!0,placement:"right",headingSelector:"h1,h2,h3,h4,h5,h6",collapseDepth:4},lazyload:{enable:!0,loading_img:"/img/loading.gif",onlypost:!1,offset_factor:2},web_analytics:{enable:!0,follow_dnt:!0,baidu:"75eaaab59c4fa946437e9dea4f8fc07d",google:null,gtag:null,tencent:{sid:null,cid:null},woyaola:null,cnzz:1273342630,leancloud:{app_id:null,app_key:null,server_url:null,path:"window.location.pathname",ignore_local:!1}},search_path:"/local-search.xml"};if(CONFIG.web_analytics.follow_dnt){var dntVal=navigator.doNotTrack||window.doNotTrack||navigator.msDoNotTrack;Fluid.ctx.dnt=dntVal&&(dntVal.startsWith("1")||dntVal.startsWith("yes")||dntVal.startsWith("on"))}</script><script src="/js/utils.js"></script><script src="/js/color-schema.js"></script><script async>if(!Fluid.ctx.dnt){var _hmt=_hmt||[];!function(){var e=document.createElement("script");e.src="https://hm.baidu.com/hm.js?75eaaab59c4fa946437e9dea4f8fc07d";var t=document.getElementsByTagName("script")[0];t.parentNode.insertBefore(e,t)}()}</script><script async>Fluid.ctx.dnt||Fluid.utils.createScript("//s4.cnzz.com/z_stat.php?id=1273342630&show=pic")</script><meta name="generator" content="Hexo 5.4.0"><link rel="alternate" href="/atom.xml" title="Yi Shi's Blog" type="application/atom+xml">
+</head><body><header><div class="header-inner" style="height:40vh"><nav id="navbar" class="navbar fixed-top navbar-expand-lg navbar-dark scrolling-navbar"><div class="container"><a class="navbar-brand" href="/"><strong>Yi Shi&#39;s Blog</strong> </a><button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation"><div class="animated-icon"><span></span><span></span><span></span></div></button><div class="collapse navbar-collapse" id="navbarSupportedContent"><ul class="navbar-nav ml-auto text-center"><li class="nav-item"><a class="nav-link" href="/"><i class="iconfont icon-home-fill"></i> 首页</a></li><li class="nav-item"><a class="nav-link" href="/archives/"><i class="iconfont icon-archive-fill"></i> 归档</a></li><li class="nav-item"><a class="nav-link" href="/categories/"><i class="iconfont icon-category-fill"></i> 分类</a></li><li class="nav-item"><a class="nav-link" href="/tags/"><i class="iconfont icon-tags-fill"></i> 标签</a></li><li class="nav-item"><a class="nav-link" href="/books/"><i class="iconfont icon-book"></i> 读书</a></li><li class="nav-item"><a class="nav-link" href="/about/"><i class="iconfont icon-user-fill"></i> 关于</a></li><li class="nav-item" id="search-btn"><a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">&nbsp;<i class="iconfont icon-search"></i>&nbsp;</a></li><li class="nav-item" id="color-toggle-btn"><a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">&nbsp;<i class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a></li></ul></div></div></nav><div id="banner" class="banner" parallax="true" style="background:url(/image/banner.jpg) no-repeat center center;background-size:cover"><div class="full-bg-img"><div class="mask flex-center" style="background-color:rgba(0,0,0,.5)"><div class="banner-text text-center fade-in-up"><div class="h2"><span id="subtitle">正规表达式转NFA(C++)</span></div><div class="mt-3"><span class="post-meta"><i class="iconfont icon-date-fill" aria-hidden="true"></i> <time datetime="2016-10-02 02:56" pubdate>2016年10月2日 凌晨</time></span></div><div class="mt-1"></div></div></div></div></div></div></header><main><div class="container-fluid nopadding-x"><div class="row nomargin-x"><div class="side-col d-none d-lg-block col-lg-2"></div><div class="col-lg-8 nopadding-x-md"><div class="container nopadding-x-md" id="board-ctn"><div id="board"><article class="post-content mx-auto"><h1 style="display:none">正规表达式转NFA(C++)</h1><div class="markdown-body"><h3 id="分析"><a href="#分析" class="headerlink" title="分析"></a>分析</h3><blockquote><p>表达式里包含五种符号：左括号，右括号，连接符，选择符，闭包符。<br>连接符因为优先级最高，可以将其过滤掉，不予考虑。</p></blockquote><h4 id="闭包符"><a href="#闭包符" class="headerlink" title="闭包符*"></a>闭包符*</h4><blockquote><p>首先来说闭包，无非两种情况：<br>X* 或者 (…..)*<br>两者都可以看做是从一个起始状态，经过诸多输入到达一个终止状态。如 1– X –&gt;2 和 1– (……) –&gt; 2。<br>那么闭包符可以看做是以下操作：<br>1 – ε –&gt; 2<br>2 – ε –&gt; 1<br>即将首尾以空连接即可。</p></blockquote><h4 id="选择符"><a href="#选择符" class="headerlink" title="选择符|"></a>选择符|</h4><blockquote><p>把整体式也看做在一个大括号内的话，我们可以认为选择符一定是在括号内出现的。那么对一个括号内的表达式，我们给定它一个起始状态和终止状态，那么选择符处理方法<br>如下：<br>(.A.|.B.|.C.)<br>st – .A. –&gt; ed<br>st – .B. –&gt; ed<br>st – .C. –&gt; ed<br>即将|分隔的每部分表达式都与首尾状态连接。</p></blockquote><h4 id="括号"><a href="#括号" class="headerlink" title="括号()"></a>括号()</h4><blockquote><p>因为括号的嵌套问题，让这个转化变得稍微棘手了些，但利用递归思想，每个括号里面的表达式看做一个子问题，对于括号内的式子给定该式一起始状态和终止状态，那么(<br>…)和X也就没有什么区别了。</p></blockquote><h3 id="思路"><a href="#思路" class="headerlink" title="思路"></a>思路</h3><blockquote><p>首先我们定义三个栈：<br>s_str，保存输入信息<br>s_st，保存起始状态序号<br>s_ed，保存终止状态序号<br>我们用一个例子来解释栈的进出规则。</p></blockquote><pre><code class="hljs">ab*(a*|(ab)*)</code></pre><blockquote><p>** 上式基本涵盖了所有表达式存在的情况，仔细看完它的转化过程，转化为代码是很容易的。 **<br>首先，将整个式子的起始状态id设为0和终止状态id为1，将其分别入栈s_st和s_ed<br>接下来对整个表达式进行扫描<br>[a] 添加状态id=3，入栈s_st，a入栈s_str.<br>[b] 添加状态id=4，入栈s_st，b入栈s_str.<br>[(] 因为上一个符号b已经添加的状态4可以作为括号内部分的起始状态，那么只添加终止状态=5，入栈s_ed，(入栈s_str.<br>[a] 添加状态id=6，入栈s_st，a入栈s_str.<br>[<em>] 获取s_st栈顶的两个状态，4和6, 添加4–ε–&gt;6 和 6–ε–&gt;4<br>[|] 依次对s_str进行出栈直到栈顶为(，同时对s_st进行出栈，<br>并将其两两用s_str进行连接. 如a出栈(s_str)，6出栈(s_st)，添加4–a–&gt;6.<br>最重要的地方是，将最先出栈的状态id与s_ed进行连接，即添加 6–ε–&gt;5.<br>[(] 添加终止状态=7，入栈s_ed，(入栈s_str.<br>[a] 添加状态id=8，入栈s_st，a入栈s_str.<br>[b] 添加状态id=9，入栈s_st，b入栈s_str.<br>[)] 依次对s_str进行出栈直到栈顶为(，同时对s_st进行出栈，<br>并将其两两用s_str进行连接(和|有些类似)，然后将该括号部分的终止id出栈=7，并将其入栈s_st，<br>同时入栈’-‘至s_str，’-‘作为括号里面部分式子的输入符号(其实是起占位符的作用，<br>这样的话，括号整体部分就与单个输入没有区别，既便于闭包符的处理，又解决了多个括号并列的情况).<br>[</em>] 获取s_st栈顶的两个状态，6和7, 添加7–ε–&gt;6 和 6–ε–&gt;7<br>[)] 与上面）的处理是完全一样的。</p></blockquote><h3 id="代码"><a href="#代码" class="headerlink" title="代码"></a>代码</h3><pre><code class="hljs">#include &lt;iostream&gt;
+#include &lt;algorithm&gt;
+#include &lt;vector&gt;
+#include &lt;stack&gt;
+using namespace std;
+
+struct Node
+&#123;
+    Node(int id, char input, int nextId)
+    &#123;
+        this-&gt;id = id;
+        this-&gt;input = input;
+        this-&gt;nextId = nextId;
+    &#125;
+    int id;
+    char input;
+    int nextId;
+&#125;;
+
+class MyClass
+&#123;
+public:
+    MyClass() &#123;
+        strExpress = &quot;&quot;;
+        statusId = 0;
+    &#125;
+
+    MyClass(string str)
+    &#123;
+        strExpress = str;
+    &#125;
+
+    void printNFA();
+    void strToNFA();
+
+private:
+    string strExpress;
+    int statusId;
+    vector&lt;Node*&gt; map;
+&#125;;
+
+void MyClass::strToNFA()
+&#123;
+    stack&lt;int&gt; s_st;
+    stack&lt;int&gt; s_ed;
+    stack&lt;char&gt; s_str;
+
+    s_str.push(&#39;$&#39;);
+    s_st.push(statusId++);
+    s_ed.push(statusId++);
+
+    for(auto i=strExpress.begin(); i!=strExpress.end(); ++i)
+    &#123;
+        char ch = *i;
+        cout&lt;&lt;ch;
+        switch (ch)
+        &#123;
+            case &#39;(&#39;:
+            &#123;
+                s_ed.push(statusId++);
+                s_str.push(&#39;(&#39;);
+                break;
+            &#125;
+            case &#39;)&#39;:
+            &#123;
+                int ed = s_ed.top();
+                int st = s_st.top();
+                map.push_back(new Node(st, &#39;-&#39;, ed));
+                ch = s_str.top();
+                while(ch != &#39;(&#39;)
+                &#123;
+                    int nxt = s_st.top();
+                    s_st.pop();
+                    int pre = s_st.top();
+                    if(ch != &#39;#&#39;)
+                        map.push_back(new Node(pre, ch, nxt));
+                    s_str.pop();
+                    ch = s_str.top();
+                &#125;
+                s_str.pop();
+                s_str.push(&#39;#&#39;);
+                s_st.push(s_ed.top());
+                s_ed.pop();
+                break;
+            &#125;
+            case &#39;|&#39;:
+            &#123;
+                int ed = s_ed.top();
+                int st = s_st.top();
+                map.push_back(new Node(st, &#39;-&#39;, ed));
+                ch = s_str.top();
+                while(ch != &#39;(&#39; &amp;&amp; ch != &#39;$&#39;)
+                &#123;
+                    int nxt = s_st.top();
+                    s_st.pop();
+                    int pre = s_st.top();
+                    if(ch != &#39;#&#39;)
+                        map.push_back(new Node(pre, ch, nxt));
+                    s_str.pop();
+                    ch = s_str.top();
+                &#125;
+                break;
+            &#125;
+            case &#39;*&#39;:
+            &#123;
+                int nxt = s_st.top();
+                s_st.pop();
+                int pre = s_st.top();
+                map.push_back(new Node(pre, &#39;-&#39;, nxt));
+                map.push_back(new Node(nxt, &#39;-&#39;, pre));
+                s_st.push(nxt);
+                break;
+            &#125;
+            default:
+            &#123;
+                s_str.push(ch);
+                s_st.push(statusId++);
+                break;
+            &#125;
+        &#125;
+    &#125;
+    char ch = s_str.top();
+    while(ch != &#39;$&#39;)
+    &#123;
+        int nxt = s_st.top();
+        s_st.pop();
+        int pre = s_st.top();
+        if(ch != &#39;#&#39;)
+            map.push_back(new Node(pre, ch, nxt));
+        s_str.pop();
+        ch = s_str.top();
+    &#125;
+&#125;
+
+void MyClass::printNFA()
+&#123;
+    cout&lt;&lt;&quot;NFA：&quot;&lt;&lt;endl;
+    for(auto node : map)
+    &#123;
+        cout&lt;&lt;node-&gt;id&lt;&lt;&quot;--[&quot;&lt;&lt;node-&gt;input&lt;&lt;&quot;]--&gt;&quot;&lt;&lt;node-&gt;nextId&lt;&lt;endl;
+    &#125;
+&#125;
+
+int main()
+&#123;
+    string str;
+    stack&lt;int&gt; s;
+//    cin&gt;&gt;str;
+    str = &quot;ab*(a*|(ab)*|b)*b&quot;;
+
+    MyClass myclass(str);
+    myclass.strToNFA();
+    myclass.printNFA();
+
+    return 0;
+&#125;</code></pre><h3 id="output"><a href="#output" class="headerlink" title="output"></a>output</h3><pre><code class="hljs">ab*(a*|(ab)*|b)*bNFA：
+2--[-]--&gt;3
+3--[-]--&gt;2
+3--[-]--&gt;5
+5--[-]--&gt;3
+5--[-]--&gt;4
+3--[a]--&gt;5
+8--[-]--&gt;6
+7--[b]--&gt;8
+3--[a]--&gt;7
+3--[-]--&gt;6
+6--[-]--&gt;3
+6--[-]--&gt;4
+9--[-]--&gt;4
+3--[b]--&gt;9
+3--[-]--&gt;4
+4--[-]--&gt;3
+4--[b]--&gt;10
+2--[b]--&gt;3
+0--[a]--&gt;2</code></pre></div><hr><div><div class="post-metas my-3"><div class="post-meta mr-3 d-flex align-items-center"><i class="iconfont icon-category"></i> <span class="category-chains"><span class="category-chain"><a href="/categories/%E5%A4%A7%E5%AD%A6%E6%97%B6%E6%9C%9FCSDN/" class="category-chain-item">大学时期CSDN</a></span></span></div><div class="post-meta"><i class="iconfont icon-tags"></i> <a href="/tags/%E7%BC%96%E8%AF%91%E5%8E%9F%E7%90%86/">#编译原理</a></div></div><div class="license-box my-3"><div class="license-title"><div>正规表达式转NFA(C++)</div><div>https://shiyi.threebody.xyz/posts/7094.html</div></div><div class="license-meta"><div class="license-meta-item"><div>作者</div><div>Yi Shi</div></div><div class="license-meta-item license-meta-date"><div>发布于</div><div>2016年10月2日</div></div><div class="license-meta-item"><div>许可协议</div><div><a target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/"><span class="hint--top hint--rounded" aria-label="BY - 署名"><i class="iconfont icon-by"></i> </span></a><a target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/"><span class="hint--top hint--rounded" aria-label="SA - 相同方式共享"><i class="iconfont icon-sa"></i></span></a></div></div></div><div class="license-icon iconfont"></div></div><div class="post-prevnext my-3"><article class="post-prev col-6"><a href="/posts/28691.html" title="c语言词法分析初试(C++实现)"><i class="iconfont icon-arrowleft"></i> <span class="hidden-mobile">c语言词法分析初试(C++实现)</span> <span class="visible-mobile">上一篇</span></a></article><article class="post-next col-6"><a href="/posts/43695.html" title="JavaWeb ServletContext/application初试总结"><span class="hidden-mobile">JavaWeb ServletContext/application初试总结</span> <span class="visible-mobile">下一篇</span> <i class="iconfont icon-arrowright"></i></a></article></div></div><article id="comments" lazyload><div id="lv-container" data-id="city" data-uid="MTAyMC80NjEzMS8yMjY0Mg"><script type="text/javascript">Fluid.utils.loadComments("#lv-container",(function(){Fluid.utils.createScript("https://cdn-city.livere.com/js/embed.dist.js")}))</script><noscript>Please enable JavaScript to view the comments</noscript></div></article></article></div></div></div><div class="side-col d-none d-lg-block col-lg-2"><aside class="sidebar" style="margin-left:-1rem"><div id="toc"><p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p><div class="toc-body" id="toc-body"></div></div></aside></div></div></div><a id="scroll-top-button" aria-label="TOP" href="#" role="button"><i class="iconfont icon-arrowup" aria-hidden="true"></i></a><div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable modal-lg" role="document"><div class="modal-content"><div class="modal-header text-center"><h4 class="modal-title w-100 font-weight-bold">搜索</h4><button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button></div><div class="modal-body mx-3"><div class="md-form mb-5"><input type="text" id="local-search-input" class="form-control validate"> <label data-error="x" data-success="v" for="local-search-input">关键词</label></div><div class="list-group" id="local-search-result"></div></div></div></div></div></main><footer><div class="footer-inner"><div class="beian"><span><a href="http://beian.miit.gov.cn/" target="_blank" rel="nofollow noopener">陕ICP备16019529号-2</a></span></div><span id="cnzz_stat_icon_1273342630" style="display:none"></span></div></footer><script src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js"></script><link rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css"><script>NProgress.configure({showSpinner:!0,trickleSpeed:100}),NProgress.start(),window.addEventListener("load",(function(){NProgress.done()}))</script><script src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js"></script><script src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js"></script><script src="/js/events.js"></script><script src="/js/plugins.js"></script><script src="/js/img-lazyload.js"></script><script>Fluid.utils.createScript("https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js",(function(){var t=jQuery("#toc");if(0!==t.length&&window.tocbot){var i=jQuery("#board-ctn").offset().top;window.tocbot.init(Object.assign({tocSelector:"#toc-body",contentSelector:".markdown-body",linkClass:"tocbot-link",activeLinkClass:"tocbot-active-link",listClass:"tocbot-list",isCollapsedClass:"tocbot-is-collapsed",collapsibleClass:"tocbot-is-collapsible",scrollSmooth:!0,includeTitleTags:!0,headingsOffset:-i},CONFIG.toc)),t.find(".toc-list-item").length>0&&t.css("visibility","visible"),Fluid.events.registerRefreshCallback((function(){if("tocbot"in window){tocbot.refresh();var t=jQuery("#toc");if(0===t.length||!tocbot)return;t.find(".toc-list-item").length>0&&t.css("visibility","visible")}}))}}))</script><script src="https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js"></script><script>Fluid.plugins.codeWidget()</script><script>Fluid.utils.createScript("https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js",(function(){window.anchors.options={placement:CONFIG.anchorjs.placement,visible:CONFIG.anchorjs.visible},CONFIG.anchorjs.icon&&(window.anchors.options.icon=CONFIG.anchorjs.icon);var n=(CONFIG.anchorjs.element||"h1,h2,h3,h4,h5,h6").split(","),o=[];for(var s of n)o.push(".markdown-body > "+s.trim());"left"===CONFIG.anchorjs.placement&&(window.anchors.options.class="anchorjs-link-left"),window.anchors.add(o.join(", ")),Fluid.events.registerRefreshCallback((function(){if("anchors"in window){anchors.removeAll();var n=(CONFIG.anchorjs.element||"h1,h2,h3,h4,h5,h6").split(","),o=[];for(var s of n)o.push(".markdown-body > "+s.trim());"left"===CONFIG.anchorjs.placement&&(anchors.options.class="anchorjs-link-left"),anchors.add(o.join(", "))}}))}))</script><script>Fluid.utils.createScript("https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js",(function(){Fluid.plugins.fancyBox()}))</script><script>Fluid.plugins.imageCaption()</script><script src="/js/local-search.js"></script><script src="/js/boot.js"></script><noscript><div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div></noscript></body></html>

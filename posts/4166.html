@@ -1,0 +1,104 @@
+<!DOCTYPE html><html lang="zh-CN" data-default-color-scheme="auto"><head><meta charset="UTF-8"><link rel="apple-touch-icon" sizes="76x76" href="/favicon/apple-touch-icon.png"><link rel="icon" href="/favicon/favicon-32x32.png"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=5,shrink-to-fit=no"><meta http-equiv="x-ua-compatible" content="ie=edge"><meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests"><meta name="theme-color" content="#2f4154"><meta name="author" content="Yi Shi"><meta name="keywords" content="shiyi, yishi, threebody, blog, golang"><meta name="description" content="** _ 1.more命令功能 _ **  more命令用于查看内容超过一屏的文本(类似于cat)** 基本功能 ** ：1.输入backspace ：内容翻一屏2.输入enter ： 内容翻一行3.输入q：退出4.实时显示已读文件比例  ** _ 2.实现思路 _ **   从命令中获取需要操作的文件     打开文件：open(filename,O_RDONLY);     获取文件总行数：l"><meta property="og:type" content="article"><meta property="og:title" content="linux文件管理小结之自定义more"><meta property="og:url" content="https://shiyi.threebody.xyz/posts/4166.html"><meta property="og:site_name" content="Yi Shi&#39;s Blog"><meta property="og:description" content="** _ 1.more命令功能 _ **  more命令用于查看内容超过一屏的文本(类似于cat)** 基本功能 ** ：1.输入backspace ：内容翻一屏2.输入enter ： 内容翻一行3.输入q：退出4.实时显示已读文件比例  ** _ 2.实现思路 _ **   从命令中获取需要操作的文件     打开文件：open(filename,O_RDONLY);     获取文件总行数：l"><meta property="og:locale" content="zh_CN"><meta property="article:published_time" content="2015-07-24T09:32:00.000Z"><meta property="article:modified_time" content="2022-12-08T15:35:14.153Z"><meta property="article:author" content="Yi Shi"><meta property="article:tag" content="服务器开发"><meta name="twitter:card" content="summary_large_image"><title>linux文件管理小结之自定义more - Yi Shi&#39;s Blog</title><link rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css"><link rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css"><link rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css"><link rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css"><link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css"><link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css"><link rel="stylesheet" href="/css/main.css"><link id="highlight-css" rel="stylesheet" href="/css/highlight.css"><link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css"><script id="fluid-configs">var Fluid=window.Fluid||{};Fluid.ctx=Object.assign({},Fluid.ctx);var CONFIG={hostname:"shiyi.threebody.xyz",root:"/",version:"1.9.3",typing:{enable:!0,typeSpeed:50,cursorChar:"",loop:!1,scope:["home"]},anchorjs:{enable:!0,element:"h1,h2,h3,h4,h5,h6",placement:"left",visible:"hover",icon:""},progressbar:{enable:!0,height_px:3,color:"#29d",options:{showSpinner:!0,trickleSpeed:100}},code_language:{enable:!0,default:"TEXT"},copy_btn:!0,image_caption:{enable:!0},image_zoom:{enable:!0,img_url_replace:["",""]},toc:{enable:!0,placement:"right",headingSelector:"h1,h2,h3,h4,h5,h6",collapseDepth:4},lazyload:{enable:!0,loading_img:"/img/loading.gif",onlypost:!1,offset_factor:2},web_analytics:{enable:!0,follow_dnt:!0,baidu:"75eaaab59c4fa946437e9dea4f8fc07d",google:null,gtag:null,tencent:{sid:null,cid:null},woyaola:null,cnzz:1273342630,leancloud:{app_id:null,app_key:null,server_url:null,path:"window.location.pathname",ignore_local:!1}},search_path:"/local-search.xml"};if(CONFIG.web_analytics.follow_dnt){var dntVal=navigator.doNotTrack||window.doNotTrack||navigator.msDoNotTrack;Fluid.ctx.dnt=dntVal&&(dntVal.startsWith("1")||dntVal.startsWith("yes")||dntVal.startsWith("on"))}</script><script src="/js/utils.js"></script><script src="/js/color-schema.js"></script><script async>if(!Fluid.ctx.dnt){var _hmt=_hmt||[];!function(){var e=document.createElement("script");e.src="https://hm.baidu.com/hm.js?75eaaab59c4fa946437e9dea4f8fc07d";var t=document.getElementsByTagName("script")[0];t.parentNode.insertBefore(e,t)}()}</script><script async>Fluid.ctx.dnt||Fluid.utils.createScript("//s4.cnzz.com/z_stat.php?id=1273342630&show=pic")</script><meta name="generator" content="Hexo 5.4.0"><link rel="alternate" href="/atom.xml" title="Yi Shi's Blog" type="application/atom+xml">
+</head><body><header><div class="header-inner" style="height:40vh"><nav id="navbar" class="navbar fixed-top navbar-expand-lg navbar-dark scrolling-navbar"><div class="container"><a class="navbar-brand" href="/"><strong>Yi Shi&#39;s Blog</strong> </a><button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation"><div class="animated-icon"><span></span><span></span><span></span></div></button><div class="collapse navbar-collapse" id="navbarSupportedContent"><ul class="navbar-nav ml-auto text-center"><li class="nav-item"><a class="nav-link" href="/"><i class="iconfont icon-home-fill"></i> 首页</a></li><li class="nav-item"><a class="nav-link" href="/archives/"><i class="iconfont icon-archive-fill"></i> 归档</a></li><li class="nav-item"><a class="nav-link" href="/categories/"><i class="iconfont icon-category-fill"></i> 分类</a></li><li class="nav-item"><a class="nav-link" href="/tags/"><i class="iconfont icon-tags-fill"></i> 标签</a></li><li class="nav-item"><a class="nav-link" href="/books/"><i class="iconfont icon-book"></i> 读书</a></li><li class="nav-item"><a class="nav-link" href="/about/"><i class="iconfont icon-user-fill"></i> 关于</a></li><li class="nav-item" id="search-btn"><a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">&nbsp;<i class="iconfont icon-search"></i>&nbsp;</a></li><li class="nav-item" id="color-toggle-btn"><a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">&nbsp;<i class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a></li></ul></div></div></nav><div id="banner" class="banner" parallax="true" style="background:url(/image/banner.jpg) no-repeat center center;background-size:cover"><div class="full-bg-img"><div class="mask flex-center" style="background-color:rgba(0,0,0,.5)"><div class="banner-text text-center fade-in-up"><div class="h2"><span id="subtitle">linux文件管理小结之自定义more</span></div><div class="mt-3"><span class="post-meta"><i class="iconfont icon-date-fill" aria-hidden="true"></i> <time datetime="2015-07-24 17:32" pubdate>2015年7月24日 下午</time></span></div><div class="mt-1"></div></div></div></div></div></div></header><main><div class="container-fluid nopadding-x"><div class="row nomargin-x"><div class="side-col d-none d-lg-block col-lg-2"></div><div class="col-lg-8 nopadding-x-md"><div class="container nopadding-x-md" id="board-ctn"><div id="board"><article class="post-content mx-auto"><h1 style="display:none">linux文件管理小结之自定义more</h1><div class="markdown-body"><p>** _ 1.more命令功能 _ **</p><blockquote><p>more命令用于查看内容超过一屏的文本(类似于cat)<br>** 基本功能 ** ：<br>1.输入backspace ：内容翻一屏<br>2.输入enter ： 内容翻一行<br>3.输入q：退出<br>4.实时显示已读文件比例</p></blockquote><p>** _ 2.实现思路 _ **</p><blockquote><ol><li>从命令中获取需要操作的文件</li></ol></blockquote><blockquote><ol start="2"><li>打开文件：open(filename,O_RDONLY);</li></ol></blockquote><blockquote><ol start="3"><li>获取文件总行数：<br>lseek(fd,0,SEEK_END);//移动文件指针至文件末<br>page_sum = lseek(fd,0,SEEK_CUR);//计算与文件头偏移量，即可得到文件总行数</li></ol></blockquote><blockquote><ol start="4"><li>命令初始读取内容(定义整屏为10行)<br>设置一标志量 存储 每次需要显示的行数，假设n，则执行n次下操作<br>用read(fd,str,1); 每次读取一个字节，读到’\n’停止<br>并且在每次读完之后需要用lseek(fd,0,SEEK_CUR)来获取当前已显示行数，用于得到文件已阅比例</li></ol></blockquote><blockquote><ol start="5"><li>每次操作完成后接受用户指令<br>see_more();<br>函数接受用户输入，根据输入值返回要翻的页数</li></ol></blockquote><blockquote><ol start="6"><li>close(fd);</li></ol></blockquote><p>** _ 过程收获 _ **</p><blockquote><ol><li>反显文字：<br>做这个时才了解到linux 上 printf的功能好丰富，清屏，移动光标，一应俱全；</li></ol></blockquote><blockquote><ol start="2"><li>保证more的提示信息总显示在终端的最下端，并不重复显示<br>刚开始准备使用，printf(“\033[s”)记录光标位置，输出后，再用printf(“\033[u\033[K”);光标归位并清行；<br>然而在输出提示信息中，还需要接受用户的输入，会产生换行符，而换行之后，光标归位会失效，记录于此。<br>最终是用printf(“\033[1A\033[K”)将光标上移一行，并清空该行内容，用以覆盖提示信息</li></ol></blockquote><blockquote><ol start="3"><li>文件比例的实现<br>这个的实现细节上文已经提到，之所以再做赘述，是因为笔者在实现过程中因为此功能卡顿很久<br>因为需要按行读的缘故，想要使用fgets()来读取文本，但是打开文件又用的是系统函数open(),而非fopen(),于是就产生了混用的情况。<br>而结果是每次用lseek()读取当前文件指针偏移量时，得到的值都是文件首与文件尾的偏移量，改为fseek()后，值变为0，探究无果，不知其因，记录于此，日后<br>再谈</li></ol></blockquote><p>** _ 代码 _ **</p><pre><code class="hljs">#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;sys/types.h&gt;
+#include &lt;sys/stat.h&gt;
+#include &lt;unistd.h&gt;
+#include &lt;fcntl.h&gt;
+
+#define PAGENUM 10 //定义一屏为10行
+
+void do_more(int fd);
+int see_more(  int sum, int now);
+
+int main( int argc, char **argv )
+&#123;
+    int fd;
+    if( argc == 1 )//参数不合法则返回
+    &#123;
+        return 0;
+    &#125;
+    else
+    &#123;
+        while( argc--&gt;1 )
+        &#123;
+            if( (fd = open(*++argv,O_RDONLY)) != -1 )
+            &#123;
+                do_more(fd);
+                close(fd);
+            &#125;
+            else
+            &#123;
+                printf(&quot;Error: can&#39;t open file\n&quot;);
+                exit(1);
+            &#125;
+        &#125;
+    &#125;
+    return 0;
+&#125;
+
+void do_more(int fd)
+&#123;
+    char str[3];
+    int page_num = 0;//保存每次需要跳转的行数
+    int rel;
+    int page_now = 0;//保存当前行数（初始为0）
+    int page_sum;//保存总行数
+
+
+    lseek(fd,0,SEEK_END);//移动文件指针至文件末
+    page_sum = lseek(fd,0,SEEK_CUR);//计算与文件头偏移量，即文件总行数
+    lseek(fd,0,SEEK_SET);//移动文件指针至文件头
+
+    while( page_now&lt;page_sum )
+    &#123;
+        while(read(fd,str,1))//每次读一行
+        &#123;
+            if(str[0] ==&#39;\n&#39;)
+            &#123;
+                printf(&quot;\n&quot;);
+                break;
+            &#125;
+            printf(&quot;%c&quot;,str[0]);
+        &#125;
+        page_now = lseek(fd, 0, SEEK_CUR);//实时更新已读行数
+        if( page_num == PAGENUM )
+        &#123;
+            rel = see_more( page_sum, page_now);//获取用户输入
+            printf(&quot;\033[1A\033[K&quot;);//将光标上移一行，并清空该行内容，用以覆盖提示信息
+            if( rel == 0 )
+            &#123;
+                break;
+            &#125;
+            else
+            &#123;
+                page_num -= rel;
+            &#125;
+        &#125;
+        page_num++;
+    &#125;
+&#125;
+
+int see_more(int sum,int now)
+&#123;
+    int rel;
+    printf(&quot;\033[7m --更多-- enter翻行 backspace翻页 q退出  %.2f%% \033[0m&quot;,now*100.0/sum);//反显输出提示信息以及文件已读比例
+
+    while(rel = getchar())
+    &#123;
+        if(rel == &#39;q&#39;)
+        &#123;
+            return 0;
+        &#125;
+        if(rel == &#39; &#39;)
+        &#123;
+            return PAGENUM;
+        &#125;
+        if(rel == &#39;\n&#39;)
+        &#123;
+            return 1;
+        &#125;
+    &#125;
+
+    return 0;
+&#125;</code></pre></div><hr><div><div class="post-metas my-3"><div class="post-meta mr-3 d-flex align-items-center"><i class="iconfont icon-category"></i> <span class="category-chains"><span class="category-chain"><a href="/categories/%E5%A4%A7%E5%AD%A6%E6%97%B6%E6%9C%9FCSDN/" class="category-chain-item">大学时期CSDN</a></span></span></div><div class="post-meta"><i class="iconfont icon-tags"></i> <a href="/tags/%E6%9C%8D%E5%8A%A1%E5%99%A8%E5%BC%80%E5%8F%91/">#服务器开发</a></div></div><div class="license-box my-3"><div class="license-title"><div>linux文件管理小结之自定义more</div><div>https://shiyi.threebody.xyz/posts/4166.html</div></div><div class="license-meta"><div class="license-meta-item"><div>作者</div><div>Yi Shi</div></div><div class="license-meta-item license-meta-date"><div>发布于</div><div>2015年7月24日</div></div><div class="license-meta-item"><div>许可协议</div><div><a target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/"><span class="hint--top hint--rounded" aria-label="BY - 署名"><i class="iconfont icon-by"></i> </span></a><a target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/"><span class="hint--top hint--rounded" aria-label="SA - 相同方式共享"><i class="iconfont icon-sa"></i></span></a></div></div></div><div class="license-icon iconfont"></div></div><div class="post-prevnext my-3"><article class="post-prev col-6"><a href="/posts/42950.html" title="linux线程初学之实现打字母功能"><i class="iconfont icon-arrowleft"></i> <span class="hidden-mobile">linux线程初学之实现打字母功能</span> <span class="visible-mobile">上一篇</span></a></article><article class="post-next col-6"><a href="/posts/60465.html" title="树状数组学习（一维）"><span class="hidden-mobile">树状数组学习（一维）</span> <span class="visible-mobile">下一篇</span> <i class="iconfont icon-arrowright"></i></a></article></div></div><article id="comments" lazyload><div id="lv-container" data-id="city" data-uid="MTAyMC80NjEzMS8yMjY0Mg"><script type="text/javascript">Fluid.utils.loadComments("#lv-container",(function(){Fluid.utils.createScript("https://cdn-city.livere.com/js/embed.dist.js")}))</script><noscript>Please enable JavaScript to view the comments</noscript></div></article></article></div></div></div><div class="side-col d-none d-lg-block col-lg-2"><aside class="sidebar" style="margin-left:-1rem"><div id="toc"><p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p><div class="toc-body" id="toc-body"></div></div></aside></div></div></div><a id="scroll-top-button" aria-label="TOP" href="#" role="button"><i class="iconfont icon-arrowup" aria-hidden="true"></i></a><div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable modal-lg" role="document"><div class="modal-content"><div class="modal-header text-center"><h4 class="modal-title w-100 font-weight-bold">搜索</h4><button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button></div><div class="modal-body mx-3"><div class="md-form mb-5"><input type="text" id="local-search-input" class="form-control validate"> <label data-error="x" data-success="v" for="local-search-input">关键词</label></div><div class="list-group" id="local-search-result"></div></div></div></div></div></main><footer><div class="footer-inner"><div class="beian"><span><a href="http://beian.miit.gov.cn/" target="_blank" rel="nofollow noopener">陕ICP备16019529号-2</a></span></div><span id="cnzz_stat_icon_1273342630" style="display:none"></span></div></footer><script src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js"></script><link rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css"><script>NProgress.configure({showSpinner:!0,trickleSpeed:100}),NProgress.start(),window.addEventListener("load",(function(){NProgress.done()}))</script><script src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js"></script><script src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js"></script><script src="/js/events.js"></script><script src="/js/plugins.js"></script><script src="/js/img-lazyload.js"></script><script>Fluid.utils.createScript("https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js",(function(){var t=jQuery("#toc");if(0!==t.length&&window.tocbot){var i=jQuery("#board-ctn").offset().top;window.tocbot.init(Object.assign({tocSelector:"#toc-body",contentSelector:".markdown-body",linkClass:"tocbot-link",activeLinkClass:"tocbot-active-link",listClass:"tocbot-list",isCollapsedClass:"tocbot-is-collapsed",collapsibleClass:"tocbot-is-collapsible",scrollSmooth:!0,includeTitleTags:!0,headingsOffset:-i},CONFIG.toc)),t.find(".toc-list-item").length>0&&t.css("visibility","visible"),Fluid.events.registerRefreshCallback((function(){if("tocbot"in window){tocbot.refresh();var t=jQuery("#toc");if(0===t.length||!tocbot)return;t.find(".toc-list-item").length>0&&t.css("visibility","visible")}}))}}))</script><script src="https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js"></script><script>Fluid.plugins.codeWidget()</script><script>Fluid.utils.createScript("https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js",(function(){window.anchors.options={placement:CONFIG.anchorjs.placement,visible:CONFIG.anchorjs.visible},CONFIG.anchorjs.icon&&(window.anchors.options.icon=CONFIG.anchorjs.icon);var n=(CONFIG.anchorjs.element||"h1,h2,h3,h4,h5,h6").split(","),o=[];for(var s of n)o.push(".markdown-body > "+s.trim());"left"===CONFIG.anchorjs.placement&&(window.anchors.options.class="anchorjs-link-left"),window.anchors.add(o.join(", ")),Fluid.events.registerRefreshCallback((function(){if("anchors"in window){anchors.removeAll();var n=(CONFIG.anchorjs.element||"h1,h2,h3,h4,h5,h6").split(","),o=[];for(var s of n)o.push(".markdown-body > "+s.trim());"left"===CONFIG.anchorjs.placement&&(anchors.options.class="anchorjs-link-left"),anchors.add(o.join(", "))}}))}))</script><script>Fluid.utils.createScript("https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js",(function(){Fluid.plugins.fancyBox()}))</script><script>Fluid.plugins.imageCaption()</script><script src="/js/local-search.js"></script><script src="/js/boot.js"></script><noscript><div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div></noscript></body></html>

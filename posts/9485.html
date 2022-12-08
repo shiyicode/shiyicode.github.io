@@ -1,0 +1,1198 @@
+<!DOCTYPE html><html lang="zh-CN" data-default-color-scheme="auto"><head><meta charset="UTF-8"><link rel="apple-touch-icon" sizes="76x76" href="/favicon/apple-touch-icon.png"><link rel="icon" href="/favicon/favicon-32x32.png"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=5,shrink-to-fit=no"><meta http-equiv="x-ua-compatible" content="ie=edge"><meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests"><meta name="theme-color" content="#2f4154"><meta name="author" content="Yi Shi"><meta name="keywords" content="shiyi, yishi, threebody, blog, golang"><meta name="description" content="** 前言 **  补高数作业到现在也是醉了，索性不睡了，把前段时间做的课设整理一下，毕竟是小白，有什么地方有错误，还望大神不吝指出  ** 感触与收获 **  在写之前，本以为最大的难关是图形界面的构建，后来又认为是程序与文件的交互，最终完成后才明白，怎样不再庞大的代码堆中逻辑错乱才是最大的难关，而这就关系到下面几个问题了  ** 1.代码架构问题 **  刚开始写时，按以前习惯把全部代码全部写"><meta property="og:type" content="article"><meta property="og:title" content="影院管理系统（GTK）"><meta property="og:url" content="https://shiyi.threebody.xyz/posts/9485.html"><meta property="og:site_name" content="Yi Shi&#39;s Blog"><meta property="og:description" content="** 前言 **  补高数作业到现在也是醉了，索性不睡了，把前段时间做的课设整理一下，毕竟是小白，有什么地方有错误，还望大神不吝指出  ** 感触与收获 **  在写之前，本以为最大的难关是图形界面的构建，后来又认为是程序与文件的交互，最终完成后才明白，怎样不再庞大的代码堆中逻辑错乱才是最大的难关，而这就关系到下面几个问题了  ** 1.代码架构问题 **  刚开始写时，按以前习惯把全部代码全部写"><meta property="og:locale" content="zh_CN"><meta property="article:published_time" content="2015-06-14T22:16:00.000Z"><meta property="article:modified_time" content="2022-12-08T15:35:14.153Z"><meta property="article:author" content="Yi Shi"><meta property="article:tag" content="Gtk"><meta name="twitter:card" content="summary_large_image"><title>影院管理系统（GTK） - Yi Shi&#39;s Blog</title><link rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css"><link rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css"><link rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css"><link rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css"><link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css"><link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css"><link rel="stylesheet" href="/css/main.css"><link id="highlight-css" rel="stylesheet" href="/css/highlight.css"><link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css"><script id="fluid-configs">var Fluid=window.Fluid||{};Fluid.ctx=Object.assign({},Fluid.ctx);var CONFIG={hostname:"shiyi.threebody.xyz",root:"/",version:"1.9.3",typing:{enable:!0,typeSpeed:50,cursorChar:"",loop:!1,scope:["home"]},anchorjs:{enable:!0,element:"h1,h2,h3,h4,h5,h6",placement:"left",visible:"hover",icon:""},progressbar:{enable:!0,height_px:3,color:"#29d",options:{showSpinner:!0,trickleSpeed:100}},code_language:{enable:!0,default:"TEXT"},copy_btn:!0,image_caption:{enable:!0},image_zoom:{enable:!0,img_url_replace:["",""]},toc:{enable:!0,placement:"right",headingSelector:"h1,h2,h3,h4,h5,h6",collapseDepth:4},lazyload:{enable:!0,loading_img:"/img/loading.gif",onlypost:!1,offset_factor:2},web_analytics:{enable:!0,follow_dnt:!0,baidu:"75eaaab59c4fa946437e9dea4f8fc07d",google:null,gtag:null,tencent:{sid:null,cid:null},woyaola:null,cnzz:1273342630,leancloud:{app_id:null,app_key:null,server_url:null,path:"window.location.pathname",ignore_local:!1}},search_path:"/local-search.xml"};if(CONFIG.web_analytics.follow_dnt){var dntVal=navigator.doNotTrack||window.doNotTrack||navigator.msDoNotTrack;Fluid.ctx.dnt=dntVal&&(dntVal.startsWith("1")||dntVal.startsWith("yes")||dntVal.startsWith("on"))}</script><script src="/js/utils.js"></script><script src="/js/color-schema.js"></script><script async>if(!Fluid.ctx.dnt){var _hmt=_hmt||[];!function(){var e=document.createElement("script");e.src="https://hm.baidu.com/hm.js?75eaaab59c4fa946437e9dea4f8fc07d";var t=document.getElementsByTagName("script")[0];t.parentNode.insertBefore(e,t)}()}</script><script async>Fluid.ctx.dnt||Fluid.utils.createScript("//s4.cnzz.com/z_stat.php?id=1273342630&show=pic")</script><meta name="generator" content="Hexo 5.4.0"><link rel="alternate" href="/atom.xml" title="Yi Shi's Blog" type="application/atom+xml">
+</head><body><header><div class="header-inner" style="height:40vh"><nav id="navbar" class="navbar fixed-top navbar-expand-lg navbar-dark scrolling-navbar"><div class="container"><a class="navbar-brand" href="/"><strong>Yi Shi&#39;s Blog</strong> </a><button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation"><div class="animated-icon"><span></span><span></span><span></span></div></button><div class="collapse navbar-collapse" id="navbarSupportedContent"><ul class="navbar-nav ml-auto text-center"><li class="nav-item"><a class="nav-link" href="/"><i class="iconfont icon-home-fill"></i> 首页</a></li><li class="nav-item"><a class="nav-link" href="/archives/"><i class="iconfont icon-archive-fill"></i> 归档</a></li><li class="nav-item"><a class="nav-link" href="/categories/"><i class="iconfont icon-category-fill"></i> 分类</a></li><li class="nav-item"><a class="nav-link" href="/tags/"><i class="iconfont icon-tags-fill"></i> 标签</a></li><li class="nav-item"><a class="nav-link" href="/books/"><i class="iconfont icon-book"></i> 读书</a></li><li class="nav-item"><a class="nav-link" href="/about/"><i class="iconfont icon-user-fill"></i> 关于</a></li><li class="nav-item" id="search-btn"><a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">&nbsp;<i class="iconfont icon-search"></i>&nbsp;</a></li><li class="nav-item" id="color-toggle-btn"><a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">&nbsp;<i class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a></li></ul></div></div></nav><div id="banner" class="banner" parallax="true" style="background:url(/image/banner.jpg) no-repeat center center;background-size:cover"><div class="full-bg-img"><div class="mask flex-center" style="background-color:rgba(0,0,0,.5)"><div class="banner-text text-center fade-in-up"><div class="h2"><span id="subtitle">影院管理系统（GTK）</span></div><div class="mt-3"><span class="post-meta"><i class="iconfont icon-date-fill" aria-hidden="true"></i> <time datetime="2015-06-15 06:16" pubdate>2015年6月15日 早上</time></span></div><div class="mt-1"></div></div></div></div></div></div></header><main><div class="container-fluid nopadding-x"><div class="row nomargin-x"><div class="side-col d-none d-lg-block col-lg-2"></div><div class="col-lg-8 nopadding-x-md"><div class="container nopadding-x-md" id="board-ctn"><div id="board"><article class="post-content mx-auto"><h1 style="display:none">影院管理系统（GTK）</h1><div class="markdown-body"><p>** 前言 **</p><blockquote><p>补高数作业到现在也是醉了，索性不睡了，把前段时间做的课设整理一下，毕竟是小白，有什么地方有错误，还望大神不吝指出</p></blockquote><p>** 感触与收获 **</p><blockquote><p>在写之前，本以为最大的难关是图形界面的构建，后来又认为是程序与文件的交互，最终完成后才明白，怎样不再庞大的代码堆中逻辑错乱才是最大的难关，而这就关系到下<br>面几个问题了</p></blockquote><p>** 1.代码架构问题 **</p><blockquote><p>刚开始写时，按以前习惯把全部代码全部写在了一个源文件里，随着代码越写越多，苦不堪言，于是乎，参考书上样例的架构，总算是有点逻辑分明的感觉</p></blockquote><p>如下</p><blockquote><p>main.c 主函数<br>interface.c 窗口实现函数<br>interface.h 窗口实现函数声明<br>callback.c 回调函数<br>callback.h 回调函数声明 以及 全局变量和结构体的定义</p></blockquote><p>** 2.代码编写的习惯问题 **</p><blockquote><p>&lt;1&gt;变量的命名<br>这个是令我感触最深，因为英语不好哦，所以常随心所欲的设置变量&gt;名，后来变量越来越多，痛苦不期而至，后不得不<br>用有道辅助对所有变量重新命名，重新观看代码，才觉变量命名的重要性<br>&lt;2&gt;添加必要的注释<br>代码量大了后，方知注释的重要，可惜还是懒，注释的太少，要养成这个好习惯<br>&lt;3&gt;代码缩进<br>也就在这个上面做的还行，归功于我的强迫症</p></blockquote><p>** 代码 **</p><p>** main.c **</p><pre><code class="hljs">#include&lt;gtk/gtk.h&gt;
+#include&quot;interface.h&quot;
+#include&quot;callback.h&quot;
+
+int main(int argc,char *argv[])
+&#123;
+    gtk_init(&amp;argc , &amp;argv);
+
+    theater_num = 0;
+
+    window_main = make_window_main();
+
+    window_main_buy = make_window_main_buy();
+    window_main_login = make_window_main_login();
+    window_change_yesorno = make_window_yesorno();
+
+    window_main_change = make_window_main_change();
+    gtk_widget_show_all(window_main);
+
+    gtk_main();
+
+    return 0;
+&#125;</code></pre><p>** interface.c **</p><pre><code class="hljs">#include&lt;gtk/gtk.h&gt;
+#include&quot;callback.h&quot;
+#include&lt;stdlib.h&gt;
+//extern struct findrc *q;
+
+GtkWidget* make_window_main()//创建主页面
+&#123;
+    GtkWidget *window;
+    GtkWidget *button_buy;
+    GtkWidget *button_change;
+    GtkWidget *button_quit;
+    GtkWidget *image;
+    GtkWidget *box_b;
+    GtkWidget *box_s;
+
+
+    window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    gtk_container_set_border_width(GTK_CONTAINER(window),10);
+    gtk_window_set_title(GTK_WINDOW(window),&quot;影院系统&quot;);
+    gtk_window_set_position(GTK_WINDOW(window),GTK_WIN_POS_CENTER);
+    //gtk_window_set_default_size(GTK_WINDOW(window),10,10);
+
+    g_signal_connect(G_OBJECT(window),&quot;delete_event&quot;,G_CALLBACK(want_to_quit),NULL);
+
+    box_b = gtk_vbox_new(FALSE,10);
+    gtk_container_add(GTK_CONTAINER(window),box_b);
+
+    image = gtk_image_new_from_file(&quot;3.png&quot;);
+    box_s = gtk_hbox_new(TRUE,10);
+
+    gtk_box_pack_start(GTK_BOX(box_b),image,TRUE,FALSE,0);
+    gtk_box_pack_start(GTK_BOX(box_b),box_s,TRUE,FALSE,0);
+
+    button_buy = gtk_button_new_with_label(&quot;开始购票&quot;);
+    button_change = gtk_button_new_with_label(&quot;管理登录&quot;);
+    button_quit = gtk_button_new_with_label(&quot;退出系统&quot;);
+
+    g_signal_connect(G_OBJECT(button_buy),&quot;clicked&quot;,G_CALLBACK(on_main_to_buy),NULL);
+    g_signal_connect(G_OBJECT(button_change),&quot;clicked&quot;,G_CALLBACK(on_main_to_login),NULL);
+    g_signal_connect(G_OBJECT(button_quit),&quot;clicked&quot;,G_CALLBACK(want_to_quit),NULL);
+
+    gtk_box_pack_start(GTK_BOX(box_s),button_buy,TRUE,FALSE,0);
+    gtk_box_pack_start(GTK_BOX(box_s),button_change,TRUE,FALSE,0);
+    gtk_box_pack_start(GTK_BOX(box_s),button_quit,TRUE,FALSE,0);
+
+    return window;
+
+&#125;
+
+void on_dian_jie(struct theater* p,GtkWidget *boxs)//创建单项影片信息
+&#123;
+    GtkWidget *button;
+    GtkWidget *image;
+    GtkWidget *label;
+    GtkWidget *frame;
+    GtkWidget *frame1;
+    GtkWidget *vbox;
+    GtkWidget *hbox;
+    GtkWidget *tbox;
+    GtkWidget *box;
+
+    box = gtk_hbox_new(FALSE,10);
+    gtk_container_add(GTK_CONTAINER(boxs),box);
+
+    image = gtk_image_new_from_file(p-&gt;photo);
+    gtk_box_pack_start_defaults(GTK_BOX(box),image);
+
+    frame1 = gtk_frame_new(NULL);
+    gtk_container_add(GTK_CONTAINER(box),frame1);
+    gtk_widget_set_size_request(GTK_WIDGET(frame1),800,300);
+
+    hbox = gtk_hbox_new(TRUE,0);
+    gtk_container_add(GTK_CONTAINER(frame1),hbox);
+
+    vbox = gtk_vbox_new(FALSE,0);
+    gtk_container_add(GTK_CONTAINER(hbox),vbox);
+
+    frame = gtk_frame_new(&quot;影片名&quot;);
+    label = gtk_label_new(p-&gt;name);
+    gtk_label_set_line_wrap (GTK_LABEL(label),TRUE);
+    gtk_container_add(GTK_CONTAINER(frame),label);
+    gtk_label_set_justify(GTK_LABEL(label),GTK_JUSTIFY_LEFT);
+    gtk_box_pack_start_defaults(GTK_BOX(vbox),frame);
+
+    frame = gtk_frame_new(&quot;影片类型&quot;);
+    label = gtk_label_new(p-&gt;type);
+    gtk_label_set_line_wrap (GTK_LABEL(label),TRUE);
+    gtk_container_add(GTK_CONTAINER(frame),label);
+    gtk_label_set_justify(GTK_LABEL(label),GTK_JUSTIFY_LEFT);
+    gtk_box_pack_start_defaults(GTK_BOX(vbox),frame);
+
+    frame = gtk_frame_new(&quot;影片简介&quot;);
+    label = gtk_label_new(p-&gt;message);
+    gtk_label_set_line_wrap (GTK_LABEL(label),TRUE);
+    gtk_container_add(GTK_CONTAINER(frame),label);
+    gtk_label_set_justify(GTK_LABEL(label),GTK_JUSTIFY_LEFT);
+    gtk_box_pack_start_defaults(GTK_BOX(vbox),frame);
+
+    vbox = gtk_vbox_new(FALSE,0);
+    gtk_container_add(GTK_CONTAINER(hbox),vbox);
+
+    frame = gtk_frame_new(&quot;主演&quot;);
+    label = gtk_label_new(p-&gt;people);
+    gtk_label_set_line_wrap (GTK_LABEL(label),TRUE);
+    gtk_container_add(GTK_CONTAINER(frame),label);
+    gtk_label_set_justify(GTK_LABEL(label),GTK_JUSTIFY_LEFT);
+    gtk_box_pack_start_defaults(GTK_BOX(vbox),frame);
+
+    tbox = gtk_hbox_new(TRUE,0);
+    gtk_container_add(GTK_CONTAINER(vbox),tbox);
+
+    frame = gtk_frame_new(&quot;放映时间&quot;);
+    label = gtk_label_new(p-&gt;time);
+    gtk_label_set_line_wrap (GTK_LABEL(label),TRUE);
+    gtk_container_add(GTK_CONTAINER(frame),label);
+    gtk_label_set_justify(GTK_LABEL(label),GTK_JUSTIFY_LEFT);
+    gtk_box_pack_start_defaults(GTK_BOX(tbox),frame);
+    frame = gtk_frame_new(&quot;放映地点&quot;);
+    label = gtk_label_new(p-&gt;place);
+    gtk_label_set_line_wrap (GTK_LABEL(label),TRUE);
+    gtk_container_add(GTK_CONTAINER(frame),label);
+    gtk_label_set_justify(GTK_LABEL(label),GTK_JUSTIFY_LEFT);
+    gtk_box_pack_start_defaults(GTK_BOX(tbox),frame);
+
+    tbox = gtk_hbox_new(TRUE,0);
+    gtk_container_add(GTK_CONTAINER(vbox),tbox);
+
+    frame = gtk_frame_new(&quot;票价&quot;);
+    label = gtk_label_new(p-&gt;price);
+    gtk_container_add(GTK_CONTAINER(frame),label);
+    gtk_label_set_justify(GTK_LABEL(label),GTK_JUSTIFY_LEFT);
+    gtk_box_pack_start_defaults(GTK_BOX(tbox),frame);
+    frame = gtk_frame_new(&quot;评分&quot;);
+    label = gtk_label_new(p-&gt;score);
+    gtk_container_add(GTK_CONTAINER(frame),label);
+    gtk_label_set_justify(GTK_LABEL(label),GTK_JUSTIFY_LEFT);
+    gtk_box_pack_start_defaults(GTK_BOX(tbox),frame);
+
+    button = gtk_button_new_with_label(&quot;购买&quot;);
+    g_signal_connect(G_OBJECT(button),&quot;clicked&quot;,G_CALLBACK(on_choose_seat),p);
+    gtk_box_pack_start(GTK_BOX(vbox),button,FALSE,FALSE,5);
+&#125;
+
+
+GtkWidget* make_window_main_buy ()//创建影片选择页面
+&#123;
+    GtkWidget *boxs;
+    GtkWidget *window;
+    GtkWidget *swindow;
+
+    gchar *title = &quot;影票购买&quot; ;
+
+    fp=fopen(&quot;data.txt&quot;,&quot;rt&quot;);
+
+    window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    g_signal_connect(G_OBJECT(window),&quot;delete_event&quot;,G_CALLBACK(gtk_main_quit),NULL);
+    gtk_window_set_default_size(GTK_WINDOW(window),1100,500);
+
+    gtk_window_set_title(GTK_WINDOW(window),title);
+    gtk_window_set_position(GTK_WINDOW(window),GTK_WIN_POS_CENTER);
+    gtk_container_set_border_width(GTK_CONTAINER(window),20);
+
+
+    swindow = gtk_scrolled_window_new(NULL,NULL);
+    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(swindow),GTK_POLICY_AUTOMATIC,GTK_POLICY_AUTOMATIC);
+
+    gtk_container_add(GTK_CONTAINER(window),swindow);
+
+    boxs = gtk_vbox_new(TRUE,20);
+    gtk_scrolled_window_add_with_viewport(GTK_SCROLLED_WINDOW(swindow),boxs);
+
+    p = (struct theater*)malloc(sizeof(struct theater));
+
+    while (fscanf(fp,&quot;%s%s%s%s%s%s%s%s%s\n&quot;,p-&gt;name,p-&gt;type,p-&gt;people,p-&gt;time,p-&gt;place,p-&gt;message,p-&gt;photo,p-&gt;price,p-&gt;score)!=EOF)
+    &#123;
+        on_dian_jie(p,boxs);
+        p = (struct theater*)malloc(sizeof(struct theater));
+    &#125;
+
+
+    fclose(fp);
+
+    return window;
+&#125;
+
+GtkWidget* make_window_choose_seat(struct theater *p)//创建选坐窗口
+&#123;
+    GtkWidget *button;
+    GtkWidget *button1;
+    GtkWidget *label;
+    GtkWidget *frame;
+    GtkWidget *fbox;
+    GtkWidget *dbox;
+    GtkWidget *boxs;
+    GtkWidget *box;
+    GtkWidget *image;
+    GtkWidget *window;
+
+    gint i,j;
+
+    window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    g_signal_connect(G_OBJECT(window),&quot;delete_event&quot;,G_CALLBACK(gtk_main_quit),NULL);
+    gtk_window_set_position(GTK_WINDOW(window),GTK_WIN_POS_CENTER);
+    gtk_container_set_border_width(GTK_CONTAINER(window),10);
+    gtk_window_set_title(GTK_WINDOW(window),&quot;guanli&quot;);
+
+    box = gtk_vbox_new(FALSE,30);
+    gtk_container_add(GTK_CONTAINER(window),box);
+
+    button = gtk_image_new_from_file(&quot;1.jpg&quot;);
+    gtk_widget_set_size_request(GTK_WIDGET(button),100,80);
+    gtk_box_pack_start(GTK_BOX(box),button,FALSE,FALSE,0);
+
+    dbox = gtk_vbox_new(FALSE,10);
+    gtk_container_add(GTK_CONTAINER(box),dbox);
+
+    frame = gtk_frame_new(&quot;&quot;);
+    gtk_box_pack_start(GTK_BOX(dbox),frame,FALSE,FALSE,0);
+
+
+    strcpy(choose_name,p-&gt;name);
+    strcat(choose_name,&quot;.txt&quot;);
+    fp=fopen(choose_name,&quot;r+&quot;);
+    for (i=0;i&lt;8;i++)
+    &#123;
+        boxs = gtk_hbox_new(FALSE,10);
+        gtk_container_add(GTK_CONTAINER(dbox),boxs);
+        for (j=0;j&lt;8;j++)
+        &#123;
+            fscanf(fp,&quot;%d&quot;,&amp;weizhi[i][j]);
+            q =(struct findrc*)malloc(sizeof(struct findrc));
+            q-&gt;r=i;
+            q-&gt;c=j;
+            if (weizhi[i][j]==0)
+            &#123;
+                button =gtk_toggle_button_new();
+                gtk_widget_set_size_request(GTK_WIDGET(button),30,30);
+                gtk_box_pack_start(GTK_BOX(boxs),button,FALSE,FALSE,10);
+                g_signal_connect(G_OBJECT(button),&quot;clicked&quot;,G_CALLBACK(toggle_clicked_callback),q);
+            &#125;
+            else
+            &#123;
+                image = gtk_image_new_from_stock(GTK_STOCK_CANCEL,GTK_ICON_SIZE_MENU);
+                button = gtk_button_new();
+                gtk_widget_set_size_request(GTK_WIDGET(button),30,30);
+                gtk_container_add(GTK_CONTAINER(button),image);
+                gtk_box_pack_start(GTK_BOX(boxs),button,FALSE,FALSE,10);
+            &#125;
+        &#125;
+    &#125;
+
+    frame = gtk_frame_new(&quot;&quot;);
+    gtk_box_pack_start(GTK_BOX(dbox),frame,FALSE,FALSE,0);
+    fclose(fp);
+    boxs = gtk_hbox_new(FALSE,20);
+    button1 = gtk_button_new_with_label(&quot;购买&quot;);
+    gtk_widget_set_size_request(GTK_WIDGET(button1),50,40);
+    g_signal_connect(G_OBJECT(button1),&quot;clicked&quot;,G_CALLBACK(on_choose_seat_ok),p);
+    gtk_box_pack_start(GTK_BOX(boxs),button1,FALSE,FALSE,90);
+    button1 = gtk_button_new_with_label(&quot;返回&quot;);
+    gtk_widget_set_size_request(GTK_WIDGET(button1),50,40);
+    g_signal_connect(G_OBJECT(button1),&quot;clicked&quot;,G_CALLBACK(on_seat_to_buy),NULL);
+    gtk_box_pack_start(GTK_BOX(boxs),button1,FALSE,FALSE,80);
+    gtk_container_add(GTK_CONTAINER(box),boxs);
+
+    return window;
+&#125;
+
+GtkWidget* make_window_main_login()//创建管理登录界面
+&#123;
+    GtkWidget *window;
+    GtkWidget *box;
+    GtkWidget *button_a;
+    GtkWidget *button_b;
+    GtkWidget *label_user;
+    GtkWidget *label_pass;
+    GtkWidget *text_user;
+    GtkWidget *text_pass;
+    GtkWidget *table;
+
+    window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    g_signal_connect(G_OBJECT(window),&quot;delete_event&quot;,G_CALLBACK(on_login_to_main),NULL);
+    gtk_container_set_border_width(GTK_CONTAINER(window),10);
+
+    gtk_window_set_title(GTK_WINDOW(window),&quot;log in&quot;);
+    gtk_window_set_position(GTK_WINDOW(window),GTK_WIN_POS_CENTER);
+
+    table = gtk_table_new(5,5,FALSE);
+    gtk_container_add(GTK_CONTAINER(window),table);
+
+    label_user = gtk_label_new(&quot;用户名&quot;);
+    label_pass = gtk_label_new(&quot;密码&quot;);
+
+    text_user = gtk_entry_new();
+    text_pass = gtk_entry_new();
+
+    box = gtk_hbox_new(TRUE,10);
+
+    button_a = gtk_button_new_with_label(&quot;登录&quot;);
+    button_b = gtk_button_new_with_label(&quot;返回&quot;);
+
+    gtk_box_pack_start(GTK_BOX(box),button_a,FALSE,TRUE,0);
+    gtk_box_pack_start(GTK_BOX(box),button_b,FALSE,TRUE,0);
+
+    gtk_entry_set_visibility(GTK_ENTRY(text_pass),FALSE);
+
+    gtk_table_attach_defaults(GTK_TABLE(table),label_user,0,1,0,2);
+    gtk_table_attach_defaults(GTK_TABLE(table),label_pass,0,1,3,4);
+    gtk_table_attach_defaults(GTK_TABLE(table),text_user,2,5,0,2);
+    gtk_table_attach_defaults(GTK_TABLE(table),text_pass,2,5,3,4);
+
+    gtk_table_attach_defaults(GTK_TABLE(table),box,1,4,4,5);
+
+    g_signal_connect(G_OBJECT(button_a),&quot;clicked&quot;,G_CALLBACK(on_login_to_change),NULL);
+    g_signal_connect(G_OBJECT(button_b),&quot;clicked&quot;,G_CALLBACK(on_login_to_main),NULL);
+
+    return window;
+&#125;
+
+GtkWidget* make_window_main_change()//创建影片管理页面
+&#123;
+    GtkWidget *swindow;
+    GtkWidget *window;
+    GtkWidget *vbox;
+    GtkWidget *hbox;
+    GtkWidget *button;
+
+
+    gint i;
+    gint temp_row;
+    gchar *title[9]=&#123;&quot;影片名&quot;,&quot;影片类型&quot;,&quot;主演&quot;,&quot;播放时间&quot;,&quot;播放地点&quot;,&quot;影片简介&quot;,&quot;影片插图&quot;,&quot;价格&quot;,&quot;评分&quot;&#125;;
+    window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    g_signal_connect(G_OBJECT(window),&quot;delete_event&quot;,G_CALLBACK(made_file),NULL);
+    gtk_window_set_title(GTK_WINDOW(window),&quot;影片管理&quot;);
+    gtk_window_set_position(GTK_WINDOW(window),GTK_WIN_POS_CENTER);
+    gtk_container_set_border_width(GTK_CONTAINER(window),10);
+    gtk_window_set_default_size(GTK_WINDOW(window),1200,500);
+
+    vbox = gtk_vbox_new(FALSE,0);
+    gtk_container_add(GTK_CONTAINER(window),vbox);
+
+    swindow = gtk_scrolled_window_new(NULL,NULL);
+    gtk_box_pack_start_defaults(GTK_BOX(vbox),swindow);
+
+    gtk_container_set_border_width (GTK_CONTAINER (swindow), 10);
+    gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (swindow),GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
+
+    list = gtk_clist_new_with_titles(9,title);
+    gtk_clist_set_shadow_type (GTK_CLIST(list), GTK_SHADOW_OUT);
+
+    gtk_signal_connect(GTK_OBJECT(list), &quot;select_row&quot;,GTK_SIGNAL_FUNC(selection_made),NULL);
+    gtk_scrolled_window_add_with_viewport (GTK_SCROLLED_WINDOW(swindow),list);
+
+    for(i=0;i&lt;9;i++)
+    &#123;
+         gtk_clist_set_column_justification(GTK_CLIST(list),i,GTK_JUSTIFY_CENTER);
+    &#125;
+
+    gtk_clist_set_column_width(GTK_CLIST(list),0,100);
+    gtk_clist_set_column_width(GTK_CLIST(list),1,100);
+    gtk_clist_set_column_width(GTK_CLIST(list),2,100);
+    gtk_clist_set_column_width(GTK_CLIST(list),3,100);
+    gtk_clist_set_column_width(GTK_CLIST(list),4,100);
+    gtk_clist_set_column_width(GTK_CLIST(list),5,300);
+    gtk_clist_set_column_width(GTK_CLIST(list),6,100);
+    gtk_clist_set_column_width(GTK_CLIST(list),7,50);
+    gtk_clist_set_column_width(GTK_CLIST(list),8,50);
+
+    hbox = gtk_hbox_new(TRUE,0);
+    gtk_box_pack_start(GTK_BOX(vbox),hbox,FALSE,FALSE,5);
+
+    button = gtk_button_new_with_label(&quot;添加&quot;);
+    g_signal_connect(G_OBJECT(button),&quot;clicked&quot;,G_CALLBACK(list_add),(gpointer)list);
+    gtk_box_pack_start(GTK_BOX(hbox),button,FALSE,FALSE,5);
+
+    button = gtk_button_new_with_label(&quot;修改&quot;);
+    g_signal_connect(G_OBJECT(button),&quot;clicked&quot;,G_CALLBACK(list_change),(gpointer)list);
+    gtk_box_pack_start(GTK_BOX(hbox),button,FALSE,FALSE,5);
+
+    button = gtk_button_new_with_label(&quot;删除&quot;);
+    g_signal_connect(G_OBJECT(button),&quot;clicked&quot;,G_CALLBACK(list_delete),(gpointer)list);
+    gtk_box_pack_start(GTK_BOX(hbox),button,FALSE,FALSE,5);
+
+    button = gtk_button_new_with_label(&quot;清空&quot;);
+    g_signal_connect(G_OBJECT(button),&quot;clicked&quot;,G_CALLBACK(list_clear),(gpointer)list);
+    gtk_box_pack_start(GTK_BOX(hbox),button,FALSE,FALSE,5);
+
+    list_made(list,&amp;th);
+
+    return window;
+&#125;
+
+GtkWidget* make_window_yesorno(GtkWidget *userdate) //创建退出确认框？
+&#123;
+    GtkWidget *window;
+    GtkWidget *button_yes;
+    GtkWidget *button_no;
+    GtkWidget *label;
+    GtkWidget *box_b;
+    GtkWidget *box_s;
+
+    window = gtk_window_new(GTK_WINDOW_POPUP);
+    gtk_window_set_default_size(GTK_WINDOW(window),150,70);
+    gtk_window_set_position(GTK_WINDOW(window),GTK_WIN_POS_CENTER);
+    g_signal_connect(G_OBJECT(window),&quot;delete_event&quot;,G_CALLBACK(on_change_no),NULL);
+    gtk_container_set_border_width(GTK_CONTAINER(window),10);
+
+    box_b = gtk_vbox_new(TRUE,10);
+    gtk_container_add(GTK_CONTAINER(window),box_b);
+
+    label = gtk_label_new(&quot;是否确定？&quot;);
+    gtk_box_pack_start_defaults(GTK_BOX(box_b),label);
+
+    box_s = gtk_hbox_new(TRUE,10);
+    gtk_box_pack_start_defaults(GTK_BOX(box_b),box_s);
+
+    button_yes = gtk_button_new_with_label(&quot;是&quot;);
+    button_no = gtk_button_new_with_label(&quot;否&quot;);
+
+    gtk_box_pack_start_defaults(GTK_BOX(box_s),button_yes);
+    gtk_box_pack_start_defaults(GTK_BOX(box_s),button_no);
+
+    g_signal_connect(G_OBJECT(button_yes),&quot;clicked&quot;,G_CALLBACK(on_change_yes),NULL);
+    g_signal_connect(G_OBJECT(button_no),&quot;clicked&quot;,G_CALLBACK(on_change_no),NULL);
+
+    return window;
+&#125;
+
+GtkWidget* make_window_insert()//创建信息输入窗口
+&#123;
+    GtkWidget *window;
+    GtkWidget *button;
+    GtkWidget *label;
+    GtkWidget *box;
+    GtkWidget *hbox;
+    GtkWidget *vbox1;
+    GtkWidget *vbox2;
+
+
+    window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    gtk_window_set_title(GTK_WINDOW(window),&quot;添加影片&quot;);
+    gtk_window_set_position(GTK_WINDOW(window),GTK_WIN_POS_CENTER);
+    g_signal_connect(G_OBJECT(window),&quot;delete_event&quot;,G_CALLBACK(gtk_widget_destroy),NULL);
+    gtk_container_set_border_width(GTK_CONTAINER(window),10);
+
+    box = gtk_vbox_new(FALSE,10);
+    gtk_container_add(GTK_CONTAINER(window),box);
+
+    hbox = gtk_hbox_new(FALSE,10);
+    gtk_box_pack_start_defaults(GTK_BOX(box),hbox);
+
+    vbox1 = gtk_vbox_new(TRUE,10);
+    vbox2 = gtk_vbox_new(TRUE,10);
+    gtk_box_pack_start_defaults(GTK_BOX(hbox),vbox1);
+    gtk_box_pack_start_defaults(GTK_BOX(hbox),vbox2);
+
+    label = gtk_label_new(&quot;影片名&quot;);
+    text_name = gtk_entry_new();
+    gtk_box_pack_start_defaults(GTK_BOX(vbox1),label);
+    gtk_box_pack_start_defaults(GTK_BOX(vbox2),text_name);
+
+    label = gtk_label_new(&quot;影片类型&quot;);
+    text_type = gtk_entry_new();
+    gtk_box_pack_start_defaults(GTK_BOX(vbox1),label);
+    gtk_box_pack_start_defaults(GTK_BOX(vbox2),text_type);
+
+    label = gtk_label_new(&quot;主演&quot;);
+    text_people = gtk_entry_new();
+    gtk_box_pack_start_defaults(GTK_BOX(vbox1),label);
+    gtk_box_pack_start_defaults(GTK_BOX(vbox2),text_people);
+
+    label = gtk_label_new(&quot;放映时间&quot;);
+    text_time = gtk_entry_new();
+    gtk_box_pack_start_defaults(GTK_BOX(vbox1),label);
+    gtk_box_pack_start_defaults(GTK_BOX(vbox2),text_time);
+
+    label = gtk_label_new(&quot;放映地点&quot;);
+    text_place = gtk_entry_new();
+    gtk_box_pack_start_defaults(GTK_BOX(vbox1),label);
+    gtk_box_pack_start_defaults(GTK_BOX(vbox2),text_place);
+
+    label = gtk_label_new(&quot;影片简介&quot;);
+    text_message = gtk_entry_new();
+    gtk_box_pack_start_defaults(GTK_BOX(vbox1),label);
+    gtk_box_pack_start_defaults(GTK_BOX(vbox2),text_message);
+
+    label = gtk_label_new(&quot;影片封面&quot;);
+    text_photo = gtk_entry_new();
+    gtk_box_pack_start_defaults(GTK_BOX(vbox1),label);
+    gtk_box_pack_start_defaults(GTK_BOX(vbox2),text_photo);
+
+    label = gtk_label_new(&quot;票价&quot;);
+    text_price = gtk_entry_new();
+    gtk_box_pack_start_defaults(GTK_BOX(vbox1),label);
+    gtk_box_pack_start_defaults(GTK_BOX(vbox2),text_price);
+
+    label = gtk_label_new(&quot;评分&quot;);
+    text_score = gtk_entry_new();
+    gtk_box_pack_start_defaults(GTK_BOX(vbox1),label);
+    gtk_box_pack_start_defaults(GTK_BOX(vbox2),text_score);
+
+    hbox = gtk_hbox_new(TRUE,10);
+
+    button = gtk_button_new_with_label(&quot;确定&quot;);
+    gtk_box_pack_start_defaults(GTK_BOX(hbox),button);
+    g_signal_connect(G_OBJECT(button),&quot;clicked&quot;,G_CALLBACK(to_add_list_item),(gpointer)window);
+
+    button = gtk_button_new_with_label(&quot;取消&quot;);
+    gtk_box_pack_start_defaults(GTK_BOX(hbox),button);
+    g_signal_connect(G_OBJECT(button),&quot;clicked&quot;,G_CALLBACK(destroy),window);
+
+    gtk_box_pack_start_defaults(GTK_BOX(box),hbox);
+
+    return  window;
+&#125;
+
+GtkWidget* make_window2_insert()//修改信息输入窗口
+&#123;
+    GtkWidget *window;
+    GtkWidget *button;
+    GtkWidget *label;
+    GtkWidget *box;
+    GtkWidget *hbox;
+    GtkWidget *vbox1;
+    GtkWidget *vbox2;
+
+    gchar *temp[9];
+    gint i;
+
+    for(i=0;i&lt;9;i++)
+    &#123;
+        gtk_clist_get_text(GTK_CLIST(list),temp_row,i,(gchar **)(&amp;temp[i]));
+    &#125;
+
+    window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    gtk_window_set_title(GTK_WINDOW(window),&quot;修改影片&quot;);
+    gtk_window_set_position(GTK_WINDOW(window),GTK_WIN_POS_CENTER);
+    g_signal_connect(G_OBJECT(window),&quot;delete_event&quot;,G_CALLBACK(gtk_widget_destroy),NULL);
+    gtk_container_set_border_width(GTK_CONTAINER(window),10);
+
+    box = gtk_vbox_new(FALSE,10);
+    gtk_container_add(GTK_CONTAINER(window),box);
+
+    hbox = gtk_hbox_new(FALSE,10);
+    gtk_box_pack_start_defaults(GTK_BOX(box),hbox);
+
+    vbox1 = gtk_vbox_new(TRUE,10);
+    vbox2 = gtk_vbox_new(TRUE,10);
+    gtk_box_pack_start_defaults(GTK_BOX(hbox),vbox1);
+    gtk_box_pack_start_defaults(GTK_BOX(hbox),vbox2);
+
+    label = gtk_label_new(&quot;影片名&quot;);
+    text_name = gtk_entry_new();
+    gtk_entry_set_text(GTK_ENTRY(text_name),temp[0]);
+    gtk_box_pack_start_defaults(GTK_BOX(vbox1),label);
+    gtk_box_pack_start_defaults(GTK_BOX(vbox2),text_name);
+
+    label = gtk_label_new(&quot;影片类型&quot;);
+    text_type = gtk_entry_new();
+    gtk_entry_set_text(GTK_ENTRY(text_type),temp[1]);
+    gtk_box_pack_start_defaults(GTK_BOX(vbox1),label);
+    gtk_box_pack_start_defaults(GTK_BOX(vbox2),text_type);
+
+    label = gtk_label_new(&quot;主演&quot;);
+    text_people = gtk_entry_new();
+    gtk_entry_set_text(GTK_ENTRY(text_people),temp[2]);
+    gtk_box_pack_start_defaults(GTK_BOX(vbox1),label);
+    gtk_box_pack_start_defaults(GTK_BOX(vbox2),text_people);
+
+    label = gtk_label_new(&quot;放映时间&quot;);
+    text_time = gtk_entry_new();
+    gtk_entry_set_text(GTK_ENTRY(text_time),temp[3]);
+    gtk_box_pack_start_defaults(GTK_BOX(vbox1),label);
+    gtk_box_pack_start_defaults(GTK_BOX(vbox2),text_time);
+
+    label = gtk_label_new(&quot;放映地点&quot;);
+    text_place = gtk_entry_new();
+    gtk_entry_set_text(GTK_ENTRY(text_place),temp[4]);
+    gtk_box_pack_start_defaults(GTK_BOX(vbox1),label);
+    gtk_box_pack_start_defaults(GTK_BOX(vbox2),text_place);
+
+    label = gtk_label_new(&quot;影片简介&quot;);
+    text_message = gtk_entry_new();
+    gtk_entry_set_text(GTK_ENTRY(text_message),temp[5]);
+    gtk_box_pack_start_defaults(GTK_BOX(vbox1),label);
+    gtk_box_pack_start_defaults(GTK_BOX(vbox2),text_message);
+
+    label = gtk_label_new(&quot;影片封面&quot;);
+    text_photo = gtk_entry_new();
+    gtk_entry_set_text(GTK_ENTRY(text_photo),temp[6]);
+    gtk_box_pack_start_defaults(GTK_BOX(vbox1),label);
+    gtk_box_pack_start_defaults(GTK_BOX(vbox2),text_photo);
+
+    label = gtk_label_new(&quot;票价&quot;);
+    text_price = gtk_entry_new();
+    gtk_entry_set_text(GTK_ENTRY(text_price),temp[7]);
+    gtk_box_pack_start_defaults(GTK_BOX(vbox1),label);
+    gtk_box_pack_start_defaults(GTK_BOX(vbox2),text_price);
+
+    label = gtk_label_new(&quot;评分&quot;);
+    text_score = gtk_entry_new();
+    gtk_entry_set_text(GTK_ENTRY(text_score),temp[8]);
+    gtk_box_pack_start_defaults(GTK_BOX(vbox1),label);
+    gtk_box_pack_start_defaults(GTK_BOX(vbox2),text_score);
+
+    hbox = gtk_hbox_new(TRUE,10);
+
+    button = gtk_button_new_with_label(&quot;确定&quot;);
+    gtk_box_pack_start_defaults(GTK_BOX(hbox),button);
+    g_signal_connect(G_OBJECT(button),&quot;clicked&quot;,G_CALLBACK(to_change_list_item),(gpointer)window);
+
+    button = gtk_button_new_with_label(&quot;取消&quot;);
+    gtk_box_pack_start_defaults(GTK_BOX(hbox),button);
+    g_signal_connect(G_OBJECT(button),&quot;clicked&quot;,G_CALLBACK(destroy),window);
+
+    gtk_box_pack_start_defaults(GTK_BOX(box),hbox);
+
+    return  window;
+&#125;
+
+
+GtkWidget* make_window_ok_seat(struct theater *p)//创建确定付款窗口
+&#123;
+    GtkWidget *box;
+    GtkWidget *frame;
+    GtkWidget *label;
+    GtkWidget *hbox;
+    GtkWidget *boxx;
+    GtkWidget *boxs;
+    GtkWidget *button_buy;
+    GtkWidget *button_log;
+    GtkWidget *window1;
+
+    char f[20];
+
+    gint i,j;
+
+    window1 = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    g_signal_connect(G_OBJECT(window1),&quot;delete_event&quot;,G_CALLBACK(gtk_main_quit),NULL);
+    gtk_window_set_position(GTK_WINDOW(window1),GTK_WIN_POS_CENTER);
+    gtk_container_set_border_width(GTK_CONTAINER(window1),10);
+    gtk_window_set_title(GTK_WINDOW(window1),&quot;确认购买&quot;);
+
+    box = gtk_vbox_new(FALSE,10);
+
+    gtk_container_add(GTK_CONTAINER(window1),box);
+
+    frame = gtk_frame_new(&quot;电影名&quot;);
+    label = gtk_label_new(p-&gt;name);
+    gtk_container_add(GTK_CONTAINER(frame),label);
+    gtk_label_set_justify(GTK_LABEL(label),GTK_JUSTIFY_LEFT);
+    gtk_box_pack_start(GTK_BOX(box),frame,FALSE,FALSE,0);
+
+    frame = gtk_frame_new(&quot;上映时间&quot;);
+    label = gtk_label_new(p-&gt;time);
+    gtk_container_add(GTK_CONTAINER(frame),label);
+    gtk_label_set_justify(GTK_LABEL(label),GTK_JUSTIFY_LEFT);
+    gtk_box_pack_start(GTK_BOX(box),frame,FALSE,FALSE,0);
+
+    frame = gtk_frame_new(&quot;上映地点&quot;);
+    label = gtk_label_new(p-&gt;place);
+    gtk_container_add(GTK_CONTAINER(frame),label);
+    gtk_label_set_justify(GTK_LABEL(label),GTK_JUSTIFY_LEFT);
+    gtk_box_pack_start(GTK_BOX(box),frame,FALSE,FALSE,0);
+
+    frame = gtk_frame_new(&quot;购票价格&quot;);
+    label = gtk_label_new(p-&gt;price);
+    gtk_container_add(GTK_CONTAINER(frame),label);
+    gtk_label_set_justify(GTK_LABEL(label),GTK_JUSTIFY_LEFT);
+    gtk_box_pack_start(GTK_BOX(box),frame,FALSE,FALSE,0);
+
+    boxx = gtk_vbox_new(FALSE,0);
+    for (i=0;i&lt;8;i++)
+    &#123;
+        for(j=0;j&lt;8;j++)
+        &#123;
+            if(weizhi[i][j]==2)
+            &#123;
+
+                sprintf(f,&quot;  第%d排 第%d列  &quot;,i+1,j+1);
+                frame = gtk_frame_new(&quot;&quot;);
+                label = gtk_label_new(f);
+                gtk_container_add(GTK_CONTAINER(frame),label);
+                gtk_label_set_justify(GTK_LABEL(label),GTK_JUSTIFY_LEFT);
+                gtk_box_pack_start(GTK_BOX(boxx),frame,FALSE,FALSE,0);
+            &#125;
+        &#125;
+    &#125;
+    gtk_container_add(GTK_CONTAINER(box),boxx);
+
+    hbox = gtk_hbox_new(FALSE,20);
+    gtk_container_add(GTK_CONTAINER(box),hbox);
+
+
+    button_buy = gtk_button_new_with_label(&quot;确认&quot;);
+    button_log = gtk_button_new_with_label(&quot;返回&quot;);
+
+    gtk_box_pack_start(GTK_BOX(hbox),button_buy,FALSE,FALSE,20);
+    gtk_box_pack_start(GTK_BOX(hbox),button_log,FALSE,FALSE,20);
+    g_signal_connect(G_OBJECT(button_buy),&quot;clicked&quot;,G_CALLBACK(on_put_money),p);
+    g_signal_connect(G_OBJECT(button_log),&quot;clicked&quot;,G_CALLBACK(on_ok_to_seat),NULL);
+
+    return window1;
+&#125;
+
+
+GtkWidget* make_window_buy_passwd(struct theater *p)//支付登录界面
+&#123;
+    GtkWidget *window;
+    GtkWidget *box;
+    GtkWidget *button_a;
+    GtkWidget *button_b;
+    GtkWidget *label_user;
+    GtkWidget *label_pass;
+    GtkWidget *text_user;
+    GtkWidget *text_pass;
+    GtkWidget *table;
+
+    window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    g_signal_connect(G_OBJECT(window),&quot;delete_event&quot;,G_CALLBACK(on_login_to_main),NULL);
+    gtk_container_set_border_width(GTK_CONTAINER(window),10);
+
+    gtk_window_set_title(GTK_WINDOW(window),&quot;log in&quot;);
+    gtk_window_set_position(GTK_WINDOW(window),GTK_WIN_POS_CENTER);
+
+    table = gtk_table_new(5,5,FALSE);
+    gtk_container_add(GTK_CONTAINER(window),table);
+
+    label_user = gtk_label_new(&quot;账户&quot;);
+    label_pass = gtk_label_new(&quot;密码&quot;);
+
+    text_user = gtk_entry_new();
+    text_pass = gtk_entry_new();
+
+    box = gtk_hbox_new(TRUE,10);
+
+    button_a = gtk_button_new_with_label(&quot;登录&quot;);
+    button_b = gtk_button_new_with_label(&quot;返回&quot;);
+
+    gtk_box_pack_start(GTK_BOX(box),button_a,FALSE,TRUE,0);
+    gtk_box_pack_start(GTK_BOX(box),button_b,FALSE,TRUE,0);
+
+    gtk_entry_set_visibility(GTK_ENTRY(text_pass),FALSE);
+
+    gtk_table_attach_defaults(GTK_TABLE(table),label_user,0,1,0,2);
+    gtk_table_attach_defaults(GTK_TABLE(table),label_pass,0,1,3,4);
+    gtk_table_attach_defaults(GTK_TABLE(table),text_user,2,5,0,2);
+    gtk_table_attach_defaults(GTK_TABLE(table),text_pass,2,5,3,4);
+
+    gtk_table_attach_defaults(GTK_TABLE(table),box,1,4,4,5);
+
+    g_signal_connect(G_OBJECT(button_a),&quot;clicked&quot;,G_CALLBACK(on_succeed_login),p);
+    g_signal_connect(G_OBJECT(button_b),&quot;clicked&quot;,G_CALLBACK(destroy),(gpointer)window);
+
+    return window;
+&#125;
+
+GtkWidget* make_tobuy_yesorno(struct theater *p) //创建支付后确认框？
+&#123;
+    GtkWidget *window;
+    GtkWidget *button_yes;
+    GtkWidget *button_no;
+    GtkWidget *label;
+    GtkWidget *box_b;
+    GtkWidget *box_s;
+
+    window = gtk_window_new(GTK_WINDOW_POPUP);
+    gtk_window_set_default_size(GTK_WINDOW(window),150,70);
+    gtk_window_set_position(GTK_WINDOW(window),GTK_WIN_POS_CENTER);
+    g_signal_connect(G_OBJECT(window),&quot;delete_event&quot;,G_CALLBACK(on_change_no),NULL);
+    gtk_container_set_border_width(GTK_CONTAINER(window),10);
+
+    box_b = gtk_vbox_new(TRUE,10);
+    gtk_container_add(GTK_CONTAINER(window),box_b);
+
+    label = gtk_label_new(&quot;确定支付？&quot;);
+    gtk_box_pack_start_defaults(GTK_BOX(box_b),label);
+
+    box_s = gtk_hbox_new(TRUE,10);
+    gtk_box_pack_start_defaults(GTK_BOX(box_b),box_s);
+
+    button_yes = gtk_button_new_with_label(&quot;是&quot;);
+    button_no = gtk_button_new_with_label(&quot;否&quot;);
+
+    gtk_box_pack_start_defaults(GTK_BOX(box_s),button_yes);
+    gtk_box_pack_start_defaults(GTK_BOX(box_s),button_no);
+
+    g_signal_connect(G_OBJECT(button_yes),&quot;clicked&quot;,G_CALLBACK(on_succeed_buy),p);
+    g_signal_connect(G_OBJECT(button_no),&quot;clicked&quot;,G_CALLBACK(destroy),(gpointer)window);
+
+    return window;
+&#125;</code></pre><p>** interface.h **</p><pre><code class="hljs">GtkWidget* make_window_main();
+
+GtkWidget* make_window_main_login();
+
+GtkWidget* make_window_yesorno();
+
+GtkWidget* make_window_main_change();
+
+GtkWidget* make_window_main_buy();
+
+GtkWidget* make_window_insert();
+
+GtkWidget* make_window2_insert();
+
+GtkWidget* make_window_ok_seat(struct theater *p);
+
+GtkWidget* make_window_choose_seat(struct theater *p);
+
+GtkWidget* make_window_buy_passwd(struct theater *p);
+
+GtkWidget* make_tobuy_yesorno(struct theater *p);</code></pre><p>** callback.c **</p><pre><code class="hljs">#include&lt;gtk/gtk.h&gt;
+#include&quot;callback.h&quot;
+#include&quot;interface.h&quot;
+
+extern struct findrc *q;
+
+void on_main_to_buy(GtkWidget *widget ,gpointer userdate)//从主界面转至购票页面
+&#123;
+    gtk_widget_hide(window_main);
+    gtk_widget_show_all(window_main_buy);
+&#125;
+
+void on_main_to_login(GtkWidget *widget , gpointer userdate)//从主界面转至登录界面
+&#123;
+    gtk_widget_hide(window_main);
+    gtk_widget_show_all(window_main_login);
+&#125;
+
+void on_login_to_main(GtkWidget *widget , gpointer userdate)//从登录界面转至主界面
+&#123;
+    gtk_widget_hide(window_main_login);
+    gtk_widget_show_all(window_main);
+&#125;
+
+void on_login_to_change(GtkWidget *widget , gpointer userdate)//从登录界面转至管理页面
+&#123;
+    gtk_widget_hide(window_main_login);
+    gtk_widget_show_all(window_main_change);
+&#125;
+
+void on_seat_to_buy(GtkWidget *button,gpointer userdate)//从选座界面转至选电影界面
+&#123;
+    gtk_widget_hide(window_choose_seat);
+    gtk_widget_show_all(window_main_buy);
+&#125;
+
+
+
+void on_ok_to_seat(GtkWidget *button,gpointer userdate)//从付款界面返回选做界面
+&#123;
+    gtk_widget_destroy(window_choose_to_buy);
+    gtk_widget_show_all(window_choose_seat);
+&#125;
+
+void on_change_yes(GtkWidget *widget ,gpointer userdate)//确认是
+&#123;
+    gtk_main_quit();
+&#125;
+
+void on_change_no(GtkWidget *widget ,gpointer userdate)//确认否
+&#123;
+    gtk_widget_hide(window_change_yesorno);
+&#125;
+
+void want_to_quit(GtkWidget *widget ,gpointer userdate)//打开确认界面
+&#123;
+    gtk_widget_show_all(window_change_yesorno);
+&#125;
+
+void list_made(GtkWidget *list,struct theater *p)
+&#123;
+    gchar *s[9];
+
+    fp = fopen(&quot;data.txt&quot;,&quot;rt&quot;);
+    while(fscanf(fp,&quot;%s%s%s%s%s%s%s%s%s\n&quot;,p-&gt;name,p-&gt;type,p-&gt;people,p-&gt;time,p-&gt;place,p-&gt;message,p-&gt;photo,p-&gt;price,p-&gt;score)!=EOF)
+    &#123;
+        theater_num++;
+        s[0]=p-&gt;name;
+        s[1]=p-&gt;type;
+        s[2]=p-&gt;people;
+        s[3]=p-&gt;time;
+        s[4]=p-&gt;place;
+        s[5]=p-&gt;message;
+        s[6]=p-&gt;photo;
+        s[7]=p-&gt;price;
+        s[8]=p-&gt;score;
+        gtk_clist_append((GtkCList *)list,s);
+    &#125;
+    fclose(fp);
+&#125;
+
+void list_add(GtkButton *button , gpointer userdate)//添加影片
+&#123;
+
+    GtkWidget *window;
+
+    window = make_window_insert();
+
+    gtk_widget_show_all(window);
+&#125;
+
+void to_add_list_item(GtkWidget *button ,gpointer userdate)//将新增数据显示并存入文件
+&#123;
+    theater_num++;
+    const gchar *list_item[9];//列表项信息
+    list_item[0]=gtk_entry_get_text(GTK_ENTRY(text_name));
+    list_item[1]=gtk_entry_get_text(GTK_ENTRY(text_type));
+    list_item[2]=gtk_entry_get_text(GTK_ENTRY(text_people));
+    list_item[3]=gtk_entry_get_text(GTK_ENTRY(text_time));
+    list_item[4]=gtk_entry_get_text(GTK_ENTRY(text_place));
+    list_item[5]=gtk_entry_get_text(GTK_ENTRY(text_message));
+    list_item[6]=gtk_entry_get_text(GTK_ENTRY(text_photo));
+    list_item[7]=gtk_entry_get_text(GTK_ENTRY(text_price));
+    list_item[8]=gtk_entry_get_text(GTK_ENTRY(text_score));
+
+    gtk_clist_append((GtkCList *)list,(gchar **)list_item);
+    fp = fopen(&quot;data.txt&quot;,&quot;at+&quot;);
+
+    fprintf(fp,&quot;%s %s %s %s %s %s %s %s %s\n&quot;,list_item[0],list_item[1],list_item[2],list_item[3],list_item[4],list_item[5],list_item[6],list_item[7],list_item[8]);
+    fclose(fp);
+    gtk_widget_destroy((GtkWidget *)userdate);
+&#125;
+
+
+void to_change_list_item(GtkWidget *button ,gpointer userdate)//将修改后的数据显示并存入文件
+&#123;
+    gint i;
+    const gchar *list_item[9];//列表项信息
+    list_item[0]=gtk_entry_get_text(GTK_ENTRY(text_name));
+    list_item[1]=gtk_entry_get_text(GTK_ENTRY(text_type));
+    list_item[2]=gtk_entry_get_text(GTK_ENTRY(text_people));
+    list_item[3]=gtk_entry_get_text(GTK_ENTRY(text_time));
+    list_item[4]=gtk_entry_get_text(GTK_ENTRY(text_place));
+    list_item[5]=gtk_entry_get_text(GTK_ENTRY(text_message));
+    list_item[6]=gtk_entry_get_text(GTK_ENTRY(text_photo));
+    list_item[7]=gtk_entry_get_text(GTK_ENTRY(text_price));
+    list_item[8]=gtk_entry_get_text(GTK_ENTRY(text_score));
+
+    for(i=0;i&lt;9;i++)
+    &#123;
+        gtk_clist_set_text (GTK_CLIST(list),temp_row,i ,list_item[i]);
+    &#125;
+    gtk_widget_destroy((GtkWidget *)userdate);
+&#125;
+
+
+void list_change(GtkButton *button , gpointer userdate)//修改影片
+&#123;
+    GtkWidget *window;
+
+    window = make_window2_insert();
+
+    gtk_widget_show_all(window);
+&#125;
+
+void list_delete(GtkButton *button, gpointer userdate)//删除影片
+&#123;
+    theater_num--;
+    gtk_clist_remove( (GtkCList*)userdate,temp_row);
+&#125;
+
+void list_clear(GtkButton *button, gpointer userdate)//清空影片
+&#123;
+    theater_num = 0;
+    gtk_clist_clear((GtkCList*)userdate);
+&#125;
+
+void selection_made( GtkWidget *list,gint row,gint column,GdkEventButton *event,gpointer userdate)//定位管理界面选中行
+&#123;
+    gchar *text;
+    gtk_clist_get_text(GTK_CLIST(list), row, column, &amp;text);
+    temp_row=row;
+&#125;
+
+void destroy(GtkWidget *button,GtkWidget *window)//销毁窗体
+&#123;
+    gtk_widget_destroy(window);
+&#125;
+
+void made_file()//更新文件
+&#123;
+    gint i,j;
+    gchar *temp[9];
+
+    fp=fopen(&quot;data.txt&quot;,&quot;wt+&quot;);
+    for(i=0;i&lt;theater_num;i++)
+    &#123;
+        for(j=0;j&lt;9;j++)
+        &#123;
+            gtk_clist_get_text(GTK_CLIST(list),i,j,(gchar **)(&amp;temp[j]));
+        &#125;
+        fprintf(fp,&quot;%s %s %s %s %s %s %s %s %s\n&quot;,temp[0],temp[1],temp[2],temp[3],temp[4],temp[5],temp[6],temp[7],temp[8]);
+        //printf(&quot;%s %s %s %s %s %s %s %s %s\n&quot;,temp[0],temp[1],temp[2],temp[3],temp[4],temp[5],temp[6],temp[7],temp[8]);
+    &#125;
+    fclose(fp);
+    gtk_main_quit();
+&#125;
+
+
+void on_choose_seat_ok (GtkWidget *button,struct theater* p)//显示购票的选择信息
+&#123;
+    window_choose_to_buy = make_window_ok_seat(p);
+    gtk_widget_show_all(window_choose_to_buy);
+
+&#125;
+
+void on_choose_seat(GtkWidget *button,struct theater* p)//选择影片完毕
+&#123;
+
+    window_choose_seat = make_window_choose_seat(p);
+    gtk_widget_show_all(window_choose_seat);
+&#125;
+
+void toggle_clicked_callback (GtkWidget *widget, struct findrc *q)//点击座位按钮
+&#123;
+    if (gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (widget)))
+    &#123;
+        weizhi[q-&gt;r][q-&gt;c]=2;
+    &#125;
+    else
+    &#123;
+        weizhi[q-&gt;r][q-&gt;c]=0;
+    &#125;
+&#125;
+
+void update_seat_file(struct theater *p)//更新座位数据
+&#123;
+    gint i,j;
+    strcpy(choose_name,p-&gt;name);
+    strcat(choose_name,&quot;.txt&quot;);
+    fp=fopen(choose_name,&quot;wt+&quot;);
+    for (i=0;i&lt;8;i++)
+    &#123;
+        for (j=0;j&lt;8;j++)
+        &#123;
+            if(weizhi[i][j]==0)
+            &#123;
+                fprintf(fp,&quot;0 &quot;);
+            &#125;
+            else
+            &#123;
+                fprintf(fp,&quot;1 &quot;);
+            &#125;
+        &#125;
+    &#125;
+    fclose(fp);
+&#125;
+
+void on_put_money(GtkWidget *button,struct theater *p)//付款，即将输入账户密码
+&#123;
+    GtkWidget *window;
+    window = make_window_buy_passwd(p);
+    gtk_widget_show_all(window);
+
+&#125;
+
+void on_succeed_login(GtkWidget *button,struct theater *p)//支付登录成功
+&#123;
+    GtkWidget *window;
+    window = make_tobuy_yesorno(p);
+    gtk_widget_show_all(window);
+
+&#125;
+
+void on_succeed_buy(GtkWidget *button,struct theater *p)//成功支付
+&#123;
+    update_seat_file(p);
+    gtk_main_quit();
+&#125;</code></pre><p>** callback.h **</p><pre><code class="hljs">#include&lt;stdlib.h&gt;
+#include&lt;string.h&gt;
+
+gint theater_num;
+gint temp_row;
+gchar *temp[9];
+gchar choose_name[50];
+gint weizhi[8][8];
+
+GtkWidget *window_main;
+GtkWidget *window_main_login;
+GtkWidget *window_main_change;
+GtkWidget *window_main_buy;
+GtkWidget *window_change_yesorno;
+GtkWidget *window_choose_seat;
+GtkWidget *window_choose_to_buy;
+
+GtkWidget *list;
+
+GtkWidget *text_name;
+GtkWidget *text_type;
+GtkWidget *text_people;
+GtkWidget *text_time;
+GtkWidget *text_place;
+GtkWidget *text_message;
+GtkWidget *text_photo;
+GtkWidget *text_price;
+GtkWidget *text_score;
+
+struct findrc
+&#123;
+    int r;
+    int c;
+&#125;;
+
+struct findrc *q;
+
+struct theater
+&#123;
+
+    gchar name[500];
+    gchar type[500];
+    gchar people[500];
+    gchar time[30];
+    gchar place[30];
+    gchar message[500];
+    gchar photo[20];
+    gchar price[10];
+    gchar score[10];
+&#125;th;
+
+struct theater* p;
+
+FILE *fp;
+
+void on_main_to_login(GtkWidget *widget , gpointer userdate);
+
+void on_login_to_main(GtkWidget *widget , gpointer userdate);
+
+void want_to_quit(GtkWidget *widget ,gpointer userdate);
+
+void on_change_yes(GtkWidget *widget ,gpointer userdate);
+
+void on_change_no(GtkWidget *widget ,gpointer userdate);
+
+void on_login_to_change(GtkWidget *widget , gpointer userdate);
+
+void list_delete (GtkButton *button,gpointer userdate);
+
+void list_clear(GtkButton *button,gpointer userdate);
+
+void list_add(GtkButton *button , gpointer userdate);
+
+void list_change(GtkButton *button , gpointer userdate);
+
+void on_main_to_buy(GtkWidget *widget ,gpointer userdate);
+
+void selection_made( GtkWidget *list,gint row,gint column,GdkEventButton *event,gpointer userdate);
+
+void list_made(GtkWidget *list,struct theater *p);
+
+void destroy(GtkWidget *button,GtkWidget *window);
+
+void to_add_list_item(GtkWidget *button ,gpointer userdate);
+
+void to_change_list_item(GtkWidget *button ,gpointer userdate);
+
+void made_file();
+
+void on_seat_to_buy(GtkWidget *button,gpointer userdate);
+
+void on_choose_seat(GtkWidget *button,struct theater* p);
+
+void on_choose_seat_ok (GtkWidget *button,struct theater* p);
+
+void toggle_clicked_callback (GtkWidget *widget, struct findrc *p);
+
+void on_put_money(GtkWidget *button,struct theater *p);
+
+void update_seat_file(struct theater *p);
+
+void on_ok_to_seat(GtkWidget *button,gpointer userdate);
+
+void on_succeed_login(GtkWidget *button,struct theater *p);
+
+void on_succeed_buy(GtkWidget *button,struct theater *p);</code></pre></div><hr><div><div class="post-metas my-3"><div class="post-meta mr-3 d-flex align-items-center"><i class="iconfont icon-category"></i> <span class="category-chains"><span class="category-chain"><a href="/categories/%E5%A4%A7%E5%AD%A6%E6%97%B6%E6%9C%9FCSDN/" class="category-chain-item">大学时期CSDN</a></span></span></div><div class="post-meta"><i class="iconfont icon-tags"></i> <a href="/tags/Gtk/">#Gtk</a></div></div><div class="license-box my-3"><div class="license-title"><div>影院管理系统（GTK）</div><div>https://shiyi.threebody.xyz/posts/9485.html</div></div><div class="license-meta"><div class="license-meta-item"><div>作者</div><div>Yi Shi</div></div><div class="license-meta-item license-meta-date"><div>发布于</div><div>2015年6月15日</div></div><div class="license-meta-item"><div>许可协议</div><div><a target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/"><span class="hint--top hint--rounded" aria-label="BY - 署名"><i class="iconfont icon-by"></i> </span></a><a target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/"><span class="hint--top hint--rounded" aria-label="SA - 相同方式共享"><i class="iconfont icon-sa"></i></span></a></div></div></div><div class="license-icon iconfont"></div></div><div class="post-prevnext my-3"><article class="post-prev col-6"><a href="/posts/13788.html" title="leetcode 3 -- Longest Substring Without Repeating Characters"><i class="iconfont icon-arrowleft"></i> <span class="hidden-mobile">leetcode 3 -- Longest Substring Without Repeating Characters</span> <span class="visible-mobile">上一篇</span></a></article><article class="post-next col-6"><a href="/posts/37129.html" title="leetcode 2 -- Add Two Numbers"><span class="hidden-mobile">leetcode 2 -- Add Two Numbers</span> <span class="visible-mobile">下一篇</span> <i class="iconfont icon-arrowright"></i></a></article></div></div><article id="comments" lazyload><div id="lv-container" data-id="city" data-uid="MTAyMC80NjEzMS8yMjY0Mg"><script type="text/javascript">Fluid.utils.loadComments("#lv-container",(function(){Fluid.utils.createScript("https://cdn-city.livere.com/js/embed.dist.js")}))</script><noscript>Please enable JavaScript to view the comments</noscript></div></article></article></div></div></div><div class="side-col d-none d-lg-block col-lg-2"><aside class="sidebar" style="margin-left:-1rem"><div id="toc"><p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p><div class="toc-body" id="toc-body"></div></div></aside></div></div></div><a id="scroll-top-button" aria-label="TOP" href="#" role="button"><i class="iconfont icon-arrowup" aria-hidden="true"></i></a><div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable modal-lg" role="document"><div class="modal-content"><div class="modal-header text-center"><h4 class="modal-title w-100 font-weight-bold">搜索</h4><button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button></div><div class="modal-body mx-3"><div class="md-form mb-5"><input type="text" id="local-search-input" class="form-control validate"> <label data-error="x" data-success="v" for="local-search-input">关键词</label></div><div class="list-group" id="local-search-result"></div></div></div></div></div></main><footer><div class="footer-inner"><div class="beian"><span><a href="http://beian.miit.gov.cn/" target="_blank" rel="nofollow noopener">陕ICP备16019529号-2</a></span></div><span id="cnzz_stat_icon_1273342630" style="display:none"></span></div></footer><script src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js"></script><link rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css"><script>NProgress.configure({showSpinner:!0,trickleSpeed:100}),NProgress.start(),window.addEventListener("load",(function(){NProgress.done()}))</script><script src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js"></script><script src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js"></script><script src="/js/events.js"></script><script src="/js/plugins.js"></script><script src="/js/img-lazyload.js"></script><script>Fluid.utils.createScript("https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js",(function(){var t=jQuery("#toc");if(0!==t.length&&window.tocbot){var i=jQuery("#board-ctn").offset().top;window.tocbot.init(Object.assign({tocSelector:"#toc-body",contentSelector:".markdown-body",linkClass:"tocbot-link",activeLinkClass:"tocbot-active-link",listClass:"tocbot-list",isCollapsedClass:"tocbot-is-collapsed",collapsibleClass:"tocbot-is-collapsible",scrollSmooth:!0,includeTitleTags:!0,headingsOffset:-i},CONFIG.toc)),t.find(".toc-list-item").length>0&&t.css("visibility","visible"),Fluid.events.registerRefreshCallback((function(){if("tocbot"in window){tocbot.refresh();var t=jQuery("#toc");if(0===t.length||!tocbot)return;t.find(".toc-list-item").length>0&&t.css("visibility","visible")}}))}}))</script><script src="https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js"></script><script>Fluid.plugins.codeWidget()</script><script>Fluid.utils.createScript("https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js",(function(){window.anchors.options={placement:CONFIG.anchorjs.placement,visible:CONFIG.anchorjs.visible},CONFIG.anchorjs.icon&&(window.anchors.options.icon=CONFIG.anchorjs.icon);var n=(CONFIG.anchorjs.element||"h1,h2,h3,h4,h5,h6").split(","),o=[];for(var s of n)o.push(".markdown-body > "+s.trim());"left"===CONFIG.anchorjs.placement&&(window.anchors.options.class="anchorjs-link-left"),window.anchors.add(o.join(", ")),Fluid.events.registerRefreshCallback((function(){if("anchors"in window){anchors.removeAll();var n=(CONFIG.anchorjs.element||"h1,h2,h3,h4,h5,h6").split(","),o=[];for(var s of n)o.push(".markdown-body > "+s.trim());"left"===CONFIG.anchorjs.placement&&(anchors.options.class="anchorjs-link-left"),anchors.add(o.join(", "))}}))}))</script><script>Fluid.utils.createScript("https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js",(function(){Fluid.plugins.fancyBox()}))</script><script>Fluid.plugins.imageCaption()</script><script src="/js/local-search.js"></script><script src="/js/boot.js"></script><noscript><div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div></noscript></body></html>

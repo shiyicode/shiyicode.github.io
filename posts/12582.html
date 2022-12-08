@@ -1,0 +1,173 @@
+<!DOCTYPE html><html lang="zh-CN" data-default-color-scheme="auto"><head><meta charset="UTF-8"><link rel="apple-touch-icon" sizes="76x76" href="/favicon/apple-touch-icon.png"><link rel="icon" href="/favicon/favicon-32x32.png"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=5,shrink-to-fit=no"><meta http-equiv="x-ua-compatible" content="ie=edge"><meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests"><meta name="theme-color" content="#2f4154"><meta name="author" content="Yi Shi"><meta name="keywords" content="shiyi, yishi, threebody, blog, golang"><meta name="description" content="前言 服务端而言，对于每一个新的连接我们都需要去保存其基本信息，如ip地址，套接字fd，也需要赋予其唯一标识如用户名。这里，我们来谈谈对用户连接的封装。  用户连接需要哪些数据1. 套接字描述符 sockfd         执行读写操作时当然不可缺 2. 连接信息  sockaddr         基本信息的保存 3. 用户缓存区 Buffer         非阻塞读写不可缺 4. 唯一标识"><meta property="og:type" content="article"><meta property="og:title" content="Epoll-ET模式读写之用户连接的封装"><meta property="og:url" content="https://shiyi.threebody.xyz/posts/12582.html"><meta property="og:site_name" content="Yi Shi&#39;s Blog"><meta property="og:description" content="前言 服务端而言，对于每一个新的连接我们都需要去保存其基本信息，如ip地址，套接字fd，也需要赋予其唯一标识如用户名。这里，我们来谈谈对用户连接的封装。  用户连接需要哪些数据1. 套接字描述符 sockfd         执行读写操作时当然不可缺 2. 连接信息  sockaddr         基本信息的保存 3. 用户缓存区 Buffer         非阻塞读写不可缺 4. 唯一标识"><meta property="og:locale" content="zh_CN"><meta property="article:published_time" content="2016-12-03T08:36:00.000Z"><meta property="article:modified_time" content="2022-12-08T15:35:14.149Z"><meta property="article:author" content="Yi Shi"><meta property="article:tag" content="服务器开发"><meta property="article:tag" content="Linux网络编程"><meta name="twitter:card" content="summary_large_image"><title>Epoll-ET模式读写之用户连接的封装 - Yi Shi&#39;s Blog</title><link rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css"><link rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css"><link rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css"><link rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css"><link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css"><link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css"><link rel="stylesheet" href="/css/main.css"><link id="highlight-css" rel="stylesheet" href="/css/highlight.css"><link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css"><script id="fluid-configs">var Fluid=window.Fluid||{};Fluid.ctx=Object.assign({},Fluid.ctx);var CONFIG={hostname:"shiyi.threebody.xyz",root:"/",version:"1.9.3",typing:{enable:!0,typeSpeed:50,cursorChar:"",loop:!1,scope:["home"]},anchorjs:{enable:!0,element:"h1,h2,h3,h4,h5,h6",placement:"left",visible:"hover",icon:""},progressbar:{enable:!0,height_px:3,color:"#29d",options:{showSpinner:!0,trickleSpeed:100}},code_language:{enable:!0,default:"TEXT"},copy_btn:!0,image_caption:{enable:!0},image_zoom:{enable:!0,img_url_replace:["",""]},toc:{enable:!0,placement:"right",headingSelector:"h1,h2,h3,h4,h5,h6",collapseDepth:4},lazyload:{enable:!0,loading_img:"/img/loading.gif",onlypost:!1,offset_factor:2},web_analytics:{enable:!0,follow_dnt:!0,baidu:"75eaaab59c4fa946437e9dea4f8fc07d",google:null,gtag:null,tencent:{sid:null,cid:null},woyaola:null,cnzz:1273342630,leancloud:{app_id:null,app_key:null,server_url:null,path:"window.location.pathname",ignore_local:!1}},search_path:"/local-search.xml"};if(CONFIG.web_analytics.follow_dnt){var dntVal=navigator.doNotTrack||window.doNotTrack||navigator.msDoNotTrack;Fluid.ctx.dnt=dntVal&&(dntVal.startsWith("1")||dntVal.startsWith("yes")||dntVal.startsWith("on"))}</script><script src="/js/utils.js"></script><script src="/js/color-schema.js"></script><script async>if(!Fluid.ctx.dnt){var _hmt=_hmt||[];!function(){var e=document.createElement("script");e.src="https://hm.baidu.com/hm.js?75eaaab59c4fa946437e9dea4f8fc07d";var t=document.getElementsByTagName("script")[0];t.parentNode.insertBefore(e,t)}()}</script><script async>Fluid.ctx.dnt||Fluid.utils.createScript("//s4.cnzz.com/z_stat.php?id=1273342630&show=pic")</script><meta name="generator" content="Hexo 5.4.0"><link rel="alternate" href="/atom.xml" title="Yi Shi's Blog" type="application/atom+xml">
+</head><body><header><div class="header-inner" style="height:40vh"><nav id="navbar" class="navbar fixed-top navbar-expand-lg navbar-dark scrolling-navbar"><div class="container"><a class="navbar-brand" href="/"><strong>Yi Shi&#39;s Blog</strong> </a><button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation"><div class="animated-icon"><span></span><span></span><span></span></div></button><div class="collapse navbar-collapse" id="navbarSupportedContent"><ul class="navbar-nav ml-auto text-center"><li class="nav-item"><a class="nav-link" href="/"><i class="iconfont icon-home-fill"></i> 首页</a></li><li class="nav-item"><a class="nav-link" href="/archives/"><i class="iconfont icon-archive-fill"></i> 归档</a></li><li class="nav-item"><a class="nav-link" href="/categories/"><i class="iconfont icon-category-fill"></i> 分类</a></li><li class="nav-item"><a class="nav-link" href="/tags/"><i class="iconfont icon-tags-fill"></i> 标签</a></li><li class="nav-item"><a class="nav-link" href="/books/"><i class="iconfont icon-book"></i> 读书</a></li><li class="nav-item"><a class="nav-link" href="/about/"><i class="iconfont icon-user-fill"></i> 关于</a></li><li class="nav-item" id="search-btn"><a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">&nbsp;<i class="iconfont icon-search"></i>&nbsp;</a></li><li class="nav-item" id="color-toggle-btn"><a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">&nbsp;<i class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a></li></ul></div></div></nav><div id="banner" class="banner" parallax="true" style="background:url(/image/banner.jpg) no-repeat center center;background-size:cover"><div class="full-bg-img"><div class="mask flex-center" style="background-color:rgba(0,0,0,.5)"><div class="banner-text text-center fade-in-up"><div class="h2"><span id="subtitle">Epoll-ET模式读写之用户连接的封装</span></div><div class="mt-3"><span class="post-meta"><i class="iconfont icon-date-fill" aria-hidden="true"></i> <time datetime="2016-12-03 16:36" pubdate>2016年12月3日 下午</time></span></div><div class="mt-1"></div></div></div></div></div></div></header><main><div class="container-fluid nopadding-x"><div class="row nomargin-x"><div class="side-col d-none d-lg-block col-lg-2"></div><div class="col-lg-8 nopadding-x-md"><div class="container nopadding-x-md" id="board-ctn"><div id="board"><article class="post-content mx-auto"><h1 style="display:none">Epoll-ET模式读写之用户连接的封装</h1><div class="markdown-body"><h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><blockquote><p>服务端而言，对于每一个新的连接我们都需要去保存其基本信息，如ip地址，套接字fd，也需要赋予其唯一标识如用户名。<br>这里，我们来谈谈对用户连接的封装。</p></blockquote><h3 id="用户连接需要哪些数据"><a href="#用户连接需要哪些数据" class="headerlink" title="用户连接需要哪些数据"></a>用户连接需要哪些数据</h3><pre><code class="hljs">1. 套接字描述符 sockfd
+        执行读写操作时当然不可缺
+2. 连接信息  sockaddr
+        基本信息的保存
+3. 用户缓存区 Buffer
+        非阻塞读写不可缺
+4. 唯一标识
+        服务端进行消息转发时不可能根据sockfd去进行查找，所以我们需要对每一个连接有一个唯一标识，用于对其进行检索</code></pre><p>关于Buffer细节可看 <a target="_blank" rel="noopener" href="http://blog.csdn.net/to_be_better/article/details/53441468">Epoll-ET模式下非阻塞读写之Buffer的封装</a></p><h3 id="用户连接需要哪些操作"><a href="#用户连接需要哪些操作" class="headerlink" title="用户连接需要哪些操作"></a>用户连接需要哪些操作</h3><pre><code class="hljs">1. 读
+    epoll-Et模式下，读必须将缓冲区全部读完，否则不会再次触发
+2. 写
+    epoll-Et模式下，写必须将所写数据全部写入或是写到缓冲区满，否则不会再次触发
+3. 断开
+    断开时，如果是异步读写，需要需要确认写事件已全部完成，再关闭套接字
+4. 初始化
+    保证连接可复用，否则每来一个连接，都要开辟空间，太过低效。</code></pre><h3 id="关于读写的细节"><a href="#关于读写的细节" class="headerlink" title="关于读写的细节"></a>关于读写的细节</h3><blockquote><p>本身 send和recv都是线程安全的。<br>因为读操作，我们可以确定只会有一个线程来对读操作进行处理(通过设置EPOLLONESHOT)，也就是说对读缓冲区的写入(接受数据)和取出(处理数据)都是在一<br>个线程内，所以读缓冲区本质上是线程安全的。<br>但是写操作，写缓冲区可能会有多个线程对其进行写入和更改，所以我们用一个原子变量，来标志写缓冲区是否被操作，来保证数据读写不会冲突。</p></blockquote><h3 id="代码"><a href="#代码" class="headerlink" title="代码"></a>代码</h3><p>本代码数据处理只是简单的进行转发到原本socket里</p><pre><code class="hljs">//
+//  Connection.h
+//  QuoridorServer
+//
+//  Created by shiyi on 2016/12/2.
+//  Copyright © 2016年 shiyi. All rights reserved.
+//
+
+#ifndef Connection_H
+#define Connection_H
+
+#include &lt;stdio.h&gt;
+#include &lt;iostream&gt;
+#include &lt;atomic&gt;
+#include &lt;fcntl.h&gt;
+#include &lt;sys/socket.h&gt;
+#include &lt;sys/types.h&gt;
+#include &lt;signal.h&gt;
+#include &lt;string.h&gt;
+#include &lt;sys/epoll.h&gt;
+#include &lt;unistd.h&gt;
+#include &lt;assert.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;arpa/inet.h&gt;
+#include &lt;errno.h&gt;
+#include &quot;Buffer.h&quot;
+#include &quot;Util.h&quot;
+#include &quot;BaseFunc.h&quot;
+
+const size_t BUFFER_SIZE = 65535;
+
+class Connection
+&#123;
+public:
+    Connection() : m_writeing(true), m_epollfd(-1), m_sockfd(-1)
+    &#123;&#125;
+
+    ~Connection()&#123;&#125;
+
+    //初始化连接
+    void init(int epollfd, int sockfd, const sockaddr_in&amp; client_addr)
+    &#123;
+        m_epollfd = epollfd;
+        m_sockfd = sockfd;
+        m_writeing = true;
+        m_address = client_addr;
+
+        //初始化读写缓冲区
+        m_inBuff.init();
+        m_outBuff.init();
+    &#125;
+
+    void HandleRead()
+    &#123;
+        while(true)
+        &#123;
+            char buf[BUFFER_SIZE];
+            int ret = recv(m_sockfd, buf, BUFFER_SIZE, 0);
+            if(ret &lt; 0)
+            &#123;
+                //缓冲区内容已读完
+                if((errno == EAGAIN) || (errno == EWOULDBLOCK))
+                &#123;
+                    break;
+                &#125;
+                //其他错误直接断开连接
+                Util::outError(&quot;HandleRead&quot;);
+                shutdown();
+            &#125;
+            //断开连接
+            else if(ret == 0)
+            &#123;
+                shutdown();
+            &#125;
+            else
+            &#123;
+                //将读取的内容加入缓冲区
+                m_inBuff.PutData(buf, ret);
+            &#125;
+
+            //printf(&quot;[%s]\n&quot;, buf);
+        &#125;
+        worker();
+    &#125;
+
+    void HandleWrite()
+    &#123;
+        //更改临界值
+        if(!m_writeing)
+            return;
+        m_writeing = false;
+
+        //取出数据
+        char buf[BUFFER_SIZE];
+
+        int len = m_outBuff.GetData(buf, BUFFER_SIZE);
+
+        int n = len;
+        while (n &gt; 0)
+        &#123;
+            int ret = send(m_sockfd, buf+len-n, n, 0);
+            if (ret &lt; n)
+            &#123;
+                if (ret == -1 &amp;&amp; errno != EAGAIN)
+                &#123;
+                    Util::outError(&quot;write error&quot;);
+                &#125;
+                break;
+            &#125;
+            n -= ret;
+        &#125;
+        //n=0表示数据全部写完，删除写事件
+        if(n == 0)
+            modFd(m_epollfd, m_sockfd, EPOLLIN | EPOLLET | EPOLLONESHOT);
+
+        //恢复临界值
+        m_writeing = true;
+    &#125;
+
+    void worker()
+    &#123;
+        //解析
+        //取出数据
+        char buf[BUFFER_SIZE];
+
+        int len = m_inBuff.GetData(buf, BUFFER_SIZE);
+
+        while(!m_writeing)
+            usleep(1000);
+        m_writeing = false;
+
+        m_outBuff.PutData(buf, len);
+        modFd(m_epollfd, m_sockfd, EPOLLIN | EPOLLOUT | EPOLLET | EPOLLONESHOT);
+
+        m_writeing = true;
+    &#125;
+
+    void shutdown()
+    &#123;
+        //等待写事件完成后关闭
+        while(!m_writeing)
+            usleep(1000);
+
+        m_writeing = false;
+        removeFd(m_epollfd, m_sockfd);
+    &#125;
+
+private:
+    int m_epollfd;              //epoll描述符
+    int m_sockfd;               //套接字描述符
+    sockaddr_in m_address;      //套接字地址
+    Buffer m_inBuff;            //读缓冲
+    Buffer m_outBuff;           //写缓冲
+    std::atomic_bool m_writeing;     //是否正在写
+&#125;;
+
+
+#endif /* Connection_H */</code></pre></div><hr><div><div class="post-metas my-3"><div class="post-meta mr-3 d-flex align-items-center"><i class="iconfont icon-category"></i> <span class="category-chains"><span class="category-chain"><a href="/categories/%E5%A4%A7%E5%AD%A6%E6%97%B6%E6%9C%9FCSDN/" class="category-chain-item">大学时期CSDN</a></span></span></div><div class="post-meta"><i class="iconfont icon-tags"></i> <a href="/tags/%E6%9C%8D%E5%8A%A1%E5%99%A8%E5%BC%80%E5%8F%91/">#服务器开发</a> <a href="/tags/Linux%E7%BD%91%E7%BB%9C%E7%BC%96%E7%A8%8B/">#Linux网络编程</a></div></div><div class="license-box my-3"><div class="license-title"><div>Epoll-ET模式读写之用户连接的封装</div><div>https://shiyi.threebody.xyz/posts/12582.html</div></div><div class="license-meta"><div class="license-meta-item"><div>作者</div><div>Yi Shi</div></div><div class="license-meta-item license-meta-date"><div>发布于</div><div>2016年12月3日</div></div><div class="license-meta-item"><div>许可协议</div><div><a target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/"><span class="hint--top hint--rounded" aria-label="BY - 署名"><i class="iconfont icon-by"></i> </span></a><a target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/"><span class="hint--top hint--rounded" aria-label="SA - 相同方式共享"><i class="iconfont icon-sa"></i></span></a></div></div></div><div class="license-icon iconfont"></div></div><div class="post-prevnext my-3"><article class="post-prev col-6"><a href="/posts/36868.html" title="linux服务器开发之网关服务器的实现"><i class="iconfont icon-arrowleft"></i> <span class="hidden-mobile">linux服务器开发之网关服务器的实现</span> <span class="visible-mobile">上一篇</span></a></article><article class="post-next col-6"><a href="/posts/20402.html" title="Epoll-ET模式下非阻塞读写之Buffer的封装"><span class="hidden-mobile">Epoll-ET模式下非阻塞读写之Buffer的封装</span> <span class="visible-mobile">下一篇</span> <i class="iconfont icon-arrowright"></i></a></article></div></div><article id="comments" lazyload><div id="lv-container" data-id="city" data-uid="MTAyMC80NjEzMS8yMjY0Mg"><script type="text/javascript">Fluid.utils.loadComments("#lv-container",(function(){Fluid.utils.createScript("https://cdn-city.livere.com/js/embed.dist.js")}))</script><noscript>Please enable JavaScript to view the comments</noscript></div></article></article></div></div></div><div class="side-col d-none d-lg-block col-lg-2"><aside class="sidebar" style="margin-left:-1rem"><div id="toc"><p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p><div class="toc-body" id="toc-body"></div></div></aside></div></div></div><a id="scroll-top-button" aria-label="TOP" href="#" role="button"><i class="iconfont icon-arrowup" aria-hidden="true"></i></a><div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable modal-lg" role="document"><div class="modal-content"><div class="modal-header text-center"><h4 class="modal-title w-100 font-weight-bold">搜索</h4><button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button></div><div class="modal-body mx-3"><div class="md-form mb-5"><input type="text" id="local-search-input" class="form-control validate"> <label data-error="x" data-success="v" for="local-search-input">关键词</label></div><div class="list-group" id="local-search-result"></div></div></div></div></div></main><footer><div class="footer-inner"><div class="beian"><span><a href="http://beian.miit.gov.cn/" target="_blank" rel="nofollow noopener">陕ICP备16019529号-2</a></span></div><span id="cnzz_stat_icon_1273342630" style="display:none"></span></div></footer><script src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js"></script><link rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css"><script>NProgress.configure({showSpinner:!0,trickleSpeed:100}),NProgress.start(),window.addEventListener("load",(function(){NProgress.done()}))</script><script src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js"></script><script src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js"></script><script src="/js/events.js"></script><script src="/js/plugins.js"></script><script src="/js/img-lazyload.js"></script><script>Fluid.utils.createScript("https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js",(function(){var t=jQuery("#toc");if(0!==t.length&&window.tocbot){var i=jQuery("#board-ctn").offset().top;window.tocbot.init(Object.assign({tocSelector:"#toc-body",contentSelector:".markdown-body",linkClass:"tocbot-link",activeLinkClass:"tocbot-active-link",listClass:"tocbot-list",isCollapsedClass:"tocbot-is-collapsed",collapsibleClass:"tocbot-is-collapsible",scrollSmooth:!0,includeTitleTags:!0,headingsOffset:-i},CONFIG.toc)),t.find(".toc-list-item").length>0&&t.css("visibility","visible"),Fluid.events.registerRefreshCallback((function(){if("tocbot"in window){tocbot.refresh();var t=jQuery("#toc");if(0===t.length||!tocbot)return;t.find(".toc-list-item").length>0&&t.css("visibility","visible")}}))}}))</script><script src="https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js"></script><script>Fluid.plugins.codeWidget()</script><script>Fluid.utils.createScript("https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js",(function(){window.anchors.options={placement:CONFIG.anchorjs.placement,visible:CONFIG.anchorjs.visible},CONFIG.anchorjs.icon&&(window.anchors.options.icon=CONFIG.anchorjs.icon);var n=(CONFIG.anchorjs.element||"h1,h2,h3,h4,h5,h6").split(","),o=[];for(var s of n)o.push(".markdown-body > "+s.trim());"left"===CONFIG.anchorjs.placement&&(window.anchors.options.class="anchorjs-link-left"),window.anchors.add(o.join(", ")),Fluid.events.registerRefreshCallback((function(){if("anchors"in window){anchors.removeAll();var n=(CONFIG.anchorjs.element||"h1,h2,h3,h4,h5,h6").split(","),o=[];for(var s of n)o.push(".markdown-body > "+s.trim());"left"===CONFIG.anchorjs.placement&&(anchors.options.class="anchorjs-link-left"),anchors.add(o.join(", "))}}))}))</script><script>Fluid.utils.createScript("https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js",(function(){Fluid.plugins.fancyBox()}))</script><script>Fluid.plugins.imageCaption()</script><script src="/js/local-search.js"></script><script src="/js/boot.js"></script><noscript><div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div></noscript></body></html>

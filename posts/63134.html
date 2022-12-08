@@ -1,0 +1,499 @@
+<!DOCTYPE html><html lang="zh-CN" data-default-color-scheme="auto"><head><meta charset="UTF-8"><link rel="apple-touch-icon" sizes="76x76" href="/favicon/apple-touch-icon.png"><link rel="icon" href="/favicon/favicon-32x32.png"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=5,shrink-to-fit=no"><meta http-equiv="x-ua-compatible" content="ie=edge"><meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests"><meta name="theme-color" content="#2f4154"><meta name="author" content="Yi Shi"><meta name="keywords" content="shiyi, yishi, threebody, blog, golang"><meta name="description" content="前言 前一阵子，编译原理课实验内容是要去做一个词法分析器，实现后，觉得没有把 ** 正规表达式和NFA、DFA **这些知识用上，所以就产生了想自己去实现一个lex的想法，于是就有了这篇博文。如果还不知道词法分析器该怎么实现，可以去看 [ c语言词法分析初试(C++实现) ](c%E8%AF%AD%E8%A8%80%E8%AF%8D%E6%B3%95%E5%88%86%E6%9E%90%E5%88"><meta property="og:type" content="article"><meta property="og:title" content="自制Lex-词法分析器生成器(C++)"><meta property="og:url" content="https://shiyi.threebody.xyz/posts/63134.html"><meta property="og:site_name" content="Yi Shi&#39;s Blog"><meta property="og:description" content="前言 前一阵子，编译原理课实验内容是要去做一个词法分析器，实现后，觉得没有把 ** 正规表达式和NFA、DFA **这些知识用上，所以就产生了想自己去实现一个lex的想法，于是就有了这篇博文。如果还不知道词法分析器该怎么实现，可以去看 [ c语言词法分析初试(C++实现) ](c%E8%AF%AD%E8%A8%80%E8%AF%8D%E6%B3%95%E5%88%86%E6%9E%90%E5%88"><meta property="og:locale" content="zh_CN"><meta property="og:image" content="http://img.blog.csdn.net/20161030213725180"><meta property="og:image" content="http://img.blog.csdn.net/20161030214356200"><meta property="article:published_time" content="2016-10-31T15:03:00.000Z"><meta property="article:modified_time" content="2022-12-08T15:35:14.157Z"><meta property="article:author" content="Yi Shi"><meta property="article:tag" content="编译原理"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:image" content="http://img.blog.csdn.net/20161030213725180"><title>自制Lex-词法分析器生成器(C++) - Yi Shi&#39;s Blog</title><link rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css"><link rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css"><link rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css"><link rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css"><link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css"><link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css"><link rel="stylesheet" href="/css/main.css"><link id="highlight-css" rel="stylesheet" href="/css/highlight.css"><link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css"><script id="fluid-configs">var Fluid=window.Fluid||{};Fluid.ctx=Object.assign({},Fluid.ctx);var CONFIG={hostname:"shiyi.threebody.xyz",root:"/",version:"1.9.3",typing:{enable:!0,typeSpeed:50,cursorChar:"",loop:!1,scope:["home"]},anchorjs:{enable:!0,element:"h1,h2,h3,h4,h5,h6",placement:"left",visible:"hover",icon:""},progressbar:{enable:!0,height_px:3,color:"#29d",options:{showSpinner:!0,trickleSpeed:100}},code_language:{enable:!0,default:"TEXT"},copy_btn:!0,image_caption:{enable:!0},image_zoom:{enable:!0,img_url_replace:["",""]},toc:{enable:!0,placement:"right",headingSelector:"h1,h2,h3,h4,h5,h6",collapseDepth:4},lazyload:{enable:!0,loading_img:"/img/loading.gif",onlypost:!1,offset_factor:2},web_analytics:{enable:!0,follow_dnt:!0,baidu:"75eaaab59c4fa946437e9dea4f8fc07d",google:null,gtag:null,tencent:{sid:null,cid:null},woyaola:null,cnzz:1273342630,leancloud:{app_id:null,app_key:null,server_url:null,path:"window.location.pathname",ignore_local:!1}},search_path:"/local-search.xml"};if(CONFIG.web_analytics.follow_dnt){var dntVal=navigator.doNotTrack||window.doNotTrack||navigator.msDoNotTrack;Fluid.ctx.dnt=dntVal&&(dntVal.startsWith("1")||dntVal.startsWith("yes")||dntVal.startsWith("on"))}</script><script src="/js/utils.js"></script><script src="/js/color-schema.js"></script><script async>if(!Fluid.ctx.dnt){var _hmt=_hmt||[];!function(){var e=document.createElement("script");e.src="https://hm.baidu.com/hm.js?75eaaab59c4fa946437e9dea4f8fc07d";var t=document.getElementsByTagName("script")[0];t.parentNode.insertBefore(e,t)}()}</script><script async>Fluid.ctx.dnt||Fluid.utils.createScript("//s4.cnzz.com/z_stat.php?id=1273342630&show=pic")</script><meta name="generator" content="Hexo 5.4.0"><link rel="alternate" href="/atom.xml" title="Yi Shi's Blog" type="application/atom+xml">
+</head><body><header><div class="header-inner" style="height:40vh"><nav id="navbar" class="navbar fixed-top navbar-expand-lg navbar-dark scrolling-navbar"><div class="container"><a class="navbar-brand" href="/"><strong>Yi Shi&#39;s Blog</strong> </a><button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation"><div class="animated-icon"><span></span><span></span><span></span></div></button><div class="collapse navbar-collapse" id="navbarSupportedContent"><ul class="navbar-nav ml-auto text-center"><li class="nav-item"><a class="nav-link" href="/"><i class="iconfont icon-home-fill"></i> 首页</a></li><li class="nav-item"><a class="nav-link" href="/archives/"><i class="iconfont icon-archive-fill"></i> 归档</a></li><li class="nav-item"><a class="nav-link" href="/categories/"><i class="iconfont icon-category-fill"></i> 分类</a></li><li class="nav-item"><a class="nav-link" href="/tags/"><i class="iconfont icon-tags-fill"></i> 标签</a></li><li class="nav-item"><a class="nav-link" href="/books/"><i class="iconfont icon-book"></i> 读书</a></li><li class="nav-item"><a class="nav-link" href="/about/"><i class="iconfont icon-user-fill"></i> 关于</a></li><li class="nav-item" id="search-btn"><a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">&nbsp;<i class="iconfont icon-search"></i>&nbsp;</a></li><li class="nav-item" id="color-toggle-btn"><a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">&nbsp;<i class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a></li></ul></div></div></nav><div id="banner" class="banner" parallax="true" style="background:url(/image/banner.jpg) no-repeat center center;background-size:cover"><div class="full-bg-img"><div class="mask flex-center" style="background-color:rgba(0,0,0,.5)"><div class="banner-text text-center fade-in-up"><div class="h2"><span id="subtitle">自制Lex-词法分析器生成器(C++)</span></div><div class="mt-3"><span class="post-meta"><i class="iconfont icon-date-fill" aria-hidden="true"></i> <time datetime="2016-10-31 23:03" pubdate>2016年10月31日 晚上</time></span></div><div class="mt-1"></div></div></div></div></div></div></header><main><div class="container-fluid nopadding-x"><div class="row nomargin-x"><div class="side-col d-none d-lg-block col-lg-2"></div><div class="col-lg-8 nopadding-x-md"><div class="container nopadding-x-md" id="board-ctn"><div id="board"><article class="post-content mx-auto"><h1 style="display:none">自制Lex-词法分析器生成器(C++)</h1><div class="markdown-body"><h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><blockquote><p>前一阵子，编译原理课实验内容是要去做一个词法分析器，实现后，觉得没有把 ** 正规表达式和NFA、DFA **<br>这些知识用上，所以就产生了想自己去实现一个lex的想法，于是就有了这篇博文。<br>如果还不知道词法分析器该怎么实现，可以去看 [ c语言词法分析初试(C++实现) ](c%E8%AF%AD%E8%A8%80%E8%AF%8D%E6%B3%<br>95%E5%88%86%E6%9E%90%E5%88%9D%E8%AF%95%28C++%E5%AE%9E%E7%8E%B0%29) 。</p></blockquote><h2 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h2><p><img src="http://img.blog.csdn.net/20161030213725180" srcset="/img/loading.gif" lazyload alt="这里写图片描述"><br>上图是维基百科对lex的定义。<br>从中可以明确lex的功能： ** 读进一个代表词法分析器规则的输入字符串流，然后输出以C语言实做的词法分析器源代码 ** 。<br>本质上，本人是在对原lex进行模仿，但使用规则细节什么的与其并不一致，比如原lex用正则表达式来表示词法分析器规则，而本人的自制lex使用的是正规表达式，所<br>以接下来关于原lex的内容不再赘述。</p><h2 id="执行流程"><a href="#执行流程" class="headerlink" title="执行流程"></a>执行流程</h2><p><img src="http://img.blog.csdn.net/20161030214356200" srcset="/img/loading.gif" lazyload alt="这里写图片描述"></p><h3 id="1-解析lex文本"><a href="#1-解析lex文本" class="headerlink" title="1.解析lex文本"></a>1.解析lex文本</h3><h4 id="1-1文本规则"><a href="#1-1文本规则" class="headerlink" title="1.1文本规则"></a>1.1文本规则</h4><pre><code class="hljs">%&#123;
+    c代码区块
+%&#125;
+%!
+    定义区块
+%!
+%%
+    规则1 方法体
+%$
+    规则2 方法体
+%$
+    ...
+%%</code></pre><blockquote><p>由上可以看到，整个lex文本分为三个区块。</p></blockquote><h5 id="c代码区"><a href="#c代码区" class="headerlink" title="c代码区"></a>c代码区</h5><blockquote><p>用%{ %}包围，里面内容是c代码，这些代码会原样复制进程序生成的词法分析器源代码中，也就是说，我们可以在这个区块里预定义一些c函数、变量等等。</p></blockquote><h5 id="定义区"><a href="#定义区" class="headerlink" title="定义区"></a>定义区</h5><p>用%! %!包围，里面内容是一些定义，格式为 a = b。</p><blockquote><p>a表示我们定义一种输入字符，比如所有的字母、数字，或是a-v，3-7等等区间，或是除了字母以外的任何字符。我们可以给这些值的集合起一个名字为a。<br>b表示一个函数名，该函数接受一个char字符，返回1或者0，表示输入是否匹配。该函数必须自己在c代码区进行实现。<br>例如：我们定义 digit = isDigit<br>digit表示所有的数字，则我们需要实现这样一个函数：</p></blockquote><pre><code class="hljs">int isDigit(char ch)&#123;
+    if(ch &gt;= &#39;0&#39; &amp;&amp; ch &lt;= &#39;9&#39;)
+        return 1;
+    return 0;
+&#125;</code></pre><blockquote><p>完成上述之后，我们就可以在规则区里以{a}的形式在正规表达式中使用该自定义输入。</p></blockquote><h5 id="规则区"><a href="#规则区" class="headerlink" title="规则区"></a>规则区</h5><blockquote><p>这里可以说是整个lex文件最核心的部分了。<br>我们需要在这里对所有的词法规则用正规表达式进行描述。<br>还是举个例子，我们要将c语言的标识符的规则进行描述：</p></blockquote><pre><code class="hljs">正规表达式  方法体
+
+(&#123;letter&#125;|_)(&#123;letter&#125;|_|digit)* &#123;printf(&quot;&lt;$ID, %s&gt;&quot;, LEX_TEXT);&#125;</code></pre><blockquote><p>letter表示所有字母，digit表示所有数字，这两者都属于是我们在定义区所自定义的输入类型。<br>那么上面正规表达式代表的含义就是 ** 所有以字母或者下划线开头并后续字母是字母数字或者下划线的字符串 ** ，即是我们认为合法的标识符。<br>后面{}包含的内容是我们的方法体，即定义我们生成的词法分析器当识别出符合正规式定义的字符串后需要进行的操作，该操作用c语言来进行描述。<br>LEX_TEXT为我们预设定的保存识别出的串的char数组。<br>那么上面的规则所定义的就是 ** 对标识符进行匹配，并在匹配成功之后将其进行输出 ** 。</p></blockquote><h4 id="1-2文本识别细节"><a href="#1-2文本识别细节" class="headerlink" title="1.2文本识别细节"></a>1.2文本识别细节</h4><blockquote><p>这部分做的比较粗略。<br>1.上述三个区域的界符即%{，%!等必须出现在每行的行首，否则会被忽略。<br>2.所有出现在三个区域外的文本内容全部忽略<br>3.当出现文本忽略时会报出警告(文本内容及行号)<br>4.当出现文本识别错误时会进行报错(文本内容及行号)并程序终止。<br>5.因为正规式里面原本就有(,),|,*等符号，再加上{}用于标识自定义输入的符号以及空格，这些字符均需要进行转义，我定义的转义标志是%，与c语言的\没有什<br>么区别。用%$表示正规表达式里的空。</p></blockquote><h3 id="根据lex文本内容生成NFA等"><a href="#根据lex文本内容生成NFA等" class="headerlink" title="根据lex文本内容生成NFA等"></a>根据lex文本内容生成NFA等</h3><p>这部分我用了一个栈来实现，具体细节可参看之前写的一篇博客 <a target="_blank" rel="noopener" href="http://blog.csdn.net/to_be_better/article/details/52721920">正规表达式转NFA(C++)</a><br>，细节有所差异，但是实现思想是一致的，这里就不再重复描述了。<br>除了要生成NFA，还要完成两件事。<br>1. 保存定义区里 自定义输入与对应判断函数名的映射。<br>2. 保存NFA的终点状态的序号集合，并保存其各自对应的方法体的映射。</p><h3 id="根据NFA生成DFA"><a href="#根据NFA生成DFA" class="headerlink" title="根据NFA生成DFA"></a>根据NFA生成DFA</h3><blockquote><p>这里使用的方法是子集法：<br>每个状态表示为一个数字，这一点在上面已经提过，那么我们用一个vector表示一个状态集合。<br>再使用一个set和一个queue，set用于对vector进行查重，queue用于遍历，从起始状态的集合开始，将其经每个输入到达的状态加入queue，当然，<br>前提是该状态集合没有在set中出现过。<br>这里有个重点是关于空的处理，见代码。</p></blockquote><pre><code class="hljs">//i为当前状态，input为输入，state为存放可到达的状态的集合
+void Lex::findBeGo(int i, string input, vector&lt;int&gt;* state)
+&#123;
+    for(auto x : nfaVet[i])
+    &#123;
+        int sId = x.toId;
+        bool flag = true;
+        for(auto iter=state-&gt;begin(); iter!=state-&gt;end(); iter++)
+            if((*iter) == sId)
+            &#123;
+                flag = false;
+                break;
+            &#125;
+
+        if(flag &amp;&amp; input.compare(x.input) == 0)
+        &#123;
+            state-&gt;push_back(sId);
+            findBeGo(sId, &quot;&quot;, state);
+        &#125;
+    &#125;
+&#125;</code></pre><blockquote><p>当然，这里也需要保存DFA的终点状态的序号，并保存其各自对应的方法体的映射。</p></blockquote><h3 id="将DFA转换为C代码"><a href="#将DFA转换为C代码" class="headerlink" title="将DFA转换为C代码"></a>将DFA转换为C代码</h3><blockquote><p>如果用自动机的模式写过一次词法分析器，就很明了，DFA只跟自动机的状态里面内容相关。<br>即：switch(状态){//} ；里面的内容是需要根据DFA动态生成的，其他的都不需要改变。<br>所以我们一开始就将switch部分上下的代码都确定，然后根据DFA来生成。<br>对每一个case来说，我们需要输出的内容只有以下几点：<br>1. 状态id<br>2. 状态接受的输入，以及该输入转向的状态id<br>3. 枚举完所有可接受的输入后，如果当前字符与以上输入都不符合，那么根据该状态是否是终止状态来确定是结束并执行方法体还是报错。 例子如下：</p></blockquote><pre><code class="hljs">case ID:
+        &#123;
+            ch = *str++;
+            SYLEX_TEXT[SYLEX_TEXT_LEN++]=ch;
+            if(ch == 输入1)&#123;
+                SYLEX_STATE = 转向的状态;
+            &#125;
+            else
+            if(ch == 输入2)&#123;
+                SYLEX_STATE = 转向的状态;
+            &#125;
+            else
+            &#123;
+                //根据id是否可终止，来决定是报错还是执行方法体
+            &#125;</code></pre><blockquote><p>这里还有个细节，关于我们的自定义输入，因为普通输入字符我们直接是用if(ch == ‘X’)来判断。而自定义输入，我们是通过if(函数名(ch))来判断<br>，所以在输出源代码时，需要先对其输入进行判断是否是自定义输入，这里我们用第一步时建立的映射直接就可以解决。</p></blockquote><h2 id="源码"><a href="#源码" class="headerlink" title="源码"></a>源码</h2><p>全部流程都封装在了Lex类中，因为篇幅问题，就只贴类的成员变量和成员函数声明部分的代码。<br>有兴趣的朋友，可以去github上看完整代码，链接如下。<br><a target="_blank" rel="noopener" href="https://github.com/shiyi1996/project/tree/master/Lex">shiyi1996/project/tree/master/Lex</a></p><pre><code class="hljs">//
+//  Lex.hpp
+//  Lex
+//
+//  Created by shiyi on 2016/10/18.
+//  Copyright © 2016年 shiyi. All rights reserved.
+//
+
+#ifndef Lex_hpp
+#define Lex_hpp
+
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;iostream&gt;
+#include &lt;algorithm&gt;
+#include &lt;vector&gt;
+#include &lt;map&gt;
+#include &lt;stack&gt;
+#include &lt;set&gt;
+#include &lt;queue&gt;
+
+using namespace std;
+
+struct Node
+&#123;
+    Node(int fromId, string input, int toId)
+    &#123;
+        this-&gt;fromId = fromId;
+        this-&gt;input = input;
+        this-&gt;toId = toId;
+    &#125;
+    int fromId;
+    string input;
+    int toId;
+&#125;;
+
+class Lex
+&#123;
+public:
+    static const int MAXID = 100000;
+
+    Lex(string _lexFile);
+    Lex(string _lexFile, string _outCFile);
+    void init();
+
+    //写入scanner函数之前
+    void outCodeLeft();
+    //写入scanner函数之后
+    void outCodeRight();
+    //写入scanner函数
+    void outCodeMid();
+    //解析lex源文件
+    void scanner();
+    //错误警告等输出
+    inline void printError(int line, string str, string mess);
+    inline void printWaring(int line, string str, string mess);
+    //解析方法体
+    void getFunc(string str, int line);
+    //解析正规式
+    void getRegular(string str, int line);
+
+    //------日后补充
+    //判断正规式是否合法
+    bool isExpre(vector&lt;pair&lt;string, bool&gt;&gt;);
+    //DFA最小化
+    void getSimpDFA();
+
+    // -----------
+
+    //添加NFA节点
+    inline void addNFANode(int fromId, string input, int toId);
+    //添加DFA节点
+    inline void addDFANode(int fromId, string input, int toId);
+
+    //正规式转NFA
+    void regrToNFA(vector&lt;pair&lt;string, bool&gt;&gt; regr, int startId, int endId, int &amp;itemId);
+    //生成NFA
+    void getNFA();
+    //生成DFA
+    void getDFA();
+    //nfa查询
+    void findBeGo(int i, string input, vector&lt;int&gt;* state);
+    //获取nfa目标状态集合
+    vector&lt;int&gt;* getState(vector&lt;int&gt;* fromState, string input);
+    //获取终态
+    void getVt(map&lt;vector&lt;int&gt;, int&gt; stateMap);
+
+    //执行操作
+    void work();
+
+    //输出-测试-
+    inline void print();
+
+private:
+    string lexFile;
+    string outCFile;
+    //自定义输入对应方法体
+    map&lt;string, string&gt; funcMap;
+    //正规式
+    vector&lt;vector&lt;pair&lt;string, bool&gt;&gt;&gt; regrVet;
+    //方法体
+    vector&lt;string&gt; funcVet;
+    //NFA
+    vector&lt;Node&gt; nfaVet[MAXID];
+    //DFA
+    vector&lt;Node&gt; dfaVet[MAXID];
+    //储存所有输入
+    set&lt;string&gt; inputSet;
+    //DFAend
+    int dfaEnd[MAXID];
+    //NFAend   值为funcVet item的下标
+    int nfaEnd[MAXID];
+    int nfaNum;
+    int dfaNum;
+&#125;;
+
+#endif /* Lex_hpp */</code></pre><h2 id="测试"><a href="#测试" class="headerlink" title="测试"></a>测试</h2><h3 id="Lex代码"><a href="#Lex代码" class="headerlink" title="Lex代码"></a>Lex代码</h3><pre><code class="hljs">%&#123;
+#include&lt;stdio.h&gt;
+#include&lt;stdlib.h&gt;
+#include&lt;string.h&gt;
+
+const int KEY_NUM = 32;
+const char* KEY_SET[] = &#123;
+    &quot;auto&quot;, &quot;break&quot;, &quot;case&quot;, &quot;char&quot;, &quot;const&quot;, &quot;continue&quot;,
+    &quot;default&quot;, &quot;do&quot;, &quot;double&quot;, &quot;else&quot;, &quot;enum&quot;, &quot;extern&quot;,
+    &quot;float&quot;, &quot;for&quot;, &quot;goto&quot;, &quot;if&quot;, &quot;int&quot;, &quot;long&quot;, &quot;register&quot;,
+    &quot;return&quot;, &quot;short&quot;, &quot;signed&quot;, &quot;sizeof&quot;, &quot;static&quot;, &quot;struct&quot;,
+    &quot;switch&quot;, &quot;typedef&quot;, &quot;union&quot;, &quot;unsigned&quot;, &quot;void&quot;, &quot;volatile&quot;,
+    &quot;while&quot;
+&#125;;
+
+int isDigit(char ch)
+&#123;
+    if(ch &lt;= &#39;9&#39; &amp;&amp; ch &gt;= &#39;0&#39;)
+        return 1;
+    return 0;
+&#125;
+
+int isLetter(char ch)
+&#123;
+    if((ch &gt;= &#39;a&#39; &amp;&amp; ch &lt;= &#39;z&#39;) || (ch &gt;= &#39;A&#39; &amp;&amp; ch &lt;= &#39;Z&#39;))
+        return 1;
+    return 0;
+&#125;
+
+int getKeyId(char *str)
+&#123;
+    for(int i=0; i&lt;KEY_NUM; i++)
+    &#123;
+        if(strcmp(KEY_SET[i], str) == 0)
+            return i+1;
+    &#125;
+    return 0;
+&#125;
+
+int isNoOne(char ch)
+&#123;
+    if(ch != &#39;\&#39;&#39; &amp;&amp; ch != &#39;\0&#39;)
+        return 1;
+    return 0;
+&#125;
+
+int isNoTow(char ch)
+&#123;
+    if(ch != &#39;\&quot;&#39; &amp;&amp; ch != &#39;\0&#39;)
+        return 1;
+    return 0;
+&#125;
+
+%&#125;
+
+%!
+noone=isNoOne
+notow=isNoTow
+letter=isLetter
+digit=isDigit
+%!
+
+
+%%
+(&#123;letter&#125;|_)(&#123;letter&#125;|_|&#123;digit&#125;)* &#123;
+    int id = getKeyId(SYLEX_TEXT);
+    if(id != 0)
+        printf(&quot;&lt;%s,-&gt;\n&quot;, SYLEX_TEXT);
+    else
+    &#123;
+        printf(&quot;&lt;$ID,%s&gt;\n&quot;, SYLEX_TEXT);
+    &#125;
+&#125;
+%$
+(+|-|%$)&#123;digit&#125;&#123;digit&#125;*(.&#123;digit&#125;&#123;digit&#125;*|%$)((E|e)&#123;digit&#125;&#123;digit&#125;*|%$) &#123;
+    printf(&quot;&lt;$NUM,%s&gt;\n&quot;, SYLEX_TEXT);
+&#125;
+%$
+%(|%)|%&#123;|%&#125;|[|]|;|,|. &#123;
+    printf(&quot;&lt;%s,-&gt;\n&quot;, SYLEX_TEXT);
+&#125;
+%$
+% |&#123;\t&#125;|&#123;\n&#125; &#123;
+
+&#125;
+%$
+(%*(%=|%$))|(/(=|%$))|(+(+|=|%$))|(-(-|=|%$))|(&lt;(&lt;|=|%$))|(&gt;(&gt;|=|%$))|(=(=|%$))|(&amp;(&amp;|=|%$))|(%|(%||=|%$))|(^(=|%$))|(~(=|%$)) &#123;
+    printf(&quot;&lt;%s,-&gt;\n&quot;, SYLEX_TEXT);
+&#125;
+%$
+(&#123;\&#39;&#125;&#123;noone&#125;*&#123;\&#39;&#125;)|(&#123;\&quot;&#125;&#123;notow&#125;*&#123;\&quot;&#125;) &#123;
+    printf(&quot;&lt;$STR,%s&gt;\n&quot;, SYLEX_TEXT);
+&#125;
+%$
+#include(% )*((&lt;(&#123;letter&#125;|_)(&#123;letter&#125;|_|&#123;digit&#125;)*.h&gt;)|(&quot;(&#123;letter&#125;|_)(&#123;letter&#125;|_|&#123;digit&#125;)*.h&quot;)) &#123;
+    printf(&quot;%s 应该预处理的，暂时先忽略&quot;, SYLEX_TEXT);
+&#125;
+%%</code></pre><h3 id="生成的词法分析器C代码"><a href="#生成的词法分析器C代码" class="headerlink" title="生成的词法分析器C代码"></a>生成的词法分析器C代码</h3><pre><code class="hljs">//%&#123; start
+#include&lt;stdio.h&gt;
+#include&lt;stdlib.h&gt;
+#include&lt;string.h&gt;
+
+const int KEY_NUM = 32;
+const char* KEY_SET[] = &#123;
+    &quot;auto&quot;, &quot;break&quot;, &quot;case&quot;, &quot;char&quot;, &quot;const&quot;, &quot;continue&quot;,
+    &quot;default&quot;, &quot;do&quot;, &quot;double&quot;, &quot;else&quot;, &quot;enum&quot;, &quot;extern&quot;,
+    &quot;float&quot;, &quot;for&quot;, &quot;goto&quot;, &quot;if&quot;, &quot;int&quot;, &quot;long&quot;, &quot;register&quot;,
+    &quot;return&quot;, &quot;short&quot;, &quot;signed&quot;, &quot;sizeof&quot;, &quot;static&quot;, &quot;struct&quot;,
+    &quot;switch&quot;, &quot;typedef&quot;, &quot;union&quot;, &quot;unsigned&quot;, &quot;void&quot;, &quot;volatile&quot;,
+    &quot;while&quot;
+&#125;;
+
+int isDigit(char ch)
+&#123;
+    if(ch &lt;= &#39;9&#39; &amp;&amp; ch &gt;= &#39;0&#39;)
+        return 1;
+    return 0;
+&#125;
+
+int isLetter(char ch)
+&#123;
+    if((ch &gt;= &#39;a&#39; &amp;&amp; ch &lt;= &#39;z&#39;) || (ch &gt;= &#39;A&#39; &amp;&amp; ch &lt;= &#39;Z&#39;))
+        return 1;
+    return 0;
+&#125;
+
+int getKeyId(char *str)
+&#123;
+    for(int i=0; i&lt;KEY_NUM; i++)
+    &#123;
+        if(strcmp(KEY_SET[i], str) == 0)
+            return i+1;
+    &#125;
+    return 0;
+&#125;
+
+int isNoOne(char ch)
+&#123;
+    if(ch != &#39;\&#39;&#39; &amp;&amp; ch != &#39;\0&#39;)
+        return 1;
+    return 0;
+&#125;
+
+int isNoTow(char ch)
+&#123;
+    if(ch != &#39;\&quot;&#39; &amp;&amp; ch != &#39;\0&#39;)
+        return 1;
+    return 0;
+&#125;
+
+//%&#125; end
+//%! start
+//%! end
+//%% start
+//%% end
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;string.h&gt;
+
+#define SYLEX_MAXSIZE_TEXT 120
+#define SYLEX_MAXSIZE_BUFF 1024
+
+char SYLEX_FILE_NAME[100];
+char SYLEX_OUT_FILE_NAME[100];
+int SYLEX_LINE = 0;
+int SYLEX_STATE = 0;
+int SYLEX_TEXT_LEN = 0;
+char SYLEX_TEXT[SYLEX_MAXSIZE_TEXT];
+char SYLEX_BUFF[SYLEX_MAXSIZE_BUFF];
+
+//扫描函数
+void SYLEX_scanner(char *str)
+&#123;
+    char ch = &#39; &#39;;
+    while(ch != &#39;\0&#39;)
+    &#123;
+        //printf(&quot;%c %d\n&quot;, ch, SYLEX_STATE);
+        switch(SYLEX_STATE) &#123;
+        case 0:
+        &#123;
+            ch = *str++;
+            SYLEX_TEXT[SYLEX_TEXT_LEN++]=ch;
+            if(ch == &#39; &#39;)&#123;
+                SYLEX_STATE = 1;
+            &#125;
+            else
+            if(ch == &#39;#&#39;)&#123;
+                SYLEX_STATE = 2;
+            &#125;
+            else
+            if(ch == &#39;&amp;&#39;)&#123;
+                SYLEX_STATE = 3;
+            &#125;
+            else
+            if(ch == &#39;(&#39;)&#123;
+                SYLEX_STATE = 4;
+            &#125;
+            else
+            //。。。
+            else
+            if(ch == &#39;&#125;&#39;)&#123;
+                SYLEX_STATE = 28;
+            &#125;
+            else
+            if(ch == &#39;~&#39;)&#123;
+                SYLEX_STATE = 29;
+            &#125;
+            else
+            &#123;
+printf(&quot;Error in line %d\n&quot;, SYLEX_LINE);
+exit(1);
+            &#125;
+            break;
+        &#125;
+        case 1:
+        &#123;
+            ch = *str++;
+            SYLEX_TEXT[SYLEX_TEXT_LEN++]=ch;
+            &#123;
+SYLEX_TEXT[SYLEX_TEXT_LEN-1] = &#39;\0&#39;;
+SYLEX_TEXT_LEN=0;
+SYLEX_STATE=0;
+str--;
+//**************s
+&#123;&#125;
+//**************e
+            &#125;
+            break;
+        &#125;
+      //考虑篇幅，省略中间的状态
+        case 81:
+        &#123;
+            ch = *str++;
+            SYLEX_TEXT[SYLEX_TEXT_LEN++]=ch;
+            &#123;
+SYLEX_TEXT[SYLEX_TEXT_LEN-1] = &#39;\0&#39;;
+SYLEX_TEXT_LEN=0;
+SYLEX_STATE=0;
+str--;
+//**************s
+&#123;   printf(&quot;%s 应该预处理的，暂时先忽略&quot;, SYLEX_TEXT);&#125;
+//**************e
+            &#125;
+            break;
+        &#125;
+        &#125;
+    &#125;
+&#125;
+
+int main(int argc, char **args)
+&#123;
+    if(argc == 1)
+    &#123;
+        printf(&quot;没有输入源文件名&quot;);
+        return 0;
+    &#125;
+    else if(argc == 2)
+    &#123;
+        strcpy(SYLEX_FILE_NAME, args[1]);
+        sprintf(SYLEX_OUT_FILE_NAME, &quot;%s.out&quot;, SYLEX_FILE_NAME);
+    &#125;
+    else
+    &#123;
+        strcpy(SYLEX_FILE_NAME, args[1]);
+        strcpy(SYLEX_OUT_FILE_NAME, args[2]);
+    &#125;
+    FILE* file = fopen(SYLEX_FILE_NAME, &quot;r&quot;);
+    while(NULL != fgets(SYLEX_BUFF, SYLEX_MAXSIZE_BUFF, file))
+    &#123;
+        ++SYLEX_LINE;
+        SYLEX_scanner(SYLEX_BUFF);
+    &#125;
+    return 0;
+&#125;</code></pre><h3 id="测试C代码"><a href="#测试C代码" class="headerlink" title="测试C代码"></a>测试C代码</h3><pre><code class="hljs">#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+#include&quot;aaa.h&quot;
+
+int main()
+&#123;
+    int a = 5;
+    int b = a + 3.5E3;
+    char s[] = &quot;I love the world\n&quot;;
+    for(int i=0; i&lt;5; i++)
+        printf(&quot;%s\n&quot;,s);
+&#125;</code></pre><h3 id="输出"><a href="#输出" class="headerlink" title="输出"></a>输出</h3><pre><code class="hljs">#include &lt;stdio.h&gt; 应该预处理的，暂时先忽略#include &lt;string.h&gt; 应该预处理的，暂时先忽略#include&quot;aaa.h&quot; 应该预处理的，暂时先忽略&lt;int,-&gt;
+&lt;$ID,main&gt;
+&lt;(,-&gt;
+&lt;),-&gt;
+&lt;&#123;,-&gt;
+&lt;int,-&gt;
+&lt;$ID,a&gt;
+&lt;=,-&gt;
+&lt;$NUM,5&gt;
+&lt;;,-&gt;
+&lt;int,-&gt;
+&lt;$ID,b&gt;
+&lt;=,-&gt;
+&lt;$ID,a&gt;
+&lt;+,-&gt;
+&lt;$NUM,3.5E3&gt;
+&lt;;,-&gt;
+&lt;char,-&gt;
+&lt;$ID,s&gt;
+&lt;[,-&gt;
+&lt;],-&gt;
+&lt;=,-&gt;
+&lt;$STR,&quot;I love the world\n&quot;&gt;
+&lt;;,-&gt;
+&lt;for,-&gt;
+&lt;(,-&gt;
+&lt;int,-&gt;
+&lt;$ID,i&gt;
+&lt;=,-&gt;
+&lt;$NUM,0&gt;
+&lt;;,-&gt;
+&lt;$ID,i&gt;
+&lt;&lt;,-&gt;
+&lt;$NUM,5&gt;
+&lt;;,-&gt;
+&lt;$ID,i&gt;
+&lt;++,-&gt;
+&lt;),-&gt;
+&lt;$ID,printf&gt;
+&lt;(,-&gt;
+&lt;$STR,&quot;%s\n&quot;&gt;
+&lt;,,-&gt;
+&lt;$ID,s&gt;
+&lt;),-&gt;
+&lt;;,-&gt;
+&lt;&#125;,-&gt;</code></pre></div><hr><div><div class="post-metas my-3"><div class="post-meta mr-3 d-flex align-items-center"><i class="iconfont icon-category"></i> <span class="category-chains"><span class="category-chain"><a href="/categories/%E5%A4%A7%E5%AD%A6%E6%97%B6%E6%9C%9FCSDN/" class="category-chain-item">大学时期CSDN</a></span></span></div><div class="post-meta"><i class="iconfont icon-tags"></i> <a href="/tags/%E7%BC%96%E8%AF%91%E5%8E%9F%E7%90%86/">#编译原理</a></div></div><div class="license-box my-3"><div class="license-title"><div>自制Lex-词法分析器生成器(C++)</div><div>https://shiyi.threebody.xyz/posts/63134.html</div></div><div class="license-meta"><div class="license-meta-item"><div>作者</div><div>Yi Shi</div></div><div class="license-meta-item license-meta-date"><div>发布于</div><div>2016年10月31日</div></div><div class="license-meta-item"><div>许可协议</div><div><a target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/"><span class="hint--top hint--rounded" aria-label="BY - 署名"><i class="iconfont icon-by"></i> </span></a><a target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/"><span class="hint--top hint--rounded" aria-label="SA - 相同方式共享"><i class="iconfont icon-sa"></i></span></a></div></div></div><div class="license-icon iconfont"></div></div><div class="post-prevnext my-3"><article class="post-prev col-6"><a href="/posts/64027.html" title="Linux 怎样实现非阻塞connect"><i class="iconfont icon-arrowleft"></i> <span class="hidden-mobile">Linux 怎样实现非阻塞connect</span> <span class="visible-mobile">上一篇</span></a></article><article class="post-next col-6"><a href="/posts/9932.html" title="linux之创建守护进程"><span class="hidden-mobile">linux之创建守护进程</span> <span class="visible-mobile">下一篇</span> <i class="iconfont icon-arrowright"></i></a></article></div></div><article id="comments" lazyload><div id="lv-container" data-id="city" data-uid="MTAyMC80NjEzMS8yMjY0Mg"><script type="text/javascript">Fluid.utils.loadComments("#lv-container",(function(){Fluid.utils.createScript("https://cdn-city.livere.com/js/embed.dist.js")}))</script><noscript>Please enable JavaScript to view the comments</noscript></div></article></article></div></div></div><div class="side-col d-none d-lg-block col-lg-2"><aside class="sidebar" style="margin-left:-1rem"><div id="toc"><p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p><div class="toc-body" id="toc-body"></div></div></aside></div></div></div><a id="scroll-top-button" aria-label="TOP" href="#" role="button"><i class="iconfont icon-arrowup" aria-hidden="true"></i></a><div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable modal-lg" role="document"><div class="modal-content"><div class="modal-header text-center"><h4 class="modal-title w-100 font-weight-bold">搜索</h4><button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button></div><div class="modal-body mx-3"><div class="md-form mb-5"><input type="text" id="local-search-input" class="form-control validate"> <label data-error="x" data-success="v" for="local-search-input">关键词</label></div><div class="list-group" id="local-search-result"></div></div></div></div></div></main><footer><div class="footer-inner"><div class="beian"><span><a href="http://beian.miit.gov.cn/" target="_blank" rel="nofollow noopener">陕ICP备16019529号-2</a></span></div><span id="cnzz_stat_icon_1273342630" style="display:none"></span></div></footer><script src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js"></script><link rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css"><script>NProgress.configure({showSpinner:!0,trickleSpeed:100}),NProgress.start(),window.addEventListener("load",(function(){NProgress.done()}))</script><script src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js"></script><script src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js"></script><script src="/js/events.js"></script><script src="/js/plugins.js"></script><script src="/js/img-lazyload.js"></script><script>Fluid.utils.createScript("https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js",(function(){var t=jQuery("#toc");if(0!==t.length&&window.tocbot){var i=jQuery("#board-ctn").offset().top;window.tocbot.init(Object.assign({tocSelector:"#toc-body",contentSelector:".markdown-body",linkClass:"tocbot-link",activeLinkClass:"tocbot-active-link",listClass:"tocbot-list",isCollapsedClass:"tocbot-is-collapsed",collapsibleClass:"tocbot-is-collapsible",scrollSmooth:!0,includeTitleTags:!0,headingsOffset:-i},CONFIG.toc)),t.find(".toc-list-item").length>0&&t.css("visibility","visible"),Fluid.events.registerRefreshCallback((function(){if("tocbot"in window){tocbot.refresh();var t=jQuery("#toc");if(0===t.length||!tocbot)return;t.find(".toc-list-item").length>0&&t.css("visibility","visible")}}))}}))</script><script src="https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js"></script><script>Fluid.plugins.codeWidget()</script><script>Fluid.utils.createScript("https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js",(function(){window.anchors.options={placement:CONFIG.anchorjs.placement,visible:CONFIG.anchorjs.visible},CONFIG.anchorjs.icon&&(window.anchors.options.icon=CONFIG.anchorjs.icon);var n=(CONFIG.anchorjs.element||"h1,h2,h3,h4,h5,h6").split(","),o=[];for(var s of n)o.push(".markdown-body > "+s.trim());"left"===CONFIG.anchorjs.placement&&(window.anchors.options.class="anchorjs-link-left"),window.anchors.add(o.join(", ")),Fluid.events.registerRefreshCallback((function(){if("anchors"in window){anchors.removeAll();var n=(CONFIG.anchorjs.element||"h1,h2,h3,h4,h5,h6").split(","),o=[];for(var s of n)o.push(".markdown-body > "+s.trim());"left"===CONFIG.anchorjs.placement&&(anchors.options.class="anchorjs-link-left"),anchors.add(o.join(", "))}}))}))</script><script>Fluid.utils.createScript("https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js",(function(){Fluid.plugins.fancyBox()}))</script><script>Fluid.plugins.imageCaption()</script><script src="/js/local-search.js"></script><script src="/js/boot.js"></script><noscript><div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div></noscript></body></html>

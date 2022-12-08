@@ -1,0 +1,93 @@
+<!DOCTYPE html><html lang="zh-CN" data-default-color-scheme="auto"><head><meta charset="UTF-8"><link rel="apple-touch-icon" sizes="76x76" href="/favicon/apple-touch-icon.png"><link rel="icon" href="/favicon/favicon-32x32.png"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=5,shrink-to-fit=no"><meta http-equiv="x-ua-compatible" content="ie=edge"><meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests"><meta name="theme-color" content="#2f4154"><meta name="author" content="Yi Shi"><meta name="keywords" content="shiyi, yishi, threebody, blog, golang"><meta name="description" content="以前所接触过的最短路径算法是dijkstra或floyd之类的，都是在已知每两点之间距离的情况下求最短路的。 那么想一下这样的案例  给你一个地图，类似于迷宫一样，中间有些障碍物，再给定起点终点，求该两点间最短路，显然，上述两种算法就不适用了，因为提到的迷宫，我们可能会很容易想到广搜bfs，但一次bfs下来实际上求出了起点到所有点的最短路径，但我们只想知道它与终点间的最短路径，也就是说这个方案里有"><meta property="og:type" content="article"><meta property="og:title" content="初学A*算法求解静态地图的最短路径"><meta property="og:url" content="https://shiyi.threebody.xyz/posts/38319.html"><meta property="og:site_name" content="Yi Shi&#39;s Blog"><meta property="og:description" content="以前所接触过的最短路径算法是dijkstra或floyd之类的，都是在已知每两点之间距离的情况下求最短路的。 那么想一下这样的案例  给你一个地图，类似于迷宫一样，中间有些障碍物，再给定起点终点，求该两点间最短路，显然，上述两种算法就不适用了，因为提到的迷宫，我们可能会很容易想到广搜bfs，但一次bfs下来实际上求出了起点到所有点的最短路径，但我们只想知道它与终点间的最短路径，也就是说这个方案里有"><meta property="og:locale" content="zh_CN"><meta property="article:published_time" content="2015-12-06T20:13:00.000Z"><meta property="article:modified_time" content="2022-12-08T15:35:14.153Z"><meta property="article:author" content="Yi Shi"><meta property="article:tag" content="搜索"><meta name="twitter:card" content="summary_large_image"><title>初学A*算法求解静态地图的最短路径 - Yi Shi&#39;s Blog</title><link rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css"><link rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css"><link rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css"><link rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css"><link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css"><link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css"><link rel="stylesheet" href="/css/main.css"><link id="highlight-css" rel="stylesheet" href="/css/highlight.css"><link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css"><script id="fluid-configs">var Fluid=window.Fluid||{};Fluid.ctx=Object.assign({},Fluid.ctx);var CONFIG={hostname:"shiyi.threebody.xyz",root:"/",version:"1.9.3",typing:{enable:!0,typeSpeed:50,cursorChar:"",loop:!1,scope:["home"]},anchorjs:{enable:!0,element:"h1,h2,h3,h4,h5,h6",placement:"left",visible:"hover",icon:""},progressbar:{enable:!0,height_px:3,color:"#29d",options:{showSpinner:!0,trickleSpeed:100}},code_language:{enable:!0,default:"TEXT"},copy_btn:!0,image_caption:{enable:!0},image_zoom:{enable:!0,img_url_replace:["",""]},toc:{enable:!0,placement:"right",headingSelector:"h1,h2,h3,h4,h5,h6",collapseDepth:4},lazyload:{enable:!0,loading_img:"/img/loading.gif",onlypost:!1,offset_factor:2},web_analytics:{enable:!0,follow_dnt:!0,baidu:"75eaaab59c4fa946437e9dea4f8fc07d",google:null,gtag:null,tencent:{sid:null,cid:null},woyaola:null,cnzz:1273342630,leancloud:{app_id:null,app_key:null,server_url:null,path:"window.location.pathname",ignore_local:!1}},search_path:"/local-search.xml"};if(CONFIG.web_analytics.follow_dnt){var dntVal=navigator.doNotTrack||window.doNotTrack||navigator.msDoNotTrack;Fluid.ctx.dnt=dntVal&&(dntVal.startsWith("1")||dntVal.startsWith("yes")||dntVal.startsWith("on"))}</script><script src="/js/utils.js"></script><script src="/js/color-schema.js"></script><script async>if(!Fluid.ctx.dnt){var _hmt=_hmt||[];!function(){var e=document.createElement("script");e.src="https://hm.baidu.com/hm.js?75eaaab59c4fa946437e9dea4f8fc07d";var t=document.getElementsByTagName("script")[0];t.parentNode.insertBefore(e,t)}()}</script><script async>Fluid.ctx.dnt||Fluid.utils.createScript("//s4.cnzz.com/z_stat.php?id=1273342630&show=pic")</script><meta name="generator" content="Hexo 5.4.0"><link rel="alternate" href="/atom.xml" title="Yi Shi's Blog" type="application/atom+xml">
+</head><body><header><div class="header-inner" style="height:40vh"><nav id="navbar" class="navbar fixed-top navbar-expand-lg navbar-dark scrolling-navbar"><div class="container"><a class="navbar-brand" href="/"><strong>Yi Shi&#39;s Blog</strong> </a><button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation"><div class="animated-icon"><span></span><span></span><span></span></div></button><div class="collapse navbar-collapse" id="navbarSupportedContent"><ul class="navbar-nav ml-auto text-center"><li class="nav-item"><a class="nav-link" href="/"><i class="iconfont icon-home-fill"></i> 首页</a></li><li class="nav-item"><a class="nav-link" href="/archives/"><i class="iconfont icon-archive-fill"></i> 归档</a></li><li class="nav-item"><a class="nav-link" href="/categories/"><i class="iconfont icon-category-fill"></i> 分类</a></li><li class="nav-item"><a class="nav-link" href="/tags/"><i class="iconfont icon-tags-fill"></i> 标签</a></li><li class="nav-item"><a class="nav-link" href="/books/"><i class="iconfont icon-book"></i> 读书</a></li><li class="nav-item"><a class="nav-link" href="/about/"><i class="iconfont icon-user-fill"></i> 关于</a></li><li class="nav-item" id="search-btn"><a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">&nbsp;<i class="iconfont icon-search"></i>&nbsp;</a></li><li class="nav-item" id="color-toggle-btn"><a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">&nbsp;<i class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a></li></ul></div></div></nav><div id="banner" class="banner" parallax="true" style="background:url(/image/banner.jpg) no-repeat center center;background-size:cover"><div class="full-bg-img"><div class="mask flex-center" style="background-color:rgba(0,0,0,.5)"><div class="banner-text text-center fade-in-up"><div class="h2"><span id="subtitle">初学A*算法求解静态地图的最短路径</span></div><div class="mt-3"><span class="post-meta"><i class="iconfont icon-date-fill" aria-hidden="true"></i> <time datetime="2015-12-07 04:13" pubdate>2015年12月7日 凌晨</time></span></div><div class="mt-1"></div></div></div></div></div></div></header><main><div class="container-fluid nopadding-x"><div class="row nomargin-x"><div class="side-col d-none d-lg-block col-lg-2"></div><div class="col-lg-8 nopadding-x-md"><div class="container nopadding-x-md" id="board-ctn"><div id="board"><article class="post-content mx-auto"><h1 style="display:none">初学A*算法求解静态地图的最短路径</h1><div class="markdown-body"><p>以前所接触过的最短路径算法是dijkstra或floyd之类的，都是在已知每两点之间距离的情况下求最短路的。</p><p>那么想一下这样的案例</p><blockquote><p>给你一个地图，类似于迷宫一样，中间有些障碍物，再给定起点终点，求该两点间最短路，显然，上述两种算法就不适用了，因为提到的迷宫，我们可能会很容易想到广搜b<br>fs，但一次bfs下来实际上求出了起点到所有点的最短路径，但我们只想知道它与终点间的最短路径，也就是说这个方案里有很多冗余的操作。</p></blockquote><p>说到这里，该步入正题，介绍A*算法。</p><blockquote><p>A<em>算法；A</em>（A-Star)算法是一种静态路网中求解最短路径最有效的直接搜索方法。估价值与实际值越接近，估价函数取得就越好。(取自百度百科)</p></blockquote><p>何谓直接搜索方法，即 ** _ 不进行任何预处理直接进行搜索的方法 _ ** 。<br>那么它为何可以称为最有效的直接搜索方法呢，我们看到上文说到一个估价值与估价函数。<br>所以有这么一个式子</p><blockquote><p>** f(n) = g(n) + h(n) **</p></blockquote><p>先记住这个式子，在讨论这个式子之前，先谈点题外话。<br>我们都接触过 ** _ 贪心思想 _ ** ，即 ** _ 在对问题求解时，总是做出在当前看来是最好的选择。 _ **<br>从起点开始，它可走的地方是周围的8个点(最多)，平常广搜时多个可能是平等对待，全部考虑。</p><p>那么？我们可不可以运用贪心的思想从8个点中选出一个最有可能达到最短路的点来优先进行操作呢？</p><p>当然可以，这样我们就是 ** 有针对性的搜索 ** ，而不是 ** 盲目搜索 ** 了。</p><p>有的道友可能会说了， ** 这样贪心下来求出的只能是接近于最优解的相对最优解，并不能保证一定最优 ** ，没错，事实的确是这样。<br>那么这样就行不通了，因为我们的目的是很明确的，要的是最短路径。</p><p>但是往常的贪心算法都是 ** 选取当前状态下最好的选择，至于次好选择等等全部就丢掉了 **<br>，那如果我们仍然保留这些选择，仍与后来的可能进行比较呢，这样就保证最后的解一定是最优解了。</p><p>如何将所有可能性都保留下来继续参与后来的比较呢， ** _ 优先队列 _ ** 是一个不错的法子。<br>1. 从A开始，将其周围可走且未标记的点，全部加入队列，然后标记A点<br>2. 从队列中选取优先度最高的点B<br>3. 对B重复1操作，直到到达终点为止</p><p>但优先度如果获得呢，现在我们回到这个式子</p><blockquote><p>** f(n) = g(n) + h(n) **<br>g(n)为从起点到点n所花费的代价值<br>h(n)为点n到终点所花费代价的估价值<br>两者之和 f(n)就是点n的优先值</p></blockquote><p>例如，对几何地图进行求解时，可以将从起点到点n走的步数作为g(n)，将点n到终点的几何距离作为h(n)估价值，那么此时，f(n)的值越小，优先度越高。</p><p>下面贴代码</p><pre><code class="hljs">#include&lt;iostream&gt;
+#include&lt;stdio.h&gt;
+#include&lt;algorithm&gt;
+#include&lt;math.h&gt;
+#include&lt;queue&gt;
+#include&lt;functional&gt;
+#include&lt;set&gt;
+
+using namespace std;
+
+const int N = 10009;//地图范围
+
+int v[N][N] = &#123;&#125;;//记录地图
+int dx[] = &#123;1,1,1,0,0,-1,-1,-1&#125;;//8个方向
+int dy[] = &#123;1,0,-1,1,-1,1,-1,0&#125;;
+int f[N*N];//对当前点进行标记，同时记录上一个位置的坐标
+
+struct Node
+&#123;
+    int x,y,f,g;//坐标与权值
+&#125;;
+
+struct Nodecmp//优先队列比较函数
+&#123;
+    bool operator() (const Node &amp;a, const Node &amp;b)
+    &#123;
+        return a.f &gt; b.f;
+    &#125;
+&#125;;
+
+int leng(Node a, Node b)//求点与终点的几何长度
+&#123;
+    return sqrt((a.x - b.x)*(a.x - b.x)
+                + (a.y - b.y)*(a.y - b.y));
+&#125;
+
+void print(int nid, int n)//输出最短路径
+&#123;
+    if(nid == -1)
+        return;
+    print(f[nid],n);
+    printf(&quot;%d %d\n&quot;,(nid-1)/n, nid-(nid-1)/n*n);
+&#125;
+
+bool a_start(Node s, Node e, int n)
+&#123;
+    if(!v[e.x][e.y])//终点不可达
+        return false;
+    memset(f, 0, sizeof(f));
+    priority_queue&lt;Node, vector&lt;Node&gt;, Nodecmp&gt; q;
+    int eid = e.x * n + e.y;
+    f[s.x * n + s.y] = -1;//二维转一维进行标记，便于操作
+    while(!q.empty())
+    &#123;
+        Node now = q.top();
+        q.pop();//出队
+        int nid = now.x * n + now.y;
+        if(nid == eid)//判断是否为终点
+        &#123;
+            print(nid, n);
+            return true;
+        &#125;
+        for(int i=0;i&lt;8;i++)//遍历8个方向
+        &#123;
+            Node t;
+            t.x = dx[i] + now.x;
+            t.y = dy[i] + now.y;
+            int tid = t.x * n + t.y;
+            if(v[t.x][t.y] &amp;&amp; f[tid] == 0)
+            &#123;//符合条件便标记并入队
+                f[tid] = nid;
+                t.g = now.g + 1;
+                t.f = t.g + leng(t, e);
+                q.push(t);
+            &#125;
+        &#125;
+    &#125;
+    return false;
+&#125;
+
+int main()
+&#123;
+    int n;
+    Node s,e;
+    s.g = 0;
+    cin&gt;&gt;n&gt;&gt;s.x&gt;&gt;s.y&gt;&gt;e.x&gt;&gt;e.y;
+    for(int i=1;i&lt;=n;++i)
+        for(int j=1;j&lt;=n;++j)
+            cin&gt;&gt;v[i][j];
+    if(!a_start(s,e,n))
+        cout&lt;&lt;&quot;无法到达&quot;&lt;&lt;endl;
+&#125;</code></pre></div><hr><div><div class="post-metas my-3"><div class="post-meta mr-3 d-flex align-items-center"><i class="iconfont icon-category"></i> <span class="category-chains"><span class="category-chain"><a href="/categories/%E5%A4%A7%E5%AD%A6%E6%97%B6%E6%9C%9FCSDN/" class="category-chain-item">大学时期CSDN</a></span></span></div><div class="post-meta"><i class="iconfont icon-tags"></i> <a href="/tags/%E6%90%9C%E7%B4%A2/">#搜索</a></div></div><div class="license-box my-3"><div class="license-title"><div>初学A*算法求解静态地图的最短路径</div><div>https://shiyi.threebody.xyz/posts/38319.html</div></div><div class="license-meta"><div class="license-meta-item"><div>作者</div><div>Yi Shi</div></div><div class="license-meta-item license-meta-date"><div>发布于</div><div>2015年12月7日</div></div><div class="license-meta-item"><div>许可协议</div><div><a target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/"><span class="hint--top hint--rounded" aria-label="BY - 署名"><i class="iconfont icon-by"></i> </span></a><a target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/"><span class="hint--top hint--rounded" aria-label="SA - 相同方式共享"><i class="iconfont icon-sa"></i></span></a></div></div></div><div class="license-icon iconfont"></div></div><div class="post-prevnext my-3"><article class="post-prev col-6"><a href="/posts/63520.html" title="51Nod 1376 最长递增子序列的数量(dp+树状数组)"><i class="iconfont icon-arrowleft"></i> <span class="hidden-mobile">51Nod 1376 最长递增子序列的数量(dp+树状数组)</span> <span class="visible-mobile">上一篇</span></a></article><article class="post-next col-6"><a href="/posts/48436.html" title="51Nod 1022 石子归并 V2 (划分型dp四边形不等式优化)"><span class="hidden-mobile">51Nod 1022 石子归并 V2 (划分型dp四边形不等式优化)</span> <span class="visible-mobile">下一篇</span> <i class="iconfont icon-arrowright"></i></a></article></div></div><article id="comments" lazyload><div id="lv-container" data-id="city" data-uid="MTAyMC80NjEzMS8yMjY0Mg"><script type="text/javascript">Fluid.utils.loadComments("#lv-container",(function(){Fluid.utils.createScript("https://cdn-city.livere.com/js/embed.dist.js")}))</script><noscript>Please enable JavaScript to view the comments</noscript></div></article></article></div></div></div><div class="side-col d-none d-lg-block col-lg-2"><aside class="sidebar" style="margin-left:-1rem"><div id="toc"><p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p><div class="toc-body" id="toc-body"></div></div></aside></div></div></div><a id="scroll-top-button" aria-label="TOP" href="#" role="button"><i class="iconfont icon-arrowup" aria-hidden="true"></i></a><div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable modal-lg" role="document"><div class="modal-content"><div class="modal-header text-center"><h4 class="modal-title w-100 font-weight-bold">搜索</h4><button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button></div><div class="modal-body mx-3"><div class="md-form mb-5"><input type="text" id="local-search-input" class="form-control validate"> <label data-error="x" data-success="v" for="local-search-input">关键词</label></div><div class="list-group" id="local-search-result"></div></div></div></div></div></main><footer><div class="footer-inner"><div class="beian"><span><a href="http://beian.miit.gov.cn/" target="_blank" rel="nofollow noopener">陕ICP备16019529号-2</a></span></div><span id="cnzz_stat_icon_1273342630" style="display:none"></span></div></footer><script src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js"></script><link rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css"><script>NProgress.configure({showSpinner:!0,trickleSpeed:100}),NProgress.start(),window.addEventListener("load",(function(){NProgress.done()}))</script><script src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js"></script><script src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js"></script><script src="/js/events.js"></script><script src="/js/plugins.js"></script><script src="/js/img-lazyload.js"></script><script>Fluid.utils.createScript("https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js",(function(){var t=jQuery("#toc");if(0!==t.length&&window.tocbot){var i=jQuery("#board-ctn").offset().top;window.tocbot.init(Object.assign({tocSelector:"#toc-body",contentSelector:".markdown-body",linkClass:"tocbot-link",activeLinkClass:"tocbot-active-link",listClass:"tocbot-list",isCollapsedClass:"tocbot-is-collapsed",collapsibleClass:"tocbot-is-collapsible",scrollSmooth:!0,includeTitleTags:!0,headingsOffset:-i},CONFIG.toc)),t.find(".toc-list-item").length>0&&t.css("visibility","visible"),Fluid.events.registerRefreshCallback((function(){if("tocbot"in window){tocbot.refresh();var t=jQuery("#toc");if(0===t.length||!tocbot)return;t.find(".toc-list-item").length>0&&t.css("visibility","visible")}}))}}))</script><script src="https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js"></script><script>Fluid.plugins.codeWidget()</script><script>Fluid.utils.createScript("https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js",(function(){window.anchors.options={placement:CONFIG.anchorjs.placement,visible:CONFIG.anchorjs.visible},CONFIG.anchorjs.icon&&(window.anchors.options.icon=CONFIG.anchorjs.icon);var n=(CONFIG.anchorjs.element||"h1,h2,h3,h4,h5,h6").split(","),o=[];for(var s of n)o.push(".markdown-body > "+s.trim());"left"===CONFIG.anchorjs.placement&&(window.anchors.options.class="anchorjs-link-left"),window.anchors.add(o.join(", ")),Fluid.events.registerRefreshCallback((function(){if("anchors"in window){anchors.removeAll();var n=(CONFIG.anchorjs.element||"h1,h2,h3,h4,h5,h6").split(","),o=[];for(var s of n)o.push(".markdown-body > "+s.trim());"left"===CONFIG.anchorjs.placement&&(anchors.options.class="anchorjs-link-left"),anchors.add(o.join(", "))}}))}))</script><script>Fluid.utils.createScript("https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js",(function(){Fluid.plugins.fancyBox()}))</script><script>Fluid.plugins.imageCaption()</script><script src="/js/local-search.js"></script><script src="/js/boot.js"></script><noscript><div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div></noscript></body></html>

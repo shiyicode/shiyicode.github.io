@@ -1,0 +1,281 @@
+<!DOCTYPE html><html lang="zh-CN" data-default-color-scheme="auto"><head><meta charset="UTF-8"><link rel="apple-touch-icon" sizes="76x76" href="/favicon/apple-touch-icon.png"><link rel="icon" href="/favicon/favicon-32x32.png"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=5,shrink-to-fit=no"><meta http-equiv="x-ua-compatible" content="ie=edge"><meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests"><meta name="theme-color" content="#2f4154"><meta name="author" content="Yi Shi"><meta name="keywords" content="shiyi, yishi, threebody, blog, golang"><meta name="description" content="压缩原理及步骤&amp;&amp;压缩比的计算压缩原理及步骤压缩的第一步： 将一个文件以各个字符出现的次数为权值建立哈夫曼树，这样每个字符可以用 ** _ 从树根到该字符所在到叶子节点的路径 _ ** 来表示。(左为0,右为1)  压缩第二步： 哈夫曼编码有一个很重要的特性： ** _ 每个字符编码不会成为另一个编码的前缀 _ **。这个特性保证了即使我们把不同长度的编码存在一起，仍然也可以把它们"><meta property="og:type" content="article"><meta property="og:title" content="哈夫曼编码压缩解压缩实现&amp;不同类型文件压缩比的测试"><meta property="og:url" content="https://shiyi.threebody.xyz/posts/44265.html"><meta property="og:site_name" content="Yi Shi&#39;s Blog"><meta property="og:description" content="压缩原理及步骤&amp;&amp;压缩比的计算压缩原理及步骤压缩的第一步： 将一个文件以各个字符出现的次数为权值建立哈夫曼树，这样每个字符可以用 ** _ 从树根到该字符所在到叶子节点的路径 _ ** 来表示。(左为0,右为1)  压缩第二步： 哈夫曼编码有一个很重要的特性： ** _ 每个字符编码不会成为另一个编码的前缀 _ **。这个特性保证了即使我们把不同长度的编码存在一起，仍然也可以把它们"><meta property="og:locale" content="zh_CN"><meta property="og:image" content="http://img.blog.csdn.net/20151230002934527"><meta property="article:published_time" content="2015-12-29T17:01:00.000Z"><meta property="article:modified_time" content="2022-12-08T15:35:14.153Z"><meta property="article:author" content="Yi Shi"><meta property="article:tag" content="数据结构与算法"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:image" content="http://img.blog.csdn.net/20151230002934527"><title>哈夫曼编码压缩解压缩实现&amp;不同类型文件压缩比的测试 - Yi Shi&#39;s Blog</title><link rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css"><link rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css"><link rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css"><link rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css"><link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css"><link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css"><link rel="stylesheet" href="/css/main.css"><link id="highlight-css" rel="stylesheet" href="/css/highlight.css"><link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css"><script id="fluid-configs">var Fluid=window.Fluid||{};Fluid.ctx=Object.assign({},Fluid.ctx);var CONFIG={hostname:"shiyi.threebody.xyz",root:"/",version:"1.9.3",typing:{enable:!0,typeSpeed:50,cursorChar:"",loop:!1,scope:["home"]},anchorjs:{enable:!0,element:"h1,h2,h3,h4,h5,h6",placement:"left",visible:"hover",icon:""},progressbar:{enable:!0,height_px:3,color:"#29d",options:{showSpinner:!0,trickleSpeed:100}},code_language:{enable:!0,default:"TEXT"},copy_btn:!0,image_caption:{enable:!0},image_zoom:{enable:!0,img_url_replace:["",""]},toc:{enable:!0,placement:"right",headingSelector:"h1,h2,h3,h4,h5,h6",collapseDepth:4},lazyload:{enable:!0,loading_img:"/img/loading.gif",onlypost:!1,offset_factor:2},web_analytics:{enable:!0,follow_dnt:!0,baidu:"75eaaab59c4fa946437e9dea4f8fc07d",google:null,gtag:null,tencent:{sid:null,cid:null},woyaola:null,cnzz:1273342630,leancloud:{app_id:null,app_key:null,server_url:null,path:"window.location.pathname",ignore_local:!1}},search_path:"/local-search.xml"};if(CONFIG.web_analytics.follow_dnt){var dntVal=navigator.doNotTrack||window.doNotTrack||navigator.msDoNotTrack;Fluid.ctx.dnt=dntVal&&(dntVal.startsWith("1")||dntVal.startsWith("yes")||dntVal.startsWith("on"))}</script><script src="/js/utils.js"></script><script src="/js/color-schema.js"></script><script async>if(!Fluid.ctx.dnt){var _hmt=_hmt||[];!function(){var e=document.createElement("script");e.src="https://hm.baidu.com/hm.js?75eaaab59c4fa946437e9dea4f8fc07d";var t=document.getElementsByTagName("script")[0];t.parentNode.insertBefore(e,t)}()}</script><script async>Fluid.ctx.dnt||Fluid.utils.createScript("//s4.cnzz.com/z_stat.php?id=1273342630&show=pic")</script><meta name="generator" content="Hexo 5.4.0"><link rel="alternate" href="/atom.xml" title="Yi Shi's Blog" type="application/atom+xml">
+</head><body><header><div class="header-inner" style="height:40vh"><nav id="navbar" class="navbar fixed-top navbar-expand-lg navbar-dark scrolling-navbar"><div class="container"><a class="navbar-brand" href="/"><strong>Yi Shi&#39;s Blog</strong> </a><button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation"><div class="animated-icon"><span></span><span></span><span></span></div></button><div class="collapse navbar-collapse" id="navbarSupportedContent"><ul class="navbar-nav ml-auto text-center"><li class="nav-item"><a class="nav-link" href="/"><i class="iconfont icon-home-fill"></i> 首页</a></li><li class="nav-item"><a class="nav-link" href="/archives/"><i class="iconfont icon-archive-fill"></i> 归档</a></li><li class="nav-item"><a class="nav-link" href="/categories/"><i class="iconfont icon-category-fill"></i> 分类</a></li><li class="nav-item"><a class="nav-link" href="/tags/"><i class="iconfont icon-tags-fill"></i> 标签</a></li><li class="nav-item"><a class="nav-link" href="/books/"><i class="iconfont icon-book"></i> 读书</a></li><li class="nav-item"><a class="nav-link" href="/about/"><i class="iconfont icon-user-fill"></i> 关于</a></li><li class="nav-item" id="search-btn"><a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">&nbsp;<i class="iconfont icon-search"></i>&nbsp;</a></li><li class="nav-item" id="color-toggle-btn"><a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">&nbsp;<i class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a></li></ul></div></div></nav><div id="banner" class="banner" parallax="true" style="background:url(/image/banner.jpg) no-repeat center center;background-size:cover"><div class="full-bg-img"><div class="mask flex-center" style="background-color:rgba(0,0,0,.5)"><div class="banner-text text-center fade-in-up"><div class="h2"><span id="subtitle">哈夫曼编码压缩解压缩实现&不同类型文件压缩比的测试</span></div><div class="mt-3"><span class="post-meta"><i class="iconfont icon-date-fill" aria-hidden="true"></i> <time datetime="2015-12-30 01:01" pubdate>2015年12月30日 凌晨</time></span></div><div class="mt-1"></div></div></div></div></div></div></header><main><div class="container-fluid nopadding-x"><div class="row nomargin-x"><div class="side-col d-none d-lg-block col-lg-2"></div><div class="col-lg-8 nopadding-x-md"><div class="container nopadding-x-md" id="board-ctn"><div id="board"><article class="post-content mx-auto"><h1 style="display:none">哈夫曼编码压缩解压缩实现&amp;不同类型文件压缩比的测试</h1><div class="markdown-body"><h2 id="压缩原理及步骤-amp-amp-压缩比的计算"><a href="#压缩原理及步骤-amp-amp-压缩比的计算" class="headerlink" title="压缩原理及步骤&amp;&amp;压缩比的计算"></a>压缩原理及步骤&amp;&amp;压缩比的计算</h2><h3 id="压缩原理及步骤"><a href="#压缩原理及步骤" class="headerlink" title="压缩原理及步骤"></a>压缩原理及步骤</h3><h4 id="压缩的第一步："><a href="#压缩的第一步：" class="headerlink" title="压缩的第一步："></a>压缩的第一步：</h4><blockquote><p>将一个文件以各个字符出现的次数为权值建立哈夫曼树，这样每个字符可以用 ** _ 从树根到该字符所在到叶子节点的路径 _ ** 来表示。(左为0,右为1)</p></blockquote><h4 id="压缩第二步："><a href="#压缩第二步：" class="headerlink" title="压缩第二步："></a>压缩第二步：</h4><blockquote><p>哈夫曼编码有一个很重要的特性： ** _ 每个字符编码不会成为另一个编码的前缀 _ **<br>。这个特性保证了即使我们把不同长度的编码存在一起，仍然也可以把它们分离开，不会出现 ** _ 认错人 _ ** 的冲突。<br>那么我们就可以把所有的字符按照原有顺序用其编码替换，构建新的字符串作为其压缩后的串。</p></blockquote><h4 id="压缩第三步："><a href="#压缩第三步：" class="headerlink" title="压缩第三步："></a>压缩第三步：</h4><blockquote><p>有的小伙伴可能要问了，这样一搞不是越变越多了么，哪是什么压缩。哈哈，大部分孩子可能已经想到啦，既然单位编码除了0就是1为什么还要用字节来存呢， ** _<br>用位来保存，8个单位编码为1位 _ ** 。这样转化完成后的串才是真正压缩后的串。</p></blockquote><p>** _ 当然，因为我们还要进行解压，所以这里构建的树也要和串一并加入到文件。 _ **</p><h3 id="压缩比的计算"><a href="#压缩比的计算" class="headerlink" title="压缩比的计算"></a>压缩比的计算</h3><p>介绍完步骤，我们来计算一下哈夫曼编码的压缩比。</p><p>_ 用len表示串长度，path(i)表示每i个字符的编码长度 _ ，那么根据上文所介绍的原理，我们可以很容易知道，串通过哈夫曼压缩后的长度为</p><pre><code class="hljs"> sum(path(i)) 1&lt;=i&lt;=len</code></pre><p>这个式子虽然正确但不能直观的感受的压缩比，所以我们来假设一种平均情况进行估算</p><p>假如一个 _ 串长度为n _ ，一共包含 _ m个不同的字符 _ ，那么所构建成的哈夫曼树的 _ 总结点数为 2*m-1 _ 。</p><p>假设，n很大，那么可以忽略树的保存所占用的空间。如果假设此串中每个字符出现的次数都是相同的，那么也可以假设，它们所生成的哈夫曼树是完全二叉树.</p><p>即每个叶子(字符)的 _ 深度为log(m)+1，则路径长度为log(m) _<br>。log(m)即为该串字符的平均路径长度，那么压缩后的串长为log(m)/8。</p><p>由上可以得出平均压缩比的公式为：</p><pre><code class="hljs"> n*log(2*m-1)/8/n = log(2*m-1)/8;</code></pre><p>可见压缩比的大小主要与m有关，即不同的字符越少越好。</p><p>ascii码的范围为0～255，共有256种不同字符，代入上式得</p><pre><code class="hljs"> log(2*256-1) ＝ 6.23 …</code></pre><p>向上取整为7(路径个数哪有小数)<br>7/8 = 0.875 = %87.5<br>所以哈夫曼编码的平均压缩比为%87.5。</p><h4 id="强调"><a href="#强调" class="headerlink" title="强调"></a>强调</h4><blockquote><p>** 上述的假设在计算情况中忽略了对哈夫曼树的保存，所以只在文件总长度与不同字符总数相差很大时才生效。 **</p></blockquote><h3 id="考虑ascii码外的其它语言"><a href="#考虑ascii码外的其它语言" class="headerlink" title="考虑ascii码外的其它语言"></a>考虑ascii码外的其它语言</h3><blockquote><p>一开始为考虑这个钻了牛角尖，想着去统一用wchar_t保存或是转为Unicode等等什么的。但其实不必那么复杂，因为汉字(不仅仅汉字，任何字符都是这样的<br>)都是以字节为单位的，由多个字节组成的，将其分开对待，因为最终解压时恢复原串还是按照原有顺序组装，所以和纯英文文件的实现没有什么区别)；</p></blockquote><h3 id="需要注意的地方"><a href="#需要注意的地方" class="headerlink" title="需要注意的地方"></a>需要注意的地方</h3><blockquote><p>所有字符路径的总长不一定整除8，所以在按为保存时，要注意最后一项不足8的情况，进行补零，且要将补零的个数保存起来。</p></blockquote><h2 id="代码对不同类型文档的压缩比测试情况"><a href="#代码对不同类型文档的压缩比测试情况" class="headerlink" title="代码对不同类型文档的压缩比测试情况"></a>代码对不同类型文档的压缩比测试情况</h2><h4 id="英语文章"><a href="#英语文章" class="headerlink" title="英语文章"></a>英语文章</h4><h5 id="样例文档：西游记英文节选"><a href="#样例文档：西游记英文节选" class="headerlink" title="样例文档：西游记英文节选"></a>样例文档：西游记英文节选</h5><blockquote><p>原大小：7720<br>压缩后：10476<br>压缩比：1.356 – %135<br>此处的文件压缩后不降反增，因为文件本身大小与不同字符的数量相差并不大，加上对树的保存后，空间大于压缩前。</p></blockquote><h5 id="纯汉语文档"><a href="#纯汉语文档" class="headerlink" title="纯汉语文档"></a>纯汉语文档</h5><blockquote><p>样例文档：西游记<br>原大小：1921978<br>压缩后：1781234<br>压缩比：0.926 – %92<br>不同汉字的数量多。</p></blockquote><h5 id="程序代码"><a href="#程序代码" class="headerlink" title="程序代码"></a>程序代码</h5><blockquote><p>样例文档：github网页源代码<br>原大小：46500<br>压缩后：35116<br>压缩比：0.755 – %76<br>源代码中全是英文字母与符号，不超过100种，总大小与其相差近500倍，且代码重复词比较多。</p></blockquote><h5 id="英语单词文档"><a href="#英语单词文档" class="headerlink" title="英语单词文档"></a>英语单词文档</h5><blockquote><p>样例文档：英语单词5000<br>原大小：20813<br>压缩后：13523<br>压缩比：0.649 – %65</p></blockquote><p><img src="http://img.blog.csdn.net/20151230002934527" srcset="/img/loading.gif" lazyload alt="测试情况"></p><h2 id="源代码"><a href="#源代码" class="headerlink" title="源代码"></a>源代码</h2><h3 id="压缩程序源文件-compress-cpp"><a href="#压缩程序源文件-compress-cpp" class="headerlink" title="压缩程序源文件 compress.cpp"></a>压缩程序源文件 compress.cpp</h3><pre><code class="hljs">#include &lt;iostream&gt;
+#include &lt;locale&gt;
+#include &lt;cstdlib&gt;
+#include &lt;fstream&gt;
+#include &lt;vector&gt;
+#include &lt;queue&gt;
+
+using namespace std;
+
+const long long MAX_SIZE = 10000000000;//
+const int MAX_TYPE = 300;
+unsigned int *f = new unsigned int[MAX_TYPE];//计数
+unsigned int *p = new unsigned int[MAX_TYPE];//计下标
+char *v = new char[MAX_TYPE];
+char filename[20];
+char *s[MAX_TYPE];
+
+struct Node
+&#123;
+    unsigned int weight, parent, lson, rson;
+    Node()&#123;&#125;;
+&#125;HuffmanTree[MAX_TYPE&lt;&lt;1];
+
+struct NodeCmp
+&#123;
+    bool operator()(int a, int b)
+    &#123;
+        return HuffmanTree[a].weight &gt; HuffmanTree[b].weight;
+    &#125;
+&#125;;
+
+int CreatTree(char *str, long long len)
+&#123;
+    int num = 1;
+    for(int i=0;i&lt;len;i++)
+        f[str[i]]++;
+    cout&lt;&lt;&quot;len::&quot;&lt;&lt;len&lt;&lt;endl;
+    for(int i=0;i&lt;len;i++)
+    &#123;
+        if(f[str[i]])
+        &#123;
+            HuffmanTree[num].weight = f[str[i]];
+            HuffmanTree[num].lson = 0;
+            HuffmanTree[num].rson = 0;
+            f[str[i]] = 0;
+            if(p[str[i]] == 0)
+                p[str[i]] = num;
+            v[num] = str[i];
+            ++num;
+        &#125;
+    &#125;
+    cout&lt;&lt;&quot;num::&quot;&lt;&lt;num&lt;&lt;endl;
+    return num;
+&#125;
+
+void CodingTree(int num)
+&#123;
+    priority_queue&lt;int, vector&lt;int&gt;, NodeCmp&gt; q;
+    for(int i=1;i&lt;num;i++)
+        q.push(i);
+    int len = num;
+    for(int i=0;i&lt;num-2;i++)
+    &#123;
+        int x = q.top(); q.pop();
+        int y = q.top(); q.pop();
+        HuffmanTree[len].weight = HuffmanTree[x].weight + HuffmanTree[y].weight;
+        HuffmanTree[x].parent = HuffmanTree[y].parent = len;
+        HuffmanTree[len].lson = y;
+        HuffmanTree[len].rson = x;
+        q.push(len++);
+    &#125;
+&#125;
+
+void FindPath(int num)
+&#123;
+    char *t = new char[num];
+    t[num-1] = &#39;\0&#39;;
+    for(int i=1;i&lt;num;i++)
+    &#123;
+        int son = i, father = HuffmanTree[i].parent;
+        int start = num-1;
+
+        while(father != 0)
+        &#123;
+            --start;
+            if(HuffmanTree[father].rson == son)
+                t[start] = &#39;1&#39;;
+            else
+                t[start] = &#39;0&#39;;
+            son = father;
+            father = HuffmanTree[father].parent;
+        &#125;
+        s[i] = new char[num - start];
+        strcpy(s[i], &amp;t[start]);
+    &#125;
+&#125;
+
+void print(int num, long long len, char *str)
+&#123;
+    ofstream fout(filename, ios::out);
+    fout&lt;&lt;num&lt;&lt;endl;
+    for(int i=1;i&lt;num;i++)
+    &#123;
+        fout&lt;&lt;s[i]&lt;&lt;endl;
+        fout&lt;&lt;v[i]&lt;&lt;endl;
+    &#125;
+    long long pos = 0;
+    char *ans = new char[MAX_SIZE];
+
+    int now = 7;
+    for(long long i=0;i&lt;len;i++)
+    &#123;
+        int k = 0;
+        while(s[p[str[i]]][k] != &#39;\0&#39;)
+        &#123;
+            ans[pos] |= (s[p[str[i]]][k]-&#39;0&#39;)&lt;&lt;now--;
+            if(now &lt; 0)
+            &#123;
+                now = 7;
+                pos++;
+            &#125;
+            ++k;
+        &#125;
+    &#125;
+
+    int zero = 0;
+    if(now != 7) zero = now%7+1, pos++;
+
+    fout&lt;&lt;zero&lt;&lt;&quot; &quot;&lt;&lt;pos&lt;&lt;endl;
+    fout.write(ans, sizeof(char)*pos);
+    fout.close();
+
+    cout&lt;&lt;&quot;zero::&quot;&lt;&lt;zero&lt;&lt;endl;
+&#125;
+
+int main(int argc, char **argv)
+&#123;
+    sprintf(filename, &quot;%s.temp&quot;, argv[1]);
+    ifstream fin(argv[1],ios::ate | ios::in);
+    if(!fin)
+    &#123;
+        cout&lt;&lt;&quot;File open error!&quot;&lt;&lt;endl;
+        return 0;
+    &#125;
+
+    long long size = fin.tellg();
+    if(size &gt; MAX_SIZE)
+    &#123;
+        cout&lt;&lt;&quot;Too long!&quot;&lt;&lt;endl;
+        return 0;
+    &#125;
+    fin.seekg(0, ios::beg);
+
+    char *str = new char[size+1];
+    fin.read(str,size);
+    fin.close();
+
+
+    int num = CreatTree(str, size);
+    CodingTree(num);
+    FindPath(num);
+    print(num, size, str);
+
+    return 0;
+&#125;</code></pre><h3 id="解压程序源文件-compress-cpp"><a href="#解压程序源文件-compress-cpp" class="headerlink" title="解压程序源文件 compress.cpp"></a>解压程序源文件 compress.cpp</h3><pre><code class="hljs">#include &lt;iostream&gt;
+#include &lt;locale&gt;
+#include &lt;cstdlib&gt;
+#include &lt;fstream&gt;
+#include &lt;vector&gt;
+#include &lt;queue&gt;
+
+using namespace std;
+char filename[20];
+const long long MAX_SIZE = 10000000000;//
+const int MAX_TYPE = 300;
+struct Node
+&#123;
+    char v;
+    int parent, lson, rson;
+    Node()&#123;&#125;;
+&#125;HuffmanTree[MAX_TYPE&lt;&lt;1];
+
+char *str = new char[MAX_SIZE];
+char *ans = new char[MAX_SIZE];
+
+void CreatTree(char *t, char v, int &amp;pos)
+&#123;
+    int root = 0;
+    for(int i=0;t[i]!=&#39;\0&#39;;i++)
+    &#123;
+        if(t[i] == &#39;1&#39;)
+        &#123;
+            if(HuffmanTree[root].rson == 0)
+                HuffmanTree[root].rson = pos++;
+            root = HuffmanTree[root].rson;
+        &#125;
+        else
+        &#123;
+            if(HuffmanTree[root].lson == 0)
+                HuffmanTree[root].lson = pos++;
+            root = HuffmanTree[root].lson;
+        &#125;
+    &#125;
+    HuffmanTree[root].v = v;
+&#125;
+
+void print(int zero, int len, char *str)
+&#123;
+    long long start = 0;
+    int root = 0;
+    int end = 0;
+    for(int i=0;i&lt;len;i++)
+    &#123;
+        char t = str[i];
+        if(i == len-1)
+            end = zero;
+        for(int j=7;j&gt;=end;j--)
+        &#123;
+            if((1&lt;&lt;j) &amp; t)
+                root = HuffmanTree[root].rson;
+            else
+                root = HuffmanTree[root].lson;
+            if(HuffmanTree[root].lson == 0 &amp;&amp; HuffmanTree[root].rson == 0)
+            &#123;
+                ans[start++] = HuffmanTree[root].v;
+                root = 0;
+            &#125;
+        &#125;
+    &#125;
+    cout&lt;&lt;&quot;len::&quot;&lt;&lt;start&lt;&lt;endl;
+    ofstream out(filename, ios::out);
+    out.write(ans, sizeof(char)*(start));
+    out.close();
+&#125;
+
+int main(int argc, char **argv)
+&#123;
+    strcpy(filename, argv[1]);
+    filename[strlen(filename)-4] = &#39;o&#39;;
+    filename[strlen(filename)-3] = &#39;u&#39;;
+    filename[strlen(filename)-2] = &#39;t&#39;;
+    filename[strlen(filename)-1] = &#39;\0&#39;;
+
+    ifstream fin(argv[1], ios::in);
+    if(!fin)
+    &#123;
+        cout&lt;&lt;&quot;File open error!&quot;&lt;&lt;endl;
+        return 0;
+    &#125;
+    int num;
+    char *t = new char[num];
+    char *v = new char[3];
+    fin&gt;&gt;num;
+    fin.getline(t,num);
+    cout&lt;&lt;&quot;size::&quot;&lt;&lt;num&lt;&lt;endl;
+    int pos = 1;
+    for(int i=1;i&lt;num;i++)
+    &#123;
+        fin.getline(t,num);
+        fin.getline(v,num);
+        if(v[0] == &#39;\0&#39;)
+        &#123;
+            fin.getline(v,num);
+            v[0] = &#39;\n&#39;;
+        &#125;
+        CreatTree(t, v[0], pos);
+        v[0]=0;
+    &#125;
+
+    int zero;
+    long long size;
+    fin&gt;&gt;zero; fin&gt;&gt;size;
+    fin.getline(t,num);
+    fin.read(str,sizeof(char)*size);
+    print(zero, size, str);
+
+    cout&lt;&lt;&quot;zero::&quot;&lt;&lt;zero&lt;&lt;endl;
+
+    return 0;
+&#125;</code></pre><p>** _ 代码读写操作用文件流实现，所以在时间效率方面还有很多可优化的地方，待日后闲了再说，毕竟考试在即。。。如果哪里有错误，欢迎砸砖，便于在下提升修正。 _ **</p></div><hr><div><div class="post-metas my-3"><div class="post-meta mr-3 d-flex align-items-center"><i class="iconfont icon-category"></i> <span class="category-chains"><span class="category-chain"><a href="/categories/%E5%A4%A7%E5%AD%A6%E6%97%B6%E6%9C%9FCSDN/" class="category-chain-item">大学时期CSDN</a></span></span></div><div class="post-meta"><i class="iconfont icon-tags"></i> <a href="/tags/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95/">#数据结构与算法</a></div></div><div class="license-box my-3"><div class="license-title"><div>哈夫曼编码压缩解压缩实现&amp;不同类型文件压缩比的测试</div><div>https://shiyi.threebody.xyz/posts/44265.html</div></div><div class="license-meta"><div class="license-meta-item"><div>作者</div><div>Yi Shi</div></div><div class="license-meta-item license-meta-date"><div>发布于</div><div>2015年12月30日</div></div><div class="license-meta-item"><div>许可协议</div><div><a target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/"><span class="hint--top hint--rounded" aria-label="BY - 署名"><i class="iconfont icon-by"></i> </span></a><a target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/"><span class="hint--top hint--rounded" aria-label="SA - 相同方式共享"><i class="iconfont icon-sa"></i></span></a></div></div></div><div class="license-icon iconfont"></div></div><div class="post-prevnext my-3"><article class="post-prev col-6"><a href="/posts/15447.html" title="POJ1789 Truck History"><i class="iconfont icon-arrowleft"></i> <span class="hidden-mobile">POJ1789 Truck History</span> <span class="visible-mobile">上一篇</span></a></article><article class="post-next col-6"><a href="/posts/35867.html" title="utf8编码原理与发展历程"><span class="hidden-mobile">utf8编码原理与发展历程</span> <span class="visible-mobile">下一篇</span> <i class="iconfont icon-arrowright"></i></a></article></div></div><article id="comments" lazyload><div id="lv-container" data-id="city" data-uid="MTAyMC80NjEzMS8yMjY0Mg"><script type="text/javascript">Fluid.utils.loadComments("#lv-container",(function(){Fluid.utils.createScript("https://cdn-city.livere.com/js/embed.dist.js")}))</script><noscript>Please enable JavaScript to view the comments</noscript></div></article></article></div></div></div><div class="side-col d-none d-lg-block col-lg-2"><aside class="sidebar" style="margin-left:-1rem"><div id="toc"><p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p><div class="toc-body" id="toc-body"></div></div></aside></div></div></div><a id="scroll-top-button" aria-label="TOP" href="#" role="button"><i class="iconfont icon-arrowup" aria-hidden="true"></i></a><div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable modal-lg" role="document"><div class="modal-content"><div class="modal-header text-center"><h4 class="modal-title w-100 font-weight-bold">搜索</h4><button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button></div><div class="modal-body mx-3"><div class="md-form mb-5"><input type="text" id="local-search-input" class="form-control validate"> <label data-error="x" data-success="v" for="local-search-input">关键词</label></div><div class="list-group" id="local-search-result"></div></div></div></div></div></main><footer><div class="footer-inner"><div class="beian"><span><a href="http://beian.miit.gov.cn/" target="_blank" rel="nofollow noopener">陕ICP备16019529号-2</a></span></div><span id="cnzz_stat_icon_1273342630" style="display:none"></span></div></footer><script src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js"></script><link rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css"><script>NProgress.configure({showSpinner:!0,trickleSpeed:100}),NProgress.start(),window.addEventListener("load",(function(){NProgress.done()}))</script><script src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js"></script><script src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js"></script><script src="/js/events.js"></script><script src="/js/plugins.js"></script><script src="/js/img-lazyload.js"></script><script>Fluid.utils.createScript("https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js",(function(){var t=jQuery("#toc");if(0!==t.length&&window.tocbot){var i=jQuery("#board-ctn").offset().top;window.tocbot.init(Object.assign({tocSelector:"#toc-body",contentSelector:".markdown-body",linkClass:"tocbot-link",activeLinkClass:"tocbot-active-link",listClass:"tocbot-list",isCollapsedClass:"tocbot-is-collapsed",collapsibleClass:"tocbot-is-collapsible",scrollSmooth:!0,includeTitleTags:!0,headingsOffset:-i},CONFIG.toc)),t.find(".toc-list-item").length>0&&t.css("visibility","visible"),Fluid.events.registerRefreshCallback((function(){if("tocbot"in window){tocbot.refresh();var t=jQuery("#toc");if(0===t.length||!tocbot)return;t.find(".toc-list-item").length>0&&t.css("visibility","visible")}}))}}))</script><script src="https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js"></script><script>Fluid.plugins.codeWidget()</script><script>Fluid.utils.createScript("https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js",(function(){window.anchors.options={placement:CONFIG.anchorjs.placement,visible:CONFIG.anchorjs.visible},CONFIG.anchorjs.icon&&(window.anchors.options.icon=CONFIG.anchorjs.icon);var n=(CONFIG.anchorjs.element||"h1,h2,h3,h4,h5,h6").split(","),o=[];for(var s of n)o.push(".markdown-body > "+s.trim());"left"===CONFIG.anchorjs.placement&&(window.anchors.options.class="anchorjs-link-left"),window.anchors.add(o.join(", ")),Fluid.events.registerRefreshCallback((function(){if("anchors"in window){anchors.removeAll();var n=(CONFIG.anchorjs.element||"h1,h2,h3,h4,h5,h6").split(","),o=[];for(var s of n)o.push(".markdown-body > "+s.trim());"left"===CONFIG.anchorjs.placement&&(anchors.options.class="anchorjs-link-left"),anchors.add(o.join(", "))}}))}))</script><script>Fluid.utils.createScript("https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js",(function(){Fluid.plugins.fancyBox()}))</script><script>Fluid.plugins.imageCaption()</script><script src="/js/local-search.js"></script><script src="/js/boot.js"></script><noscript><div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div></noscript></body></html>

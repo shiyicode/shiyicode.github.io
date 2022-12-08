@@ -1,0 +1,1 @@
+![Hexo Blog CI](https://github.com/shiyicode/blog/workflows/Hexo%20Blog%20CI/badge.svg)

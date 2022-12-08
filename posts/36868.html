@@ -1,0 +1,937 @@
+<!DOCTYPE html><html lang="zh-CN" data-default-color-scheme="auto"><head><meta charset="UTF-8"><link rel="apple-touch-icon" sizes="76x76" href="/favicon/apple-touch-icon.png"><link rel="icon" href="/favicon/favicon-32x32.png"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=5,shrink-to-fit=no"><meta http-equiv="x-ua-compatible" content="ie=edge"><meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests"><meta name="theme-color" content="#2f4154"><meta name="author" content="Yi Shi"><meta name="keywords" content="shiyi, yishi, threebody, blog, golang"><meta name="description" content="什么是网关服务器 初学linux服务器开发时，我们的服务器是很简单的，只需要一个程序完成与客户端的连接，接收客户端数据，数据处理，向客户端发送数据。但是在处理量很大的情况下，一台机器不能满足我们的需求，此时我们应该怎么办。我们可以将服务端的任务分摊到多台机器上完成，见下图     从图中可见，此时整个服务端主要分为了三部分。** 网关服务器：负责连接客户端与逻辑服务器，在两者间完成数据转发，使用负"><meta property="og:type" content="article"><meta property="og:title" content="linux服务器开发之网关服务器的实现"><meta property="og:url" content="https://shiyi.threebody.xyz/posts/36868.html"><meta property="og:site_name" content="Yi Shi&#39;s Blog"><meta property="og:description" content="什么是网关服务器 初学linux服务器开发时，我们的服务器是很简单的，只需要一个程序完成与客户端的连接，接收客户端数据，数据处理，向客户端发送数据。但是在处理量很大的情况下，一台机器不能满足我们的需求，此时我们应该怎么办。我们可以将服务端的任务分摊到多台机器上完成，见下图     从图中可见，此时整个服务端主要分为了三部分。** 网关服务器：负责连接客户端与逻辑服务器，在两者间完成数据转发，使用负"><meta property="og:locale" content="zh_CN"><meta property="og:image" content="http://img.blog.csdn.net/20161205173743104"><meta property="og:image" content="http://img.blog.csdn.net/20161205214912642"><meta property="article:published_time" content="2016-12-05T13:50:00.000Z"><meta property="article:modified_time" content="2022-12-08T15:35:14.153Z"><meta property="article:author" content="Yi Shi"><meta property="article:tag" content="服务器开发"><meta property="article:tag" content="C++"><meta property="article:tag" content="Linux网络编程"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:image" content="http://img.blog.csdn.net/20161205173743104"><title>linux服务器开发之网关服务器的实现 - Yi Shi&#39;s Blog</title><link rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css"><link rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css"><link rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css"><link rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css"><link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css"><link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css"><link rel="stylesheet" href="/css/main.css"><link id="highlight-css" rel="stylesheet" href="/css/highlight.css"><link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css"><script id="fluid-configs">var Fluid=window.Fluid||{};Fluid.ctx=Object.assign({},Fluid.ctx);var CONFIG={hostname:"shiyi.threebody.xyz",root:"/",version:"1.9.3",typing:{enable:!0,typeSpeed:50,cursorChar:"",loop:!1,scope:["home"]},anchorjs:{enable:!0,element:"h1,h2,h3,h4,h5,h6",placement:"left",visible:"hover",icon:""},progressbar:{enable:!0,height_px:3,color:"#29d",options:{showSpinner:!0,trickleSpeed:100}},code_language:{enable:!0,default:"TEXT"},copy_btn:!0,image_caption:{enable:!0},image_zoom:{enable:!0,img_url_replace:["",""]},toc:{enable:!0,placement:"right",headingSelector:"h1,h2,h3,h4,h5,h6",collapseDepth:4},lazyload:{enable:!0,loading_img:"/img/loading.gif",onlypost:!1,offset_factor:2},web_analytics:{enable:!0,follow_dnt:!0,baidu:"75eaaab59c4fa946437e9dea4f8fc07d",google:null,gtag:null,tencent:{sid:null,cid:null},woyaola:null,cnzz:1273342630,leancloud:{app_id:null,app_key:null,server_url:null,path:"window.location.pathname",ignore_local:!1}},search_path:"/local-search.xml"};if(CONFIG.web_analytics.follow_dnt){var dntVal=navigator.doNotTrack||window.doNotTrack||navigator.msDoNotTrack;Fluid.ctx.dnt=dntVal&&(dntVal.startsWith("1")||dntVal.startsWith("yes")||dntVal.startsWith("on"))}</script><script src="/js/utils.js"></script><script src="/js/color-schema.js"></script><script async>if(!Fluid.ctx.dnt){var _hmt=_hmt||[];!function(){var e=document.createElement("script");e.src="https://hm.baidu.com/hm.js?75eaaab59c4fa946437e9dea4f8fc07d";var t=document.getElementsByTagName("script")[0];t.parentNode.insertBefore(e,t)}()}</script><script async>Fluid.ctx.dnt||Fluid.utils.createScript("//s4.cnzz.com/z_stat.php?id=1273342630&show=pic")</script><meta name="generator" content="Hexo 5.4.0"><link rel="alternate" href="/atom.xml" title="Yi Shi's Blog" type="application/atom+xml">
+</head><body><header><div class="header-inner" style="height:40vh"><nav id="navbar" class="navbar fixed-top navbar-expand-lg navbar-dark scrolling-navbar"><div class="container"><a class="navbar-brand" href="/"><strong>Yi Shi&#39;s Blog</strong> </a><button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation"><div class="animated-icon"><span></span><span></span><span></span></div></button><div class="collapse navbar-collapse" id="navbarSupportedContent"><ul class="navbar-nav ml-auto text-center"><li class="nav-item"><a class="nav-link" href="/"><i class="iconfont icon-home-fill"></i> 首页</a></li><li class="nav-item"><a class="nav-link" href="/archives/"><i class="iconfont icon-archive-fill"></i> 归档</a></li><li class="nav-item"><a class="nav-link" href="/categories/"><i class="iconfont icon-category-fill"></i> 分类</a></li><li class="nav-item"><a class="nav-link" href="/tags/"><i class="iconfont icon-tags-fill"></i> 标签</a></li><li class="nav-item"><a class="nav-link" href="/books/"><i class="iconfont icon-book"></i> 读书</a></li><li class="nav-item"><a class="nav-link" href="/about/"><i class="iconfont icon-user-fill"></i> 关于</a></li><li class="nav-item" id="search-btn"><a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">&nbsp;<i class="iconfont icon-search"></i>&nbsp;</a></li><li class="nav-item" id="color-toggle-btn"><a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">&nbsp;<i class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a></li></ul></div></div></nav><div id="banner" class="banner" parallax="true" style="background:url(/image/banner.jpg) no-repeat center center;background-size:cover"><div class="full-bg-img"><div class="mask flex-center" style="background-color:rgba(0,0,0,.5)"><div class="banner-text text-center fade-in-up"><div class="h2"><span id="subtitle">linux服务器开发之网关服务器的实现</span></div><div class="mt-3"><span class="post-meta"><i class="iconfont icon-date-fill" aria-hidden="true"></i> <time datetime="2016-12-05 21:50" pubdate>2016年12月5日 晚上</time></span></div><div class="mt-1"></div></div></div></div></div></div></header><main><div class="container-fluid nopadding-x"><div class="row nomargin-x"><div class="side-col d-none d-lg-block col-lg-2"></div><div class="col-lg-8 nopadding-x-md"><div class="container nopadding-x-md" id="board-ctn"><div id="board"><article class="post-content mx-auto"><h1 style="display:none">linux服务器开发之网关服务器的实现</h1><div class="markdown-body"><h2 id="什么是网关服务器"><a href="#什么是网关服务器" class="headerlink" title="什么是网关服务器"></a>什么是网关服务器</h2><blockquote><p>初学linux服务器开发时，我们的服务器是很简单的，只需要一个程序完成与客户端的连接，接收客户端数据，数据处理，向客户端发送数据。<br>但是在处理量很大的情况下，一台机器不能满足我们的需求，此时我们应该怎么办。<br>我们可以将服务端的任务分摊到多台机器上完成，见下图<br><img src="http://img.blog.csdn.net/20161205173743104" srcset="/img/loading.gif" lazyload alt="这里写图片描述"></p></blockquote><blockquote></blockquote><blockquote><p>从图中可见，此时整个服务端主要分为了三部分。<br>** 网关服务器：负责连接客户端与逻辑服务器，在两者间完成数据转发，使用负载均衡算法保证每个逻辑服务器的工作量均衡，以及进行数据加密。 **<br>** 逻辑服务器：负责业务逻辑的处理，与网关服务器进行数据交互，同时与数据库服务器进行数据交互。 **<br>** 数据库服务器：数据存储与读取的具体执行者。 **</p></blockquote><h2 id="实现网关服务器需要考虑哪些问题"><a href="#实现网关服务器需要考虑哪些问题" class="headerlink" title="实现网关服务器需要考虑哪些问题"></a>实现网关服务器需要考虑哪些问题</h2><h3 id="效率问题"><a href="#效率问题" class="headerlink" title="效率问题"></a>效率问题</h3><blockquote><p>当我们需要用到网关服务器来负载均衡时，我可以假定我们需要处理的客户端请求是很多的(当然，我这里只是为了学习，具体业务并不需要)，也就是说我们需要高并发，<br>高效处理。<br>因为网关服务器在客户端和逻辑服务器间相当于纽带的作用，所有的数据包都要从此经过，所以我们的网关服务器必须要保证可以 ** 高效的处理大量连接上的事件 **<br>。</p></blockquote><h3 id="安全问题"><a href="#安全问题" class="headerlink" title="安全问题"></a>安全问题</h3><blockquote><p>如上所说，如果网关服务器被恶意发起连接，一旦挂掉，我们的全部服务都会终止，因此我们必须要对这种情况进行处理。同时，还有与客户端交互时的数据加密，这个事也<br>是要交给网关服务器来进行的。逻辑服务器一般都会与网关服务器配置于同一个局域网，所以通常不需要考虑数据的加密。</p></blockquote><h3 id="对连接的标识"><a href="#对连接的标识" class="headerlink" title="对连接的标识"></a>对连接的标识</h3><blockquote><p>逻辑服务器和客户端都会连接在网关服务器上，而网关服务器需要对其sockfd进行标识，要知晓究竟谁是服务器，谁是客户端，而且要对客户端的连接加一条可检索属<br>性(比如用户名).<br>为什么呢？因为对于客户端发送过来的数据，我们无论转到哪个逻辑服务器上都可以，而逻辑服务器返回的数据，我们需要知道要将该数据返回给哪个客户端，逻辑服务器并不能<br>知道每个客户端的sockfd是多少。</p></blockquote><h3 id="下面我们着重聊聊效率问题："><a href="#下面我们着重聊聊效率问题：" class="headerlink" title="下面我们着重聊聊效率问题："></a>下面我们着重聊聊效率问题：</h3><h4 id="多路复用"><a href="#多路复用" class="headerlink" title="多路复用"></a>多路复用</h4><blockquote></blockquote><p>我们不会去为每个sockfd都分配一个线程去服务它，我们更需要有一个线程可以去监听所有的fd上的事件，如果发生，我们再去分配线程去处理他。这就是多路复用。<br>多路复用有select poll<br>epoll，几乎凡是知道多路复用的人都知道epoll的高效。因为其底层红黑树，以及回调机制，是我们最好的选择(在大量连接，活跃量不高的情况下)。<br>而epoll分两种工作模式，LT和ET，LT模式下，epoll只是一个高效的poll，ET模式下会更高效。事实上众多的第三方库都使用的是LT模式，说白了就是<br>性价比，LT已经很高效，而改用ET模式，除了效率会更高，也会给编写带来一些复杂性以及产生一些头疼的问题，而处理这些特殊情况也需要时间，处理方式不当的话反而还<br>不如LT，所以，总而言之，性价比不高。(本人为了学习，此处使用的et模式)。</p><h4 id="非阻塞"><a href="#非阻塞" class="headerlink" title="非阻塞"></a>非阻塞</h4><blockquote><p>每个连接的sockfd，我们都有两种操作其的方式，阻塞和非阻塞，阻塞意味着我们此刻必须对sockfd进行等待，就是说我们不能去干别的事，这显然不可以。因<br>此，在以高并发为目标的服务器程序里，非阻塞是我们唯一的选择。<br>并且，et模式下，必须非阻塞，不然会产生套接字饿死的情况。<br>非阻塞模式下，我们还需要一样东西，就是缓冲区，因为你并不能保证你接受到的数据就是完整的。</p></blockquote><h4 id="工作模式"><a href="#工作模式" class="headerlink" title="工作模式"></a>工作模式</h4><p>这里使用的是多线程Reacter半同步半异步模式。<br>主线程负责监听以及接收新的连接，维护一个任务队列，其余线程从任务队列里获取任务并完成，同时也将新的任务添加进任务队列。</p><h2 id="架构"><a href="#架构" class="headerlink" title="架构"></a>架构</h2><blockquote><p>总体分为以下部分</p></blockquote><h3 id="main-h"><a href="#main-h" class="headerlink" title="main.h"></a>main.h</h3><blockquote><p>程序主线程：监听fd绑定、监听，epoll监听</p></blockquote><h3 id="Connection-h"><a href="#Connection-h" class="headerlink" title="Connection.h"></a>Connection.h</h3><blockquote><p>客户端和逻辑服务器的连接的封装<br>实现对连接的操作：<br>HandleRead()读, HandleWrite()写, Worker()数据处理,<br>shutdown()连接关闭,getData()从用户缓冲区获取数据,puttData()将数据写入用户缓冲区</p></blockquote><h3 id="ThreadPool-h"><a href="#ThreadPool-h" class="headerlink" title="ThreadPool.h"></a>ThreadPool.h</h3><blockquote><p>线程池的封装</p></blockquote><h3 id="SyncQueue-h"><a href="#SyncQueue-h" class="headerlink" title="SyncQueue.h"></a>SyncQueue.h</h3><blockquote><p>任务队列的封装<br>实现队列的添加取出，以及同步加锁等处理</p></blockquote><h3 id="Buffer-h"><a href="#Buffer-h" class="headerlink" title="Buffer.h"></a>Buffer.h</h3><blockquote><p>用户缓存区的封装</p></blockquote><h3 id="BaseFunc-h"><a href="#BaseFunc-h" class="headerlink" title="BaseFunc.h"></a>BaseFunc.h</h3><blockquote><p>基本函数的封装：如 setNoBlocking(), addFd()…</p></blockquote><h3 id="Util-h"><a href="#Util-h" class="headerlink" title="Util.h"></a>Util.h</h3><blockquote><p>工具类</p></blockquote><h2 id="正确性测试结果"><a href="#正确性测试结果" class="headerlink" title="正确性测试结果"></a>正确性测试结果</h2><p><img src="http://img.blog.csdn.net/20161205214912642" srcset="/img/loading.gif" lazyload alt="这里写图片描述"></p><h2 id="代码"><a href="#代码" class="headerlink" title="代码"></a>代码</h2><h3 id="main-cpp"><a href="#main-cpp" class="headerlink" title="main.cpp"></a>main.cpp</h3><pre><code class="hljs">//
+//  GataMain.cpp
+//  QuoridorServer
+//
+//  Created by shiyi on 2016/12/2.
+//  Copyright © 2016年 shiyi. All rights reserved.
+//
+
+#include &lt;stdio.h&gt;
+#include &lt;iostream&gt;
+#include &lt;fcntl.h&gt;
+#include &lt;sys/socket.h&gt;
+#include &lt;sys/types.h&gt;
+#include &lt;signal.h&gt;
+#include &lt;string.h&gt;
+#include &lt;sys/epoll.h&gt;
+#include &lt;unistd.h&gt;
+#include &lt;assert.h&gt;
+#include &lt;sys/wait.h&gt;
+#include &lt;arpa/inet.h&gt;
+#include &lt;functional&gt;
+#include &quot;Util.h&quot;
+#include &quot;ThreadPool.h&quot;
+#include &quot;Connection.h&quot;
+#include &quot;BaseFunc.h&quot;
+
+static const char *IP = &quot;10.105.44.34&quot;;
+// static const char *IP = &quot;127.0.0.1&quot;;
+// static const char *IP = &quot;182.254.243.29&quot;;
+static const int PORT = 11111;
+
+//处理的最大连接数
+static const int USER_PROCESS = 655536;
+//epoll能监听的最大事件
+static const int MAX_EVENT_NUMBER = 10000;
+
+//信号通信的管道
+static int sigPipefd[2];
+
+//信号回调函数
+static void sigHandler(int sig)
+&#123;
+    int saveErrno = errno;
+    send(sigPipefd[1], (char*)&amp;sig, 1, 0);
+    errno = saveErrno;
+&#125;
+
+//添加信号回调
+static void addSig(int sig, void(handler)(int), bool restart = true)
+&#123;
+    struct sigaction sa;
+    memset(&amp;sa, 0, sizeof(sa));
+    sa.sa_handler = handler;
+    if(restart)
+        sa.sa_flags |= SA_RESTART;
+    sigfillset(&amp;sa.sa_mask);
+    if(-1 == sigaction(sig, &amp;sa, NULL))
+        Util::outError(&quot;sigaction&quot;);
+&#125;
+
+static int setupSigPipe()
+&#123;
+    //新建epoll监听表和事件管道
+    int epollfd = epoll_create(USER_PROCESS);
+    if(epollfd == -1)
+        Util::outError(&quot;epoll_create&quot;);
+
+    int ret = socketpair(PF_UNIX, SOCK_STREAM, 0, sigPipefd);
+    assert(ret == 0);
+
+    //将写设置为非阻塞
+    setNoBlocking(sigPipefd[1]);
+    addFd(epollfd, sigPipefd[0], EPOLLIN | EPOLLET);
+    setNoBlocking(sigPipefd[0]);
+
+    //设置信号处理函数
+    addSig(SIGCHLD, sigHandler);
+    addSig(SIGTERM, sigHandler);
+    addSig(SIGINT, sigHandler);
+    addSig(SIGPIPE, sigHandler);
+
+    return epollfd;
+&#125;
+
+int main()
+&#123;
+    int ret;
+
+    //构造协议地址结构
+    struct sockaddr_in address;
+    bzero(&amp;address, sizeof(address));
+    address.sin_family = PF_INET;
+    inet_pton(PF_INET, IP, &amp;address.sin_addr);
+    address.sin_port = htons(PORT);
+
+    int listenfd = socket(PF_INET, SOCK_STREAM, 0);
+    assert( listenfd &gt;= 0 );
+
+    int opt = 1;
+    if(setsockopt(listenfd, SOL_SOCKET, SO_REUSEADDR, (void*)&amp;opt, sizeof(int)) &lt; 0)
+    &#123;
+        perror(&quot;setsockopt&quot;);
+        exit(1);
+    &#125;
+
+    ret = bind(listenfd, (struct sockaddr*)&amp;address, sizeof(address));
+    if(ret == -1)
+    &#123;
+        perror(&quot;bind&quot;);
+    &#125;
+
+    if(listen(listenfd, 1000) &lt; 0)
+    &#123;
+        perror(&quot;listen&quot;);
+        exit(1);
+    &#125;
+
+    Connection *users = new Connection[USER_PROCESS];
+    ThreadPool threadPool;
+
+    //统一事件源
+    int epollfd = setupSigPipe();
+
+    epoll_event events[MAX_EVENT_NUMBER];
+    // addFd(epollfd, listenfd, EPOLLIN | EPOLLET);
+    addFd(epollfd, listenfd, EPOLLIN);
+    // setNoBlocking(m_listenfd);
+
+    bool isRunning = true;
+
+    while(isRunning)
+    &#123;
+        int num = epoll_wait(epollfd, events, MAX_EVENT_NUMBER, -1);
+        //如果错误原因不是被中断，则循环退出
+        if((num &lt; 0) &amp;&amp; (errno != EINTR))
+        &#123;
+            Util::outError(&quot;epoll_wait failure&quot;);
+            break;
+        &#125;
+
+        for(int i=0; i&lt;num; i++)
+        &#123;
+            int sockfd = events[i].data.fd;
+            //处理新的请求
+            if(sockfd == listenfd)
+            &#123;
+                //连接新的请求
+                struct sockaddr_in clientAddr;
+                socklen_t clientLen = sizeof(clientAddr);
+                int connfd = accept(listenfd, (struct sockaddr*)&amp;clientAddr, &amp;clientLen);
+
+                if(connfd &lt; 0)
+                &#123;
+                    Util::outError(&quot;accept&quot;);
+                    break;
+                &#125;
+
+                Util::outMsg(&quot;accept a new client : %d %s\n&quot;, connfd, inet_ntoa(clientAddr.sin_addr));
+
+                addFd(epollfd, connfd, EPOLLIN | EPOLLET | EPOLLONESHOT);
+                setNoBlocking(connfd);
+                //初始化客户端链接
+                users[connfd].init(epollfd, connfd, clientAddr);
+
+            &#125;
+            //处理信号
+            else if((sockfd == sigPipefd[0]) &amp;&amp; (events[i].events &amp; EPOLLIN))
+            &#123;
+                char sigMsg[1024];
+                int ret = recv(sockfd, sigMsg, sizeof(sigMsg), 0);
+                if(ret &lt;= 0)
+                &#123;
+                    continue;
+                &#125;
+
+                for(int j=0; j&lt;ret; j++)
+                &#123;
+                    //循环处理每个信号
+                    switch(sigMsg[j])
+                    &#123;
+                        case SIGCHLD:
+                        &#123;
+
+                            break;
+                        &#125;
+                        case SIGTERM:
+                        case SIGINT:
+                        &#123;
+                            //退出
+                            Util::outMsg(&quot;程序退出\n&quot;);
+                            isRunning = false;
+                            break;
+                        &#125;
+                    &#125;
+                &#125;
+            &#125;
+            //处理读事件
+            else if(events[i].events &amp; EPOLLIN)
+            &#123;
+                //向任务队列添加读任务
+                threadPool.AddTask(std::bind(&amp;Connection::HandleRead, users+sockfd));
+            &#125;
+            //处理写事件
+            else if(events[i].events &amp; EPOLLOUT)
+            &#123;
+                // cout&lt;&lt;&quot;hello&quot;&lt;&lt;sockfd&lt;&lt;endl;
+                threadPool.AddTask(std::bind(&amp;Connection::HandleWrite, users+sockfd));
+            &#125;
+        &#125;
+    &#125;
+
+    delete[] users;
+
+    close(sigPipefd[0]);
+    close(sigPipefd[1]);
+    close(epollfd);
+
+    return 0;
+&#125;</code></pre><h3 id="Connection-h-1"><a href="#Connection-h-1" class="headerlink" title="Connection.h"></a>Connection.h</h3><pre><code class="hljs">//
+//  Connection.h
+//  QuoridorServer
+//
+//  Created by shiyi on 2016/12/2.
+//  Copyright © 2016年 shiyi. All rights reserved.
+//
+
+#ifndef Connection_H
+#define Connection_H
+
+#include &lt;stdio.h&gt;
+#include &lt;iostream&gt;
+#include &lt;atomic&gt;
+#include &lt;fcntl.h&gt;
+#include &lt;sys/socket.h&gt;
+#include &lt;sys/types.h&gt;
+#include &lt;signal.h&gt;
+#include &lt;string.h&gt;
+#include &lt;sys/epoll.h&gt;
+#include &lt;unistd.h&gt;
+#include &lt;assert.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;arpa/inet.h&gt;
+#include &lt;errno.h&gt;
+#include &lt;map&gt;
+#include &quot;Buffer.h&quot;
+#include &quot;Util.h&quot;
+#include &quot;BaseFunc.h&quot;
+
+#include &quot;json/json.h&quot;
+
+const std::string serverIP[] = &#123;
+    &quot;127.0.0.1&quot;,
+    &quot;182.254.243.29&quot;
+&#125;;
+
+const size_t BUFFER_SIZE = 65535;
+
+class Connection
+&#123;
+public:
+
+    static std::vector&lt;Connection*&gt; serverConnVt;
+    static std::map&lt;string, Connection*&gt; clientConnMap;
+    static int serverIdx;
+
+    static Connection* getServerConn()
+    &#123;
+        int size = serverConnVt.size();
+        if(size == 0)
+            return NULL;
+
+        serverIdx = (serverIdx+1)%size;
+
+        return serverConnVt[serverIdx];
+    &#125;
+
+    Connection() : m_writeing(true), m_epollfd(-1), m_sockfd(-1)
+    &#123;&#125;
+
+    ~Connection()&#123;&#125;
+
+    //初始化连接
+    void init(int epollfd, int sockfd, const sockaddr_in&amp; clientAddr)
+    &#123;
+        //初始化读写缓冲区
+        m_inBuff.init();
+        m_outBuff.init();
+
+        m_epollfd = epollfd;
+        m_sockfd = sockfd;
+        m_writeing = true;
+        m_address = clientAddr;
+        m_username = &quot;&quot;;
+        m_type = -1;
+
+        std::string sip(inet_ntoa(clientAddr.sin_addr));
+
+        for(auto&amp; ip : serverIP)
+        &#123;
+            if(ip.compare(0, sip.size(), sip) == 0)
+            &#123;
+                m_type = 1;
+                serverConnVt.push_back(this);
+                cout&lt;&lt;sip&lt;&lt;&quot;是服务端&quot;&lt;&lt;endl;
+                break;
+            &#125;
+        &#125;
+
+        if(m_type != 1)
+        &#123;
+            char t[10];
+            sprintf(t, &quot;%d&quot;, m_sockfd);
+            m_username = t;
+
+            //存入客户端映射表
+            clientConnMap.insert(pair&lt;string, Connection*&gt;(m_username, this));
+        &#125;
+    &#125;
+
+    void HandleRead()
+    &#123;
+        cout&lt;&lt;&quot;read&quot;&lt;&lt;endl;
+        while(true)
+        &#123;
+            char buf[BUFFER_SIZE];
+            int ret = recv(m_sockfd, buf, BUFFER_SIZE, 0);
+            if(ret &lt; 0)
+            &#123;
+                //缓冲区内容已读完
+                if((errno == EAGAIN) || (errno == EWOULDBLOCK))
+                &#123;
+                    modFd(m_epollfd, m_sockfd, EPOLLIN | EPOLLET | EPOLLONESHOT);
+                    break;
+                &#125;
+                //其他错误直接断开连接
+                Util::outError(&quot;HandleRead&quot;);
+                shutdown();
+                return;
+            &#125;
+            //断开连接
+            else if(ret == 0)
+            &#123;
+                shutdown();
+                return;
+            &#125;
+            else
+            &#123;
+                //将读取的内容加入缓冲区
+                m_inBuff.PutData(buf, ret);
+            &#125;
+
+        &#125;
+
+        worker();
+    &#125;
+
+    void HandleWrite()
+    &#123;
+        cout&lt;&lt;&quot;write&quot;&lt;&lt;endl;
+        //更改临界值
+        if(!m_writeing)
+        &#123;
+            //休眠等待
+            usleep(1000);
+            //下次再来
+            modFd(m_epollfd, m_sockfd, EPOLLIN | EPOLLOUT | EPOLLET | EPOLLONESHOT);
+            return;
+        &#125;
+        m_writeing = false;
+
+        //取出数据
+        char buf[BUFFER_SIZE];
+
+        int len = m_outBuff.GetDataAll(buf);
+
+        int n = len;
+        while (n &gt; 0)
+        &#123;
+            int ret = send(m_sockfd, buf+len-n, n, 0);
+            if (ret &lt; n)
+            &#123;
+                if (ret == -1 &amp;&amp; errno != EAGAIN)
+                &#123;
+                    Util::outError(&quot;write error&quot;);
+                &#125;
+                break;
+            &#125;
+            n -= ret;
+        &#125;
+
+        //n=0表示数据全部写完，删除写事件
+        if(n == 0)
+        &#123;
+            modFd(m_epollfd, m_sockfd, EPOLLIN | EPOLLET | EPOLLONESHOT);
+        &#125;
+        else
+        &#123;
+            modFd(m_epollfd, m_sockfd, EPOLLIN | EPOLLOUT | EPOLLET | EPOLLONESHOT);
+        &#125;
+
+        //恢复临界值
+        m_writeing = true;
+    &#125;
+
+    void clientWork()
+    &#123;
+        //解析
+        //取出数据
+        char buf[BUFFER_SIZE];
+        int len = getData(buf);
+
+        //解密buf
+        printf(&quot;recv from %d :%s\n&quot;, m_sockfd, buf);
+
+        std::string recvUser;
+        Json::Reader reader;
+        Json::Value inRoot;
+        Json::Value outRoot;
+        if(reader.parse(buf, inRoot))
+        &#123;
+            Json::Value data = inRoot[&quot;data&quot;];
+            outRoot[&quot;data&quot;] = data;
+            outRoot[&quot;user&quot;] = m_username;
+        &#125;
+
+        Connection* toConn = getServerConn();
+        if(toConn-&gt;m_sockfd == -1)
+        &#123;
+            printf(&quot;无可用逻辑服务器\n&quot;);
+            return;
+        &#125;
+
+        //生成json字符串
+        std::string outStr = outRoot.toStyledString();
+        len = outStr.size();
+
+        printf(&quot;send to %d :%s\n&quot;, toConn-&gt;m_sockfd, outStr.c_str());
+
+        memcpy(buf, &amp;len, 4);
+        memcpy(buf+4, outStr.c_str(), len);
+
+        toConn-&gt;putData(buf, len+4);
+
+        modFd(m_epollfd, toConn-&gt;m_sockfd, EPOLLIN | EPOLLOUT | EPOLLET | EPOLLONESHOT);
+    &#125;
+
+
+    void serverWork()
+    &#123;
+        //解析
+        //取出数据
+        char buf[BUFFER_SIZE];
+        int len = getData(buf);
+
+        //解密buf
+        printf(&quot;recv from %d :%s\n&quot;, m_sockfd, buf);
+
+        std::string toUser;
+        Json::Reader reader;
+        Json::Value inRoot;
+        Json::Value outRoot;
+        if(reader.parse(buf, inRoot))
+        &#123;
+            toUser = inRoot[&quot;user&quot;].asString();
+            Json::Value data = inRoot[&quot;data&quot;];
+            outRoot[&quot;data&quot;] = data;
+        &#125;
+
+        auto iter = clientConnMap.find(toUser);
+        if(iter == clientConnMap.end())
+        &#123;
+            printf(&quot;客户端%s不存在\n&quot;, toUser.c_str());
+            return;
+        &#125;
+
+        Connection* toConn = (*iter).second;
+
+        //生成json字符串
+        std::string outStr = outRoot.toStyledString();
+        len = outStr.size();
+
+        printf(&quot;send to %d :%s\n&quot;, toConn-&gt;m_sockfd, outStr.c_str());
+
+        memcpy(buf, &amp;len, 4);
+        memcpy(buf+4, outStr.c_str(), len);
+
+        toConn-&gt;putData(buf, len+4);
+
+        modFd(m_epollfd, toConn-&gt;m_sockfd, EPOLLIN | EPOLLOUT | EPOLLET | EPOLLONESHOT);
+
+    &#125;
+
+    int getData(char *buf)
+    &#123;
+        return m_inBuff.GetData(buf);
+
+    &#125;
+
+    void putData(char *buf, int len)
+    &#123;
+        while(!m_writeing)
+            usleep(1000);
+        m_writeing = false;
+
+        m_outBuff.PutData(buf, len);
+
+        m_writeing = true;
+    &#125;
+
+    void worker()
+    &#123;
+        //serverWork();
+        if(m_type == 1)
+        &#123;
+            cout&lt;&lt;&quot;workerServer&quot;&lt;&lt;endl;
+            serverWork();
+        &#125;
+        else
+        &#123;
+            cout&lt;&lt;&quot;workerClient&quot;&lt;&lt;endl;
+            clientWork();
+        &#125;
+    &#125;
+
+    void shutdown()
+    &#123;
+        //等待写事件完成后关闭
+        while(!m_writeing)
+            usleep(1000);
+
+        m_writeing = false;
+        removeFd(m_epollfd, m_sockfd);
+        m_writeing = true;
+
+        //服务端
+        if(m_type == 1)
+        &#123;
+            for(auto i=serverConnVt.begin(); i!=serverConnVt.end(); i++)
+            &#123;
+                if((*i)-&gt;m_sockfd == m_sockfd)
+                &#123;
+                    //在vt中删除该连接
+                    serverConnVt.erase(i);
+                    cout&lt;&lt;&quot;退出服务端&quot;&lt;&lt;m_sockfd&lt;&lt;endl;
+                    break;
+                &#125;
+            &#125;
+        &#125;
+        //客户端
+        else
+        &#123;
+            //map删除
+            auto iter = clientConnMap.find(m_username);
+            if(iter != clientConnMap.end())
+            &#123;
+                clientConnMap.erase(iter);
+                printf(&quot;客户端%s退出\n&quot;, m_username.c_str());
+            &#125;
+        &#125;
+    &#125;
+
+private:
+    int m_epollfd;                   //epoll描述符
+    int m_sockfd;                    //套接字描述符
+    std::string m_username;            //连接唯一标识
+    int m_type;                        //连接类型   -1为未知客户端   0为已知客户端   1为服务端
+    sockaddr_in m_address;           //套接字地址
+    Buffer m_inBuff;                 //读缓冲
+    Buffer m_outBuff;                //写缓冲
+    std::atomic_bool m_writeing;     //是否正在写
+&#125;;
+
+std::vector&lt;Connection*&gt; Connection::serverConnVt;
+std::map&lt;string, Connection*&gt; Connection::clientConnMap;
+int Connection::serverIdx = -1;
+
+#endif /* Connection_H */</code></pre><h3 id="Buffer-h-1"><a href="#Buffer-h-1" class="headerlink" title="Buffer.h"></a>Buffer.h</h3><pre><code class="hljs">//
+//  Buffer.h
+//  QuoridorServer
+//
+//  Created by shiyi on 2016/12/2.
+//  Copyright © 2016年 shiyi. All rights reserved.
+//
+
+#ifndef Buffer_H
+#define Buffer_H
+
+#include &lt;stdio.h&gt;
+#include &lt;iostream&gt;
+#include &lt;vector&gt;
+
+using namespace std;
+
+class Buffer
+&#123;
+public:
+    Buffer() : m_widx(0), m_ridx(0)
+    &#123;&#125;
+
+    ~Buffer()&#123;&#125;
+
+    void init()
+    &#123;
+        m_widx = m_ridx = 0;
+        m_buf.clear();
+    &#125;
+
+    //增加内容
+    void PutData(char *data, int len)
+    &#123;
+        //如果调整空间后足够存放，则进行调整
+        int capa = m_buf.capacity();
+        if(capa &lt; m_widx + len &amp;&amp; capa &gt; len + m_widx - m_ridx)
+            adjust();
+
+        for(int i = 0; i &lt; len; i++)
+            m_buf.push_back(data[i]);
+
+        m_widx += len;
+    &#125;
+
+    //返回获取的包的大小，数据不完整返回-1
+
+    int GetData(char* data)
+    &#123;
+        if(m_widx - m_ridx &lt; 4)
+            return -1;
+
+        int len;
+        char *t = (char*)&amp;len;
+        for(int i=0; i&lt;4; i++)
+        &#123;
+            t[i] = m_buf[m_ridx+i];
+        &#125;
+
+        //printf(&quot;-=-=%d\n&quot;, len);
+
+        if(len+4 &gt; m_widx-m_ridx)
+            return -1;
+
+        m_ridx += 4;
+
+        for(int i = 0; i &lt; len; i++)
+        &#123;
+            data[i] = m_buf[m_ridx++];
+        &#125;
+
+        if(m_ridx &gt;= m_widx)
+        &#123;
+            m_ridx = m_widx = 0;
+            m_buf.clear();
+        &#125;
+        return len;
+    &#125;
+
+    //返回Buffer内全部内容
+    int GetDataAll(char* data)
+    &#123;
+        int len = m_widx-m_ridx;
+
+        for(int i = 0; i &lt; len; i++)
+        &#123;
+            if(m_ridx &gt;= m_widx)
+                break;
+            data[i] = m_buf[m_ridx++];
+        &#125;
+
+        if(m_ridx &gt;= m_widx)
+        &#123;
+            m_ridx = m_widx = 0;
+            m_buf.clear();
+        &#125;
+
+        return len;
+    &#125;
+
+private:
+
+    //将数据移至容器头部，充分利用空间
+    void adjust()
+    &#123;
+        vector&lt;char&gt; t(m_buf.begin()+m_ridx, m_buf.begin()+m_widx);
+        m_widx -= m_ridx;
+        m_ridx = 0;
+
+        m_buf.clear();
+
+        for(int i=0; i&lt;m_widx; i++)
+            m_buf.push_back(t[i]);
+    &#125;
+
+private:
+
+    int m_ridx;
+    int m_widx;
+    std::vector&lt;char&gt; m_buf;
+&#125;;
+
+#endif /* Buffer_H */</code></pre><h3 id="ThreadPool-h-1"><a href="#ThreadPool-h-1" class="headerlink" title="ThreadPool.h"></a>ThreadPool.h</h3><pre><code class="hljs">//
+//  ThreadPool.h
+//  QuoridorServer
+//
+//  Created by shiyi on 2016/11/30.
+//  Copyright © 2016年 shiyi. All rights reserved.
+//
+
+#ifndef ThreadPool_H
+#define ThreadPool_H
+
+#include &lt;stdio.h&gt;
+#include &lt;iostream&gt;
+#include &lt;functional&gt;
+#include &lt;thread&gt;
+#include &lt;atomic&gt;
+#include &quot;SyncQueue.h&quot;
+
+const int MaxTaskCount = 100;
+
+class ThreadPool
+&#123;
+public:
+    using Task = std::function&lt;void()&gt;;
+
+    ThreadPool(int numThreads = std::thread::hardware_concurrency()) : m_queue(MaxTaskCount)
+    &#123;
+        if(numThreads &lt; 4)
+            numThreads = 4;
+
+        printf(&quot;线程池启动-%d线程\n&quot;, numThreads);
+
+        Start(numThreads);
+    &#125;
+
+    ~ThreadPool()
+    &#123;
+        Stop();
+    &#125;
+
+    void Stop()
+    &#123;
+        std::call_once(m_flag, [this]&#123;
+            StopThreadGroup();
+        &#125;);
+    &#125;
+
+    void AddTask(Task&amp;&amp; task)
+    &#123;
+        m_queue.Push(std::forward&lt;Task&gt;(task));
+    &#125;
+
+    void AddTask(const Task&amp; task)
+    &#123;
+        m_queue.Push(task);
+    &#125;
+
+private:
+    void Start(int numThreads)
+    &#123;
+        m_running = true;
+        //创建线程组
+        for(int i=0; i&lt;numThreads; i++)
+        &#123;
+            m_threadGroup.push_back(std::make_shared&lt;std::thread&gt;(&amp;ThreadPool::RunInThread, this));
+        &#125;
+
+    &#125;
+
+    void RunInThread()
+    &#123;
+        while(m_running)
+        &#123;
+            std::queue&lt;Task&gt; queue;
+            m_queue.Take(queue);
+            std::queue&lt;int&gt; a;
+
+            while(!queue.empty())
+            &#123;
+                if(!m_running)
+                    return;
+                auto task = queue.front();
+                queue.pop();
+                task();
+            &#125;
+        &#125;
+    &#125;
+
+    void StopThreadGroup()
+    &#123;
+        m_queue.Stop();
+        m_running = false;
+
+        for(auto thread : m_threadGroup)
+        &#123;
+            thread-&gt;join();
+        &#125;
+
+        m_threadGroup.clear();
+    &#125;
+
+private:
+    SyncQueue&lt;Task&gt; m_queue;                                    //同步队列
+    std::vector&lt;std::shared_ptr&lt;std::thread&gt;&gt; m_threadGroup;    //处理任务的线程组
+    atomic_bool m_running;                                      //是否停止
+    std::once_flag m_flag;
+&#125;;
+
+#endif /* ThreadPool_H */</code></pre><h3 id="SyncQueue-h-1"><a href="#SyncQueue-h-1" class="headerlink" title="SyncQueue.h"></a>SyncQueue.h</h3><pre><code class="hljs">//
+//  SyncQueue.h
+//  QuoridorServer
+//
+//  Created by shiyi on 2016/11/30.
+//  Copyright © 2016年 shiyi. All rights reserved.
+//
+
+#ifndef SyncQueue_H
+#define SyncQueue_H
+
+#include &lt;stdio.h&gt;
+#include &lt;iostream&gt;
+#include &lt;mutex&gt;
+#include &lt;thread&gt;
+#include &lt;queue&gt;
+#include &lt;condition_variable&gt;
+
+using namespace std;
+
+template &lt;typename T&gt;
+class SyncQueue
+&#123;
+public:
+    SyncQueue(int maxSize) : m_maxSize(maxSize), m_isStop(false)
+    &#123;
+    &#125;
+
+    ~SyncQueue()&#123;&#125;
+
+    void Push(const T&amp; x)
+    &#123;
+        Add(x);
+    &#125;
+
+    void Push(T&amp;&amp; x)
+    &#123;
+        Add(x);
+    &#125;
+
+    void Take(T&amp; t)
+    &#123;
+        std::unique_lock&lt;std::mutex&gt; locker(m_mutex);
+        m_notEmpty(locker, [this]&#123;
+            return m_isStop || m_notEmpty();
+        &#125;);
+
+        if(m_isStop)
+            return;
+        t = m_queue.front();
+        m_queue.pop();
+        m_notFull.notify_one();
+    &#125;
+
+    void Take(std::queue&lt;T&gt;&amp; queue)
+    &#123;
+        std::unique_lock&lt;std::mutex&gt; locker(m_mutex);
+        m_notEmpty.wait(locker, [this]&#123;
+            return m_isStop || NotEmpty();
+        &#125;);
+
+        if(m_isStop)
+            return;
+        queue = std::move(m_queue);
+        m_notFull.notify_one();
+    &#125;
+
+    void Stop()
+    &#123;
+        &#123;
+            std::lock_guard&lt;std::mutex&gt; locker(m_mutex);
+            m_isStop = true;
+        &#125;
+        m_notFull.notify_all();
+        m_notEmpty.notify_all();
+    &#125;
+
+    bool Empty()
+    &#123;
+        std::lock_guard&lt;std::mutex&gt; locker(m_mutex);
+        return m_queue.empty();
+    &#125;
+
+    bool Full()
+    &#123;
+        std::lock_guard&lt;std::mutex&gt; locker(m_mutex);
+        return m_queue.size() &gt;= m_maxSize;
+    &#125;
+
+private:
+
+    bool NotFull()
+    &#123;
+        bool full = m_queue.size() &gt;= m_maxSize;
+        if(full)
+            cout&lt;&lt;&quot;缓冲区满，需要等待...&quot;&lt;&lt;this_thread::get_id()&lt;&lt;endl;
+        return !full;
+    &#125;
+
+    bool NotEmpty()
+    &#123;
+        bool empty = m_queue.empty();
+        if(empty)
+            cout&lt;&lt;&quot;缓冲区空，需要等待...&quot;&lt;&lt;this_thread::get_id()&lt;&lt;endl;
+        return !empty;
+    &#125;
+
+    template&lt;typename F&gt;
+    void Add(F&amp;&amp; x)
+    &#123;
+        std::unique_lock&lt;std::mutex&gt; locker(m_mutex);
+        m_notFull.wait(locker, [this]&#123;
+            return m_isStop || NotFull();
+        &#125;);
+        if(m_isStop)
+            return;
+        m_queue.push(std::forward&lt;F&gt;(x));
+        m_notEmpty.notify_one();
+    &#125;
+
+private:
+    bool m_isStop;                     //是否停止
+    int m_maxSize;                     //同步队列最大的长度
+    std::queue&lt;T&gt; m_queue;                  //缓冲区
+    std::mutex m_mutex;                     //互斥量
+    std::condition_variable m_notEmpty;     //不为空的条件变量
+    std::condition_variable m_notFull;      //不满的条件变量
+&#125;;
+
+#endif /* SyncQueue_H */</code></pre></div><hr><div><div class="post-metas my-3"><div class="post-meta mr-3 d-flex align-items-center"><i class="iconfont icon-category"></i> <span class="category-chains"><span class="category-chain"><a href="/categories/%E5%A4%A7%E5%AD%A6%E6%97%B6%E6%9C%9FCSDN/" class="category-chain-item">大学时期CSDN</a></span></span></div><div class="post-meta"><i class="iconfont icon-tags"></i> <a href="/tags/%E6%9C%8D%E5%8A%A1%E5%99%A8%E5%BC%80%E5%8F%91/">#服务器开发</a> <a href="/tags/C/">#C++</a> <a href="/tags/Linux%E7%BD%91%E7%BB%9C%E7%BC%96%E7%A8%8B/">#Linux网络编程</a></div></div><div class="license-box my-3"><div class="license-title"><div>linux服务器开发之网关服务器的实现</div><div>https://shiyi.threebody.xyz/posts/36868.html</div></div><div class="license-meta"><div class="license-meta-item"><div>作者</div><div>Yi Shi</div></div><div class="license-meta-item license-meta-date"><div>发布于</div><div>2016年12月5日</div></div><div class="license-meta-item"><div>许可协议</div><div><a target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/"><span class="hint--top hint--rounded" aria-label="BY - 署名"><i class="iconfont icon-by"></i> </span></a><a target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/"><span class="hint--top hint--rounded" aria-label="SA - 相同方式共享"><i class="iconfont icon-sa"></i></span></a></div></div></div><div class="license-icon iconfont"></div></div><div class="post-prevnext my-3"><article class="post-prev col-6"><a href="/posts/51226.html" title="8086汇编初学之贪吃蛇"><i class="iconfont icon-arrowleft"></i> <span class="hidden-mobile">8086汇编初学之贪吃蛇</span> <span class="visible-mobile">上一篇</span></a></article><article class="post-next col-6"><a href="/posts/12582.html" title="Epoll-ET模式读写之用户连接的封装"><span class="hidden-mobile">Epoll-ET模式读写之用户连接的封装</span> <span class="visible-mobile">下一篇</span> <i class="iconfont icon-arrowright"></i></a></article></div></div><article id="comments" lazyload><div id="lv-container" data-id="city" data-uid="MTAyMC80NjEzMS8yMjY0Mg"><script type="text/javascript">Fluid.utils.loadComments("#lv-container",(function(){Fluid.utils.createScript("https://cdn-city.livere.com/js/embed.dist.js")}))</script><noscript>Please enable JavaScript to view the comments</noscript></div></article></article></div></div></div><div class="side-col d-none d-lg-block col-lg-2"><aside class="sidebar" style="margin-left:-1rem"><div id="toc"><p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p><div class="toc-body" id="toc-body"></div></div></aside></div></div></div><a id="scroll-top-button" aria-label="TOP" href="#" role="button"><i class="iconfont icon-arrowup" aria-hidden="true"></i></a><div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable modal-lg" role="document"><div class="modal-content"><div class="modal-header text-center"><h4 class="modal-title w-100 font-weight-bold">搜索</h4><button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button></div><div class="modal-body mx-3"><div class="md-form mb-5"><input type="text" id="local-search-input" class="form-control validate"> <label data-error="x" data-success="v" for="local-search-input">关键词</label></div><div class="list-group" id="local-search-result"></div></div></div></div></div></main><footer><div class="footer-inner"><div class="beian"><span><a href="http://beian.miit.gov.cn/" target="_blank" rel="nofollow noopener">陕ICP备16019529号-2</a></span></div><span id="cnzz_stat_icon_1273342630" style="display:none"></span></div></footer><script src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js"></script><link rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css"><script>NProgress.configure({showSpinner:!0,trickleSpeed:100}),NProgress.start(),window.addEventListener("load",(function(){NProgress.done()}))</script><script src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js"></script><script src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js"></script><script src="/js/events.js"></script><script src="/js/plugins.js"></script><script src="/js/img-lazyload.js"></script><script>Fluid.utils.createScript("https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js",(function(){var t=jQuery("#toc");if(0!==t.length&&window.tocbot){var i=jQuery("#board-ctn").offset().top;window.tocbot.init(Object.assign({tocSelector:"#toc-body",contentSelector:".markdown-body",linkClass:"tocbot-link",activeLinkClass:"tocbot-active-link",listClass:"tocbot-list",isCollapsedClass:"tocbot-is-collapsed",collapsibleClass:"tocbot-is-collapsible",scrollSmooth:!0,includeTitleTags:!0,headingsOffset:-i},CONFIG.toc)),t.find(".toc-list-item").length>0&&t.css("visibility","visible"),Fluid.events.registerRefreshCallback((function(){if("tocbot"in window){tocbot.refresh();var t=jQuery("#toc");if(0===t.length||!tocbot)return;t.find(".toc-list-item").length>0&&t.css("visibility","visible")}}))}}))</script><script src="https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js"></script><script>Fluid.plugins.codeWidget()</script><script>Fluid.utils.createScript("https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js",(function(){window.anchors.options={placement:CONFIG.anchorjs.placement,visible:CONFIG.anchorjs.visible},CONFIG.anchorjs.icon&&(window.anchors.options.icon=CONFIG.anchorjs.icon);var n=(CONFIG.anchorjs.element||"h1,h2,h3,h4,h5,h6").split(","),o=[];for(var s of n)o.push(".markdown-body > "+s.trim());"left"===CONFIG.anchorjs.placement&&(window.anchors.options.class="anchorjs-link-left"),window.anchors.add(o.join(", ")),Fluid.events.registerRefreshCallback((function(){if("anchors"in window){anchors.removeAll();var n=(CONFIG.anchorjs.element||"h1,h2,h3,h4,h5,h6").split(","),o=[];for(var s of n)o.push(".markdown-body > "+s.trim());"left"===CONFIG.anchorjs.placement&&(anchors.options.class="anchorjs-link-left"),anchors.add(o.join(", "))}}))}))</script><script>Fluid.utils.createScript("https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js",(function(){Fluid.plugins.fancyBox()}))</script><script>Fluid.plugins.imageCaption()</script><script src="/js/local-search.js"></script><script src="/js/boot.js"></script><noscript><div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div></noscript></body></html>
